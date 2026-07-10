@@ -227,14 +227,55 @@ body::before {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Toggle switch Apple style */
+.toggle-group {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px; padding: 3px;
+}
+.toggle-group button {
+  background: transparent !important; border: none !important;
+  color: var(--text-tertiary) !important; padding: 6px 14px !important;
+  border-radius: 8px !important; font-size: 11px !important;
+  transition: all 0.3s cubic-bezier(0.25,1,0.5,1) !important;
+}
+.toggle-group button.active {
+  background: rgba(10,132,255,0.18) !important;
+  color: var(--accent-blue) !important;
+  box-shadow: 0 0 12px rgba(10,132,255,0.1) !important;
+}
+.toolbar-label {
+  font-size: 10px; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;
+  margin-right: 2px;
+}
+.toolbar-divider {
+  width: 1px; height: 24px; background: rgba(255,255,255,0.06); margin: 0 6px;
+}
+.icon-btn { display: inline-flex; align-items: center; gap: 5px; }
+.icon-btn svg { width: 13px; height: 13px; opacity: 0.7; }
 </style>
 </head>
 <body>
 <div id="toolbar" class="glass-panel">
-  <button onclick="setLayout('dagre')" id="btn-dagre" class="active">Jerarquico</button>
-  <button onclick="setLayout('concentric')" id="btn-concentric">Concentrico</button>
-  <button onclick="toggleEntities()" id="btn-entities" class="active">Entidades</button>
-  <button onclick="toggleFlows()" id="btn-flows">Flujos</button>
+  <span class="toolbar-label">Vista</span>
+  <div class="toggle-group">
+    <button onclick="setLayout('dagre')" id="btn-dagre" class="active">Jerarquico</button>
+    <button onclick="setLayout('concentric')" id="btn-concentric">Concentrico</button>
+  </div>
+  <span class="toolbar-divider"></span>
+  <span class="toolbar-label">Capas</span>
+  <button onclick="toggleEntities()" id="btn-entities" class="active icon-btn">
+    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 5l7 4 7-4-7-4zM1 8l7 4 7-4M1 11l7 4 7-4" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>
+    Entidades
+  </button>
+  <button onclick="toggleFlows()" id="btn-flows" class="icon-btn">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 8h3M11 8h3M5 8a3 3 0 1 1 6 0 3 3 0 0 1-6 0z"/><path d="M1 4v8M15 4v8" stroke-width="1.5" stroke-linecap="round"/></svg>
+    Flujos
+  </button>
+  <span class="toolbar-divider"></span>
   <button onclick="resetView()">Reset</button>
   <select id="filterEntity" onchange="filterByEntity(this.value)">
     <option value="">Filtrar entidad...</option>
@@ -301,11 +342,18 @@ function layoutCfg(name) {
 }
 
 function renderGraph() {
-  if (cy) cy.destroy();
-  cy = cytoscape({
-    container: document.getElementById('cy'),
-    elements: getFiltered(),
-    style: [
+  var container = document.getElementById('cy');
+
+  // Fade out current graph
+  container.style.transition = 'opacity 0.3s ease';
+  container.style.opacity = '0';
+
+  setTimeout(function(){
+    if (cy) cy.destroy();
+    cy = cytoscape({
+      container: container,
+      elements: getFiltered(),
+      style: [
       // Story nodes — neural network synapses
       { selector: 'node[type="story"]', style: {
         'label':'data(label)',
@@ -396,6 +444,9 @@ function renderGraph() {
     minZoom:0.3, maxZoom:3, wheelSensitivity:0.2,
   });
 
+  // Fade in new graph
+  setTimeout(function(){ container.style.opacity = '1'; }, 50);
+
   // Neural pulse effect
   startNeuralPulse();
 
@@ -468,6 +519,8 @@ function renderGraph() {
     await showDetail(evt.target.data('id'));
   });
   cy.on('tap', function(evt){ if(evt.target===cy){resetHighlight();hidePanel();} });
+
+  }, 300); // end setTimeout fade-out
 }
 
 // Neural pulse — periodic glow animation on edges to simulate signal transmission
@@ -558,11 +611,17 @@ async function showDetail(id) {
 
 function setLayout(name) {
   currentLayout = name;
-  document.querySelectorAll('#toolbar button').forEach(b=>b.classList.remove('active'));
+  // Toggle group: only layout buttons inside .toggle-group
+  document.querySelectorAll('.toggle-group button').forEach(b=>b.classList.remove('active'));
   var btn=document.getElementById('btn-'+name); if(btn)btn.classList.add('active');
-  document.getElementById('btn-entities').classList.toggle('active',showEntities);
-  document.getElementById('btn-flows').classList.toggle('active',showFlows);
-  cy.layout(layoutCfg(name)).run();
+  // Fade transition for layout change
+  var container = document.getElementById('cy');
+  container.style.transition = 'opacity 0.25s ease';
+  container.style.opacity = '0.3';
+  setTimeout(function(){
+    cy.layout(layoutCfg(name)).run();
+    setTimeout(function(){ container.style.opacity = '1'; }, 200);
+  }, 250);
 }
 function toggleEntities() {
   showEntities=!showEntities;
