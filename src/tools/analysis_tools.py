@@ -2,6 +2,7 @@
 
 import logging
 
+from src.engine.ecosystem import get_ecosystem
 from src.engine.experts import ExpertClassifier
 from src.engine.memory import get_memory
 from src.engine.segmenter import ContextSegmenter
@@ -217,6 +218,7 @@ def handle_get_story_context(story_id: str) -> dict:
         "relevant_stories_count": len(context_stories),
         "tokens_saved_percent": round((1 - len(context_stories) / max(len(summaries) - 1, 1)) * 100),
         "relevant_stories": context_stories,
+        "cross_app_context": _get_cross_app_context_for_story(story),
     }
 
 
@@ -364,3 +366,32 @@ def _extract_keywords_from_text(text: str) -> list[str]:
                  "debe", "puede", "cuando", "desde", "hasta", "ser", "tiene", "hay"}
     words = text.lower().split()
     return [w for w in words if len(w) > 2 and w not in stopwords]
+
+
+def _get_cross_app_context_for_story(story) -> dict:
+    """Obtiene contexto cross-app relevante para una HU si hay ecosistema.
+
+    Args:
+        story: StoryAnalysis de la HU.
+
+    Returns:
+        Dict con contexto cross-app o indicador de no disponible.
+    """
+    try:
+        ecosystem = get_ecosystem()
+        if not ecosystem.is_initialized:
+            return {"available": False}
+
+        memory = get_memory()
+        current_app_id = None
+        if memory.index and memory.index.config.app_id:
+            current_app_id = memory.index.config.app_id
+
+        context = ecosystem.get_cross_app_context(
+            entity_names=story.entities_detected,
+            flow_names=story.flows_detected,
+            current_app_id=current_app_id,
+        )
+        return context
+    except Exception:
+        return {"available": False}

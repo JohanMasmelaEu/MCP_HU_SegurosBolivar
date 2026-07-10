@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 
+from src.engine.ecosystem import get_ecosystem
 from src.engine.memory import get_memory
 from src.models.project import ProjectConfig
 
@@ -12,8 +13,11 @@ logger = logging.getLogger("mcp_hu.tools.project")
 def handle_init_project(config_dict: dict) -> dict:
     """Inicializa un nuevo proyecto y crea la memoria local.
 
+    Si se proporciona ecosystem_id y app_id, vincula el proyecto al ecosistema.
+
     Args:
-        config_dict: Diccionario con project_name, domain, stakeholders, description.
+        config_dict: Diccionario con project_name, domain, stakeholders, description,
+                     y opcionalmente ecosystem_id y app_id.
 
     Returns:
         Status de la operacion.
@@ -34,7 +38,24 @@ def handle_init_project(config_dict: dict) -> dict:
 
     try:
         memory.init_project(config)
-        return {
+
+        # Vincular al ecosistema si se proporciono ecosystem_id
+        ecosystem_linked = False
+        if config.ecosystem_id and config.app_id:
+            try:
+                ecosystem = get_ecosystem()
+                if ecosystem.is_initialized:
+                    registry = ecosystem.registry
+                    if registry and registry.ecosystem_id == config.ecosystem_id:
+                        ecosystem_linked = True
+                        logger.info(
+                            "Proyecto vinculado al ecosistema '%s' como app '%s'",
+                            config.ecosystem_id, config.app_id,
+                        )
+            except Exception as eco_err:
+                logger.warning("No se pudo vincular al ecosistema: %s", eco_err)
+
+        result = {
             "status": "success",
             "project_name": config.project_name,
             "domain": config.domain,
@@ -46,6 +67,20 @@ def handle_init_project(config_dict: dict) -> dict:
                 f"Listo para recibir historias de usuario."
             ),
         }
+
+        if config.ecosystem_id:
+            result["ecosystem_id"] = config.ecosystem_id
+            result["app_id"] = config.app_id
+            result["ecosystem_linked"] = ecosystem_linked
+            if ecosystem_linked:
+                result["message"] += f" Vinculado al ecosistema '{config.ecosystem_id}'."
+            else:
+                result["message"] += (
+                    f" Ecosistema '{config.ecosystem_id}' configurado pero no encontrado. "
+                    f"Inicializa el ecosistema con init_ecosystem para activar la visibilidad transversal."
+                )
+
+        return result
     except Exception as e:
         logger.exception("Error inicializando proyecto")
         return {"status": "error", "message": f"Error: {e}"}

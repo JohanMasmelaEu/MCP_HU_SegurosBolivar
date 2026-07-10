@@ -13,6 +13,12 @@ class ProjectConfig(BaseModel):
     domain: str = Field(description="Dominio de negocio (ej: seguros/siniestros/autos)")
     stakeholders: list[str] = Field(default_factory=list, description="Roles del equipo")
     description: str = Field(default="", description="Descripcion general del proyecto")
+    ecosystem_id: Optional[str] = Field(
+        default=None, description="ID del ecosistema al que pertenece este proyecto"
+    )
+    app_id: Optional[str] = Field(
+        default=None, description="ID de esta app dentro del ecosistema"
+    )
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 

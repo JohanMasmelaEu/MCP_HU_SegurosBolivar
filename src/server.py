@@ -7,7 +7,7 @@ Transport: stdio (Docker).
 
 import json
 import logging
-from typing import Union
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
@@ -28,6 +28,13 @@ from src.tools.conflict_tools import (
     handle_detect_conflicts,
     handle_suggest_next_stories,
 )
+from src.tools.ecosystem_tools import (
+    handle_init_ecosystem,
+    handle_register_app,
+    handle_list_ecosystem,
+    handle_get_cross_app_context,
+    handle_sync_ecosystem,
+)
 from src.tools.estimation_tools import (
     handle_estimate_story,
     handle_register_completion,
@@ -39,7 +46,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(na
 logger = logging.getLogger("mcp_hu")
 
 
-def _ensure_dict(value: Union[str, dict]) -> dict:
+def _ensure_dict(value: Any) -> dict:
     """Normaliza un parametro JSON que puede llegar como str o dict.
 
     Algunos clientes MCP (Kiro, Claude Desktop) deserializan automaticamente
@@ -47,13 +54,13 @@ def _ensure_dict(value: Union[str, dict]) -> dict:
     los envian como string crudo. Esta funcion maneja ambos casos.
 
     Args:
-        value: Valor que puede ser un JSON string o un dict ya parseado.
+        value: Valor que puede ser un JSON string, un dict, o cualquier tipo.
 
     Returns:
         Diccionario parseado listo para usar.
 
     Raises:
-        ValueError: Si el valor no es ni str ni dict valido.
+        ValueError: Si el valor no es convertible a dict.
     """
     if isinstance(value, dict):
         return value
@@ -61,13 +68,29 @@ def _ensure_dict(value: Union[str, dict]) -> dict:
         return json.loads(value)
     raise ValueError(f"Se esperaba str o dict, se recibio: {type(value).__name__}")
 
+
+def _ensure_str(value: Any) -> str:
+    """Normaliza un parametro que puede llegar como dict o str a string.
+
+    Args:
+        value: Valor que puede ser un dict o un string.
+
+    Returns:
+        String (si era dict, lo serializa a JSON).
+    """
+    if isinstance(value, dict):
+        return json.dumps(value, ensure_ascii=False)
+    return str(value)
+
+
 mcp = FastMCP(
     name="MCP_HU_SegurosBolivar",
-    version="1.0.0",
+    version="1.1.0",
     description=(
         "MCP Server para analisis inteligente de Historias de Usuario. "
-        "Panel de 10 expertos, memoria contextual, segmentacion de contexto "
-        "y estimacion adaptativa. Produce HUs estandarizadas sin ambiguedades."
+        "Panel de 10 expertos, memoria contextual, segmentacion de contexto, "
+        "estimacion adaptativa y visibilidad transversal de ecosistemas. "
+        "Produce HUs estandarizadas sin ambiguedades."
     ),
 )
 
@@ -76,11 +99,11 @@ mcp = FastMCP(
 
 
 @mcp.tool()
-async def init_project(config: str) -> str:
+async def init_project(config: dict) -> str:
     """Inicializa un nuevo proyecto y crea la memoria local (.hu-memory/).
 
     Args:
-        config: JSON con project_name, domain, stakeholders y description.
+        config: Objeto con project_name, domain, stakeholders y description. Opcionalmente ecosystem_id y app_id.
     """
     config_dict = _ensure_dict(config)
     result = handle_init_project(config_dict)
@@ -125,16 +148,17 @@ async def analyze_story(story_text: str) -> str:
     Args:
         story_text: Texto de la HU en cualquier formato.
     """
-    result = handle_analyze_story(story_text)
+    text = _ensure_str(story_text)
+    result = handle_analyze_story(text)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
 @mcp.tool()
-async def add_story(story_json: str) -> str:
+async def add_story(story_json: dict) -> str:
     """Persiste una HU analizada en la memoria y actualiza el grafo de relaciones.
 
     Args:
-        story_json: JSON completo de la HU (output de analyze_story, posiblemente editado).
+        story_json: Objeto JSON completo de la HU (output de analyze_story, posiblemente editado).
     """
     story_dict = _ensure_dict(story_json)
     result = handle_add_story(story_dict)
@@ -214,11 +238,11 @@ async def estimate_story(story_id: str) -> str:
 
 
 @mcp.tool()
-async def register_completion(completion_json: str) -> str:
+async def register_completion(completion_json: dict) -> str:
     """Registra la finalizacion de una HU con horas reales (calibra el motor).
 
     Args:
-        completion_json: JSON con story_id, actual_hours, y notes opcionales.
+        completion_json: Objeto con story_id, actual_hours, y notes opcionales.
     """
     data = _ensure_dict(completion_json)
     result = handle_register_completion(data)
@@ -243,11 +267,76 @@ async def calibrate_estimates() -> str:
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
+# ─── ECOSYSTEM ────────────────────────────────────────────────────────────────────
+
+
+@mcp.tool()
+async def init_ecosystem(config: dict) -> str:
+    """Inicializa un ecosistema de apps para visibilidad transversal.
+
+    Crea el registro central donde se indexan multiples apps con sus
+    entidades, flujos y contratos de integracion.
+
+    Args:
+        config: Objeto con ecosystem_id, name, y description.
+    """
+    config_dict = _ensure_dict(config)
+    result = handle_init_ecosystem(config_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def register_app(app_config: dict) -> str:
+    """Registra una app en el ecosistema y sincroniza sus entidades/flujos.
+
+    Lee el .hu-memory/ de la app para indexar su estado actual.
+    Permite definir contratos de integracion con otras apps.
+
+    Args:
+        app_config: Objeto con app_id, name, memory_path, coupling_type (cohesive/decoupled), description, team, contracts (opcional).
+    """
+    app_dict = _ensure_dict(app_config)
+    result = handle_register_app(app_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def list_ecosystem() -> str:
+    """Lista todas las apps del ecosistema con sus dependencias, contratos y entidades compartidas."""
+    result = handle_list_ecosystem()
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def get_cross_app_context(story_id: str) -> str:
+    """Obtiene contexto transversal de otras apps del ecosistema relevante para una HU.
+
+    Busca entidades compartidas, contratos de integracion y apps que
+    tocan los mismos dominios que la HU indicada.
+
+    Args:
+        story_id: Identificador de la HU del proyecto actual.
+    """
+    result = handle_get_cross_app_context(story_id)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def sync_ecosystem(app_id: str = "") -> str:
+    """Re-sincroniza las apps del ecosistema leyendo sus .hu-memory/ actualizados.
+
+    Args:
+        app_id: ID de app especifica para sincronizar, o vacio para sincronizar todas.
+    """
+    result = handle_sync_ecosystem(app_id if app_id else "")
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
 # ─── ENTRY POINT ─────────────────────────────────────────────────────────────────
 
 
 if __name__ == "__main__":
-    logger.info("Iniciando MCP_HU_SegurosBolivar v1.0.0 (stdio)")
+    logger.info("Iniciando MCP_HU_SegurosBolivar v1.1.0 (stdio)")
     # Arrancar visualizador de grafo en background (puerto 9751)
     from src.engine.visualizer import start_visualizer
     start_visualizer()

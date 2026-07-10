@@ -1,1 +1,1 @@
-"""Modelos Pydantic para HUs, expertos y memoria."""
+"""Modelos Pydantic para HUs, expertos, memoria y ecosistemas."""

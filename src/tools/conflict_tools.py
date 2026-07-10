@@ -3,6 +3,7 @@
 import logging
 from typing import Optional
 
+from src.engine.ecosystem import get_ecosystem
 from src.engine.memory import get_memory
 from src.engine.segmenter import ContextSegmenter
 
@@ -127,17 +128,36 @@ def handle_detect_conflicts(story_id: Optional[str] = None) -> dict:
                 "candidates": contradiction_candidates,
             })
 
+    # 5. Conflictos cross-app (si hay ecosistema configurado)
+    cross_app_conflicts = []
+    try:
+        ecosystem = get_ecosystem()
+        if ecosystem.is_initialized:
+            detected = ecosystem.detect_cross_app_conflicts()
+            for conflict in detected:
+                cross_app_conflicts.append({
+                    "type": f"cross_app:{conflict.conflict_type}",
+                    "severity": conflict.severity,
+                    "between": conflict.apps_involved,
+                    "description": conflict.description,
+                    "suggestion": conflict.suggestion,
+                })
+    except Exception as e:
+        logger.warning("No se pudo analizar conflictos cross-app: %s", e)
+
     return {
         "status": "success",
         "scope": story_id or "all",
-        "conflicts_found": len(conflicts),
+        "conflicts_found": len(conflicts) + len(cross_app_conflicts),
         "conflicts": conflicts,
+        "cross_app_conflicts": cross_app_conflicts,
         "instructions_for_llm": (
             "Revisa los conflictos detectados y proporciona al usuario: "
             "1) Para duplicaciones: si realmente son duplicados o perspectivas complementarias. "
             "2) Para flujos abiertos: que HUs faltan para completar el flujo. "
             "3) Para dependencias faltantes: crear la HU dependencia o corregir la referencia. "
-            "4) Para contradicciones potenciales: comparar las reglas de las HUs involucradas."
+            "4) Para contradicciones potenciales: comparar las reglas de las HUs involucradas. "
+            "5) Para conflictos cross-app: evaluar divergencias de entidades entre apps y contratos rotos."
         ),
     }
 
