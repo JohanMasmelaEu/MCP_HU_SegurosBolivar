@@ -310,6 +310,18 @@ async function init() {
   allData.nodes.filter(n => n.data.type==='entity').forEach(e => {
     const o = document.createElement('option'); o.value = e.data.id; o.textContent = e.data.label; sel.appendChild(o);
   });
+
+  // Global mouse tracker for tooltip position (works even outside cy nodes)
+  document.addEventListener('mousemove', function(e) {
+    tooltip.style.left = (e.clientX + 16) + 'px';
+    tooltip.style.top = (e.clientY + 16) + 'px';
+  });
+
+  // Safety: hide tooltip when mouse leaves the graph area
+  document.getElementById('cy').addEventListener('mouseleave', function() {
+    tooltip.classList.remove('visible');
+  });
+
   renderGraph();
 }
 
@@ -451,10 +463,8 @@ function renderGraph() {
   startNeuralPulse();
 
   // --- TOOLTIP for ALL node types ---
-  var hoverTimeout = null;
-
   cy.on('mouseover', 'node', function(evt){
-    clearTimeout(hoverTimeout);
+    clearTimeout(window._hoverTimeout);
     var node = evt.target;
     var d = node.data();
     var html = '';
@@ -486,9 +496,7 @@ function renderGraph() {
   cy.on('mouseout', 'node', function(evt){
     var node = evt.target;
     var d = node.data();
-    // Hide tooltip with small delay to avoid flicker
-    hoverTimeout = setTimeout(function(){ tooltip.classList.remove('visible'); }, 80);
-    // Restore node size
+    window._hoverTimeout = setTimeout(function(){ tooltip.classList.remove('visible'); }, 100);
     if (d.type === 'story') {
       node.animate({style:{'width':50,'height':50,'shadow-blur':24}},{duration:200});
     } else if (d.type === 'entity') {
@@ -496,20 +504,6 @@ function renderGraph() {
     } else if (d.type === 'flow') {
       node.animate({style:{'width':14,'height':14,'shadow-blur':8}},{duration:200});
     }
-  });
-
-  // Safety: hide tooltip when mouse leaves the cy container entirely
-  document.getElementById('cy').addEventListener('mouseleave', function(){
-    tooltip.classList.remove('visible');
-  });
-
-  // Move tooltip with cursor
-  cy.on('mousemove', function(evt){
-    var e = evt.originalEvent || evt;
-    var x = e.clientX || e.pageX || 0;
-    var y = e.clientY || e.pageY || 0;
-    tooltip.style.left = (x + 16) + 'px';
-    tooltip.style.top = (y + 16) + 'px';
   });
 
   // Click story for detail panel
