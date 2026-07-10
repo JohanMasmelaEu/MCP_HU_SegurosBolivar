@@ -224,4 +224,7 @@ async def calibrate_estimates() -> str:
 
 if __name__ == "__main__":
     logger.info("Iniciando MCP_HU_SegurosBolivar v1.0.0 (stdio)")
+    # Arrancar visualizador de grafo en background (puerto 9751)
+    from src.engine.visualizer import start_visualizer
+    start_visualizer()
     mcp.run(transport="stdio")

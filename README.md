@@ -27,6 +27,7 @@ Crear `~/.kiro/settings/mcp.json` (global) o `<workspace>/.kiro/settings/mcp.jso
       "args": [
         "run", "-i", "--rm",
         "-v", ".:/workspace",
+        "-p", "9751:9751",
         "ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest"
       ],
       "disabled": false
@@ -97,6 +98,21 @@ Solo HUs con score > 0.5 entran al contexto. Ahorro tipico: 80-90% de tokens.
 
 Se calibra con cada HU completada. Rango optimista/probable/pesimista con nivel de confianza.
 
+### Visualizador de Grafo Interactivo
+
+Al arrancar el MCP, se levanta automaticamente un servidor web en `http://localhost:9751` con una UI interactiva para explorar el grafo de HUs:
+
+- **Click en un nodo** → resalta sus relaciones y muestra panel lateral con detalles
+- **Click en fondo** → vuelve al estado original (reset)
+- **Boton Reset** → restaura vista completa
+- **Boton Entidades** → muestra/oculta nodos de entidades del dominio
+- **Boton Flujos** → muestra/oculta nodos de flujos de negocio
+- **Filtro por entidad** → resalta solo HUs que involucran esa entidad
+- **Colores:** rojo (analyzed), cyan (refined), verde (completed)
+- **Bordes:** rojo (depends_on), verde (impacts), gris (related_to)
+
+Abrir en navegador: [http://localhost:9751](http://localhost:9751)
+
 ---
 
 ## Tools disponibles (15)
@@ -144,7 +160,7 @@ docker build --network=host -t mcp-hu-segurosbolivar:latest .
 
 Usar imagen local:
 ```json
-"args": ["run", "-i", "--rm", "-v", ".:/workspace", "mcp-hu-segurosbolivar:latest"]
+"args": ["run", "-i", "--rm", "-v", ".:/workspace", "-p", "9751:9751", "mcp-hu-segurosbolivar:latest"]
 ```
 
 ---

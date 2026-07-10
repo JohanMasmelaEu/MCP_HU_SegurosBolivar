@@ -18,4 +18,6 @@ VOLUME ["/workspace"]
 ENV PYTHONUNBUFFERED=1
 ENV MCP_WORKSPACE_PATH=/workspace
 
+EXPOSE 9751
+
 ENTRYPOINT ["python", "-m", "src.server"]
