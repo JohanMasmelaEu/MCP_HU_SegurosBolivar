@@ -57,6 +57,7 @@ body::before {
 
 #cy {
   flex: 1; z-index: 1;
+  position: relative;
   background: transparent;
 }
 
@@ -158,7 +159,7 @@ body::before {
 
 /* === TOOLTIP === */
 #tooltip {
-  position: absolute; z-index: 100;
+  position: fixed; z-index: 9999;
   padding: 12px 16px; border-radius: 14px;
   background: rgba(44,44,46,0.92);
   backdrop-filter: blur(30px) saturate(1.6);
@@ -314,7 +315,7 @@ async function init() {
   // Global mouse tracker for tooltip position (works even outside cy nodes)
   document.addEventListener('mousemove', function(e) {
     tooltip.style.left = (e.clientX + 16) + 'px';
-    tooltip.style.top = (e.clientY + 16) + 'px';
+    tooltip.style.top = (e.clientY + 14) + 'px';
   });
 
   // Safety: hide tooltip when mouse leaves the graph area
@@ -356,12 +357,16 @@ function layoutCfg(name) {
 function renderGraph() {
   var container = document.getElementById('cy');
 
-  // Fade out current graph
-  container.style.transition = 'opacity 0.3s ease';
+  // Fade out, rebuild, fade in
+  container.style.transition = 'opacity 0.25s ease';
   container.style.opacity = '0';
 
   setTimeout(function(){
     if (cy) cy.destroy();
+
+    // Remove transition during build to avoid interference
+    container.style.transition = 'none';
+
     cy = cytoscape({
       container: container,
       elements: getFiltered(),
@@ -389,7 +394,7 @@ function renderGraph() {
           var s=e.data('status');
           return s==='completed'?'#30d158':s==='refined'?'#0a84ff':'#ff9f0a';
         },
-        'overlay-opacity':0,
+        'overlay-opacity':0, 'overlay-padding':6,
         'transition-property':'shadow-blur,shadow-opacity,width,height,border-width',
         'transition-duration':'0.3s','transition-timing-function':'ease-out',
       }},
@@ -403,7 +408,7 @@ function renderGraph() {
         'border-width':1,'border-color':'rgba(100,210,255,0.4)',
         'width':12,'height':12,'shape':'diamond',
         'shadow-blur':8,'shadow-opacity':0.4,'shadow-color':'#64d2ff',
-        'overlay-opacity':0,
+        'overlay-opacity':0, 'overlay-padding':4,
       }},
       // Flow nodes
       { selector: 'node[type="flow"]', style: {
@@ -415,7 +420,7 @@ function renderGraph() {
         'border-width':1,'border-color':'rgba(191,90,242,0.4)',
         'width':14,'height':14,'shape':'round-rectangle',
         'shadow-blur':8,'shadow-opacity':0.3,'shadow-color':'#bf5af2',
-        'overlay-opacity':0,
+        'overlay-opacity':0, 'overlay-padding':4,
       }},
       // Edges — neural pathways
       { selector: 'edge[relation="depends_on"]', style: {
@@ -457,53 +462,34 @@ function renderGraph() {
   });
 
   // Fade in new graph
-  setTimeout(function(){ container.style.opacity = '1'; }, 50);
+  setTimeout(function(){
+    container.style.transition = 'opacity 0.4s ease';
+    container.style.opacity = '1';
+  }, 80);
 
   // Neural pulse effect
   startNeuralPulse();
 
-  // --- TOOLTIP for ALL node types ---
+  // --- TOOLTIP ---
   cy.on('mouseover', 'node', function(evt){
-    clearTimeout(window._hoverTimeout);
-    var node = evt.target;
-    var d = node.data();
+    clearTimeout(window._ttHide);
+    var d = evt.target.data();
     var html = '';
-
     if (d.type === 'story') {
-      html = '<div class="tt-id">' + d.id + '</div>'
-        + '<div class="tt-title">' + d.title + '</div>'
-        + '<div class="tt-desc">Historia de usuario con ' + (d.entities||[]).length + ' entidades y ' + (d.flows||[]).length + ' flujos asociados.</div>'
-        + '<div class="tt-meta"><span>' + d.gaps + ' gaps</span><span>' + d.questions + ' preguntas</span><span>' + (d.complexity||[]).join(', ') + '</span></div>';
-      node.animate({style:{'width':58,'height':58,'shadow-blur':36}},{duration:200});
+      html = '<div class="tt-id">' + d.id + '</div><div class="tt-title">' + d.title + '</div><div class="tt-desc">Historia de usuario con ' + (d.entities||[]).length + ' entidades y ' + (d.flows||[]).length + ' flujos.</div><div class="tt-meta"><span>' + d.gaps + ' gaps</span><span>' + d.questions + ' preguntas</span></div>';
     } else if (d.type === 'entity') {
-      var appearsIn = d.appears_in || [];
-      html = '<div class="tt-id">Entidad</div>'
-        + '<div class="tt-title">' + d.label + '</div>'
-        + '<div class="tt-desc">Objeto del dominio detectado en ' + appearsIn.length + ' historia(s): ' + appearsIn.join(', ') + '.</div>';
-      node.animate({style:{'width':18,'height':18,'shadow-blur':14}},{duration:200});
+      html = '<div class="tt-id">Entidad</div><div class="tt-title">' + d.label + '</div><div class="tt-desc">Aparece en ' + (d.appears_in||[]).length + ' HU(s): ' + (d.appears_in||[]).join(', ') + '</div>';
     } else if (d.type === 'flow') {
-      var stories = d.stories || [];
-      html = '<div class="tt-id">Flujo &middot; ' + (d.status||'incomplete') + '</div>'
-        + '<div class="tt-title">' + d.label + '</div>'
-        + '<div class="tt-desc">Flujo de negocio que involucra ' + stories.length + ' HU(s): ' + stories.join(', ') + '.</div>';
-      node.animate({style:{'width':20,'height':20,'shadow-blur':14}},{duration:200});
+      html = '<div class="tt-id">Flujo \u00b7 ' + (d.status||'') + '</div><div class="tt-title">' + d.label + '</div><div class="tt-desc">Involucra ' + (d.stories||[]).length + ' HU(s): ' + (d.stories||[]).join(', ') + '</div>';
     }
-
-    tooltip.innerHTML = html;
-    tooltip.classList.add('visible');
+    if (html) {
+      tooltip.innerHTML = html;
+      tooltip.classList.add('visible');
+    }
   });
 
-  cy.on('mouseout', 'node', function(evt){
-    var node = evt.target;
-    var d = node.data();
-    window._hoverTimeout = setTimeout(function(){ tooltip.classList.remove('visible'); }, 100);
-    if (d.type === 'story') {
-      node.animate({style:{'width':50,'height':50,'shadow-blur':24}},{duration:200});
-    } else if (d.type === 'entity') {
-      node.animate({style:{'width':12,'height':12,'shadow-blur':8}},{duration:200});
-    } else if (d.type === 'flow') {
-      node.animate({style:{'width':14,'height':14,'shadow-blur':8}},{duration:200});
-    }
+  cy.on('mouseout', 'node', function(){
+    window._ttHide = setTimeout(function(){ tooltip.classList.remove('visible'); }, 120);
   });
 
   // Click story for detail panel
