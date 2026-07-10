@@ -8,77 +8,172 @@
 <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
 <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Inter", sans-serif;
   display: flex; height: 100vh;
-  background: #0d1117; color: #e6edf3;
+  background: #080b12;
+  color: #e6edf3;
   overflow: hidden;
 }
-#cy { flex: 1; }
+
+/* Ambient background glow */
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(88,166,255,0.04) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(214,168,255,0.03) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 50%, rgba(247,129,102,0.02) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#cy { flex: 1; z-index: 1; }
+
+/* === LIQUID GLASS MIXIN === */
+.glass {
+  background: rgba(13, 17, 23, 0.6);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4),
+              inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+/* === PANEL === */
 #panel {
-  width: 360px; background: #161b22;
-  border-left: 1px solid #30363d;
-  overflow-y: auto; padding: 20px;
-  display: none; flex-direction: column; gap: 12px;
+  width: 380px;
+  background: rgba(13, 17, 23, 0.85);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  border-left: 1px solid rgba(255,255,255,0.06);
+  overflow-y: auto; padding: 24px;
+  display: none; flex-direction: column; gap: 14px;
+  z-index: 10;
 }
 #panel.active { display: flex; }
 #panel h2 { color: #58a6ff; font-size: 15px; font-weight: 600; }
-#panel h3 { color: #8b949e; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 8px; }
-#panel p { font-size: 13px; line-height: 1.6; color: #c9d1d9; }
+#panel h3 {
+  color: #8b949e; font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.8px; margin-top: 10px; font-weight: 500;
+}
+#panel p { font-size: 13px; line-height: 1.7; color: #c9d1d9; }
 #panel ul { padding-left: 16px; font-size: 12px; color: #c9d1d9; }
-#panel li { margin: 3px 0; }
+#panel li { margin: 4px 0; }
+
+/* === TAGS === */
 .tag {
-  display: inline-block; padding: 3px 8px; border-radius: 12px;
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
   font-size: 10px; font-weight: 500; margin: 2px 3px 2px 0;
+  backdrop-filter: blur(8px);
 }
-.tag-entity { background: #1f3a5f; color: #58a6ff; border: 1px solid #264d7a; }
-.tag-flow { background: #2d1f3a; color: #d2a8ff; border: 1px solid #4a2d6a; }
-.tag-complexity { background: #3a2f1f; color: #f0c674; border: 1px solid #5a4520; }
-.tag-expert { background: #1f3a2d; color: #7ee787; border: 1px solid #2a5a3d; }
+.tag-entity { background: rgba(88,166,255,0.12); color: #79c0ff; border: 1px solid rgba(88,166,255,0.2); }
+.tag-flow { background: rgba(214,168,255,0.12); color: #d2a8ff; border: 1px solid rgba(214,168,255,0.2); }
+.tag-complexity { background: rgba(240,198,116,0.12); color: #f0c674; border: 1px solid rgba(240,198,116,0.2); }
+.tag-expert { background: rgba(126,231,135,0.12); color: #7ee787; border: 1px solid rgba(126,231,135,0.2); }
+
 .status-badge {
-  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  display: inline-block; padding: 4px 12px; border-radius: 20px;
   font-size: 10px; font-weight: 600; text-transform: uppercase;
+  backdrop-filter: blur(8px);
 }
-.status-analyzed { background: #3a2f1f; color: #f0c674; }
-.status-refined { background: #1f3a5f; color: #58a6ff; }
-.status-completed { background: #1f3a2d; color: #7ee787; }
+.status-analyzed { background: rgba(240,198,116,0.15); color: #f0c674; border: 1px solid rgba(240,198,116,0.25); }
+.status-refined { background: rgba(88,166,255,0.15); color: #58a6ff; border: 1px solid rgba(88,166,255,0.25); }
+.status-completed { background: rgba(126,231,135,0.15); color: #7ee787; border: 1px solid rgba(126,231,135,0.25); }
+
+/* === TOOLBAR === */
 #toolbar {
-  position: absolute; top: 16px; left: 16px; z-index: 10;
-  display: flex; gap: 8px; align-items: center;
+  position: absolute; top: 16px; left: 16px; z-index: 20;
+  display: flex; gap: 6px; align-items: center;
+  padding: 8px 12px; border-radius: 12px;
+  background: rgba(13,17,23,0.7);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
 #toolbar button {
-  background: #21262d; border: 1px solid #30363d; color: #c9d1d9;
-  padding: 7px 14px; border-radius: 6px; cursor: pointer;
-  font-size: 12px; font-weight: 500; transition: all 0.15s;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  color: #8b949e; padding: 6px 12px; border-radius: 8px;
+  cursor: pointer; font-size: 11px; font-weight: 500;
+  transition: all 0.2s ease;
 }
-#toolbar button:hover { background: #30363d; border-color: #58a6ff; color: #58a6ff; }
-#toolbar button.active { background: #1f3a5f; border-color: #58a6ff; color: #58a6ff; }
+#toolbar button:hover {
+  background: rgba(88,166,255,0.1); border-color: rgba(88,166,255,0.3);
+  color: #58a6ff; transform: translateY(-1px);
+}
+#toolbar button.active {
+  background: rgba(88,166,255,0.15); border-color: rgba(88,166,255,0.4);
+  color: #58a6ff; box-shadow: 0 0 12px rgba(88,166,255,0.15);
+}
 #toolbar select {
-  background: #21262d; color: #c9d1d9; border: 1px solid #30363d;
-  padding: 7px 10px; border-radius: 6px; font-size: 12px;
+  background: rgba(255,255,255,0.04); color: #8b949e;
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 6px 10px; border-radius: 8px; font-size: 11px;
 }
+
+/* === TOOLTIP === */
+#tooltip {
+  position: absolute; z-index: 100;
+  padding: 10px 14px; border-radius: 10px;
+  background: rgba(13,17,23,0.9);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+  pointer-events: none;
+  opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: translateY(4px);
+  max-width: 280px;
+}
+#tooltip.visible { opacity: 1; transform: translateY(0); }
+#tooltip .tt-id { font-size: 10px; color: #8b949e; font-weight: 500; letter-spacing: 0.5px; }
+#tooltip .tt-title { font-size: 13px; color: #e6edf3; font-weight: 600; margin-top: 3px; }
+#tooltip .tt-meta { font-size: 10px; color: #8b949e; margin-top: 6px; display: flex; gap: 10px; }
+#tooltip .tt-meta span { display: flex; align-items: center; gap: 3px; }
+
+/* === LEGEND === */
 #legend {
-  position: absolute; bottom: 16px; left: 16px;
-  background: rgba(22,27,34,0.95); border: 1px solid #30363d;
-  padding: 14px 18px; border-radius: 8px; font-size: 11px;
+  position: absolute; bottom: 16px; left: 16px; z-index: 20;
+  padding: 16px 20px; border-radius: 12px; font-size: 11px;
+  background: rgba(13,17,23,0.7);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
-#legend .row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+#legend .row { display: flex; align-items: center; gap: 8px; margin: 5px 0; color: #8b949e; }
 #legend .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-#legend .dot-diamond { width: 10px; height: 10px; transform: rotate(45deg); flex-shrink: 0; }
-#legend .line { width: 20px; height: 2px; flex-shrink: 0; border-radius: 1px; }
+#legend .dot-diamond { width: 8px; height: 8px; transform: rotate(45deg); flex-shrink: 0; border-radius: 1px; }
+#legend .line { width: 18px; height: 2px; flex-shrink: 0; border-radius: 1px; }
+
+/* === HEADER === */
 #header {
-  position: absolute; top: 16px; right: 16px; z-index: 10;
-  display: flex; align-items: center; gap: 10px;
+  position: absolute; top: 16px; right: 16px; z-index: 20;
+  padding: 8px 16px; border-radius: 10px;
+  background: rgba(13,17,23,0.7);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.08);
 }
-#header .logo { font-size: 13px; font-weight: 600; color: #8b949e; }
+#header .logo { font-size: 12px; font-weight: 600; color: #58a6ff; letter-spacing: 0.3px; }
+
+/* Scrollbar */
+#panel::-webkit-scrollbar { width: 6px; }
+#panel::-webkit-scrollbar-track { background: transparent; }
+#panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 </style>
 </head>
 <body>
 <div id="toolbar">
   <button onclick="setLayout('dagre')" id="btn-dagre" class="active">Jerarquico</button>
   <button onclick="setLayout('concentric')" id="btn-concentric">Concentrico</button>
-  <button onclick="toggleEntities()" id="btn-entities">Entidades</button>
+  <button onclick="toggleEntities()" id="btn-entities" class="active">Entidades</button>
   <button onclick="toggleFlows()" id="btn-flows">Flujos</button>
   <button onclick="resetView()">Reset</button>
   <select id="filterEntity" onchange="filterByEntity(this.value)">
@@ -89,6 +184,11 @@ body {
   <span class="logo">Seguros Bolivar</span>
 </div>
 <div id="cy"></div>
+<div id="tooltip">
+  <div class="tt-id"></div>
+  <div class="tt-title"></div>
+  <div class="tt-meta"></div>
+</div>
 <div id="panel">
   <h2 id="panel-title"></h2>
   <div id="panel-content"></div>
@@ -101,7 +201,7 @@ body {
   <div class="row"><span class="dot" style="background:#d2a8ff"></span> Flujo</div>
   <div class="row"><span class="line" style="background:#f78166"></span> depends_on</div>
   <div class="row"><span class="line" style="background:#7ee787"></span> impacts</div>
-  <div class="row"><span class="line" style="background:#30363d"></span> has_entity / in_flow</div>
+  <div class="row"><span class="line" style="background:rgba(255,255,255,0.15)"></span> has_entity / in_flow</div>
 </div>
 <script>
 let cy;
@@ -109,6 +209,7 @@ let allData = { nodes: [], edges: [] };
 let showEntities = true;
 let showFlows = false;
 let currentLayout = 'dagre';
+const tooltip = document.getElementById('tooltip');
 
 async function init() {
   const res = await fetch('/api/graph');
@@ -142,15 +243,11 @@ function getFilteredElements() {
 function getLayoutConfig(name) {
   if (name === 'dagre') {
     return {
-      name: 'dagre',
-      rankDir: 'TB',
-      nodeSep: 80,
-      edgeSep: 40,
-      rankSep: 120,
-      animate: true,
-      animationDuration: 500,
-      fit: true,
-      padding: 60,
+      name: 'dagre', rankDir: 'TB',
+      nodeSep: 90, edgeSep: 50, rankSep: 140,
+      animate: true, animationDuration: 600,
+      animationEasing: 'ease-in-out-cubic',
+      fit: true, padding: 70,
     };
   }
   if (name === 'concentric') {
@@ -162,19 +259,16 @@ function getLayoutConfig(name) {
         return 1;
       },
       levelWidth: function() { return 1; },
-      minNodeSpacing: 80,
-      animate: true,
-      animationDuration: 500,
-      fit: true,
-      padding: 60,
+      minNodeSpacing: 90,
+      animate: true, animationDuration: 600,
+      fit: true, padding: 70,
     };
   }
-  return { name: 'dagre', rankDir: 'TB', nodeSep: 80, rankSep: 120, padding: 60 };
+  return { name: 'dagre', rankDir: 'TB', nodeSep: 90, rankSep: 140, padding: 70 };
 }
 
 function renderGraph() {
   const elements = getFilteredElements();
-
   if (cy) { cy.destroy(); }
 
   cy = cytoscape({
@@ -185,157 +279,132 @@ function renderGraph() {
         selector: 'node[type="story"]',
         style: {
           'label': 'data(label)',
-          'text-valign': 'bottom',
-          'text-halign': 'center',
-          'text-margin-y': 8,
-          'font-size': '11px',
-          'font-weight': '600',
+          'text-valign': 'bottom', 'text-halign': 'center',
+          'text-margin-y': 10,
+          'font-size': '11px', 'font-weight': '600',
           'color': '#e6edf3',
-          'text-outline-color': '#0d1117',
-          'text-outline-width': 2,
+          'text-outline-color': '#080b12', 'text-outline-width': 2,
           'background-color': function(ele) {
             var s = ele.data('status');
             if (s === 'completed') return '#7ee787';
             if (s === 'refined') return '#58a6ff';
             return '#f78166';
           },
-          'width': 44,
-          'height': 44,
-          'border-width': 3,
+          'background-opacity': 0.9,
+          'width': 46, 'height': 46,
+          'border-width': 2.5,
+          'border-opacity': 0.7,
           'border-color': function(ele) {
             var s = ele.data('status');
             if (s === 'completed') return '#2ea043';
             if (s === 'refined') return '#1f6feb';
             return '#da3633';
           },
-          'shadow-blur': 12,
-          'shadow-color': function(ele) {
-            var s = ele.data('status');
-            if (s === 'completed') return '#7ee787';
-            if (s === 'refined') return '#58a6ff';
-            return '#f78166';
-          },
-          'shadow-opacity': 0.4,
+          'overlay-opacity': 0,
+          'transition-property': 'border-width, border-color, width, height',
+          'transition-duration': '0.2s',
         }
       },
       {
         selector: 'node[type="entity"]',
         style: {
           'label': 'data(label)',
-          'font-size': '9px',
-          'color': '#58a6ff',
-          'text-outline-color': '#0d1117',
-          'text-outline-width': 1,
-          'text-valign': 'bottom',
-          'text-margin-y': 6,
-          'background-color': '#1f3a5f',
-          'border-width': 1.5,
-          'border-color': '#58a6ff',
-          'width': 16,
-          'height': 16,
-          'shape': 'diamond',
+          'font-size': '9px', 'color': '#79c0ff',
+          'text-outline-color': '#080b12', 'text-outline-width': 1,
+          'text-valign': 'bottom', 'text-margin-y': 6,
+          'background-color': 'rgba(88,166,255,0.25)',
+          'border-width': 1, 'border-color': 'rgba(88,166,255,0.5)',
+          'width': 14, 'height': 14, 'shape': 'diamond',
+          'overlay-opacity': 0,
         }
       },
       {
         selector: 'node[type="flow"]',
         style: {
           'label': 'data(label)',
-          'font-size': '9px',
-          'color': '#d2a8ff',
-          'text-outline-color': '#0d1117',
-          'text-outline-width': 1,
-          'text-valign': 'bottom',
-          'text-margin-y': 6,
-          'background-color': '#2d1f3a',
-          'border-width': 1.5,
-          'border-color': '#d2a8ff',
-          'width': 18,
-          'height': 18,
-          'shape': 'round-rectangle',
+          'font-size': '9px', 'color': '#d2a8ff',
+          'text-outline-color': '#080b12', 'text-outline-width': 1,
+          'text-valign': 'bottom', 'text-margin-y': 6,
+          'background-color': 'rgba(214,168,255,0.2)',
+          'border-width': 1, 'border-color': 'rgba(214,168,255,0.5)',
+          'width': 16, 'height': 16, 'shape': 'round-rectangle',
+          'overlay-opacity': 0,
         }
       },
       {
         selector: 'edge[relation="depends_on"]',
         style: {
-          'line-color': '#f78166',
+          'line-color': 'rgba(247,129,102,0.7)',
           'target-arrow-color': '#f78166',
-          'target-arrow-shape': 'triangle',
-          'arrow-scale': 1.2,
+          'target-arrow-shape': 'triangle', 'arrow-scale': 1.1,
           'curve-style': 'unbundled-bezier',
-          'control-point-distances': [40],
-          'control-point-weights': [0.5],
-          'width': 2.5,
-          'opacity': 0.85,
+          'control-point-distances': [35], 'control-point-weights': [0.5],
+          'width': 2, 'opacity': 0.8,
         }
       },
       {
         selector: 'edge[relation="impacts"]',
         style: {
-          'line-color': '#7ee787',
+          'line-color': 'rgba(126,231,135,0.7)',
           'target-arrow-color': '#7ee787',
-          'target-arrow-shape': 'triangle',
-          'arrow-scale': 1.2,
+          'target-arrow-shape': 'triangle', 'arrow-scale': 1.1,
           'curve-style': 'unbundled-bezier',
-          'control-point-distances': [-40],
-          'control-point-weights': [0.5],
-          'width': 2.5,
-          'opacity': 0.85,
+          'control-point-distances': [-35], 'control-point-weights': [0.5],
+          'width': 2, 'opacity': 0.8,
         }
       },
       {
         selector: 'edge[relation="related_to"]',
         style: {
-          'line-color': '#484f58',
-          'curve-style': 'bezier',
-          'width': 1.5,
-          'line-style': 'dashed',
-          'opacity': 0.5,
+          'line-color': 'rgba(255,255,255,0.12)',
+          'curve-style': 'bezier', 'width': 1, 'line-style': 'dashed', 'opacity': 0.4,
         }
       },
       {
         selector: 'edge[relation="has_entity"]',
         style: {
-          'line-color': '#264d7a',
-          'curve-style': 'bezier',
-          'width': 1,
-          'opacity': 0.4,
-          'line-style': 'dotted',
+          'line-color': 'rgba(88,166,255,0.2)',
+          'curve-style': 'bezier', 'width': 0.8, 'opacity': 0.35, 'line-style': 'dotted',
         }
       },
       {
         selector: 'edge[relation="in_flow"]',
         style: {
-          'line-color': '#4a2d6a',
-          'curve-style': 'bezier',
-          'width': 1,
-          'opacity': 0.4,
-          'line-style': 'dotted',
+          'line-color': 'rgba(214,168,255,0.2)',
+          'curve-style': 'bezier', 'width': 0.8, 'opacity': 0.35, 'line-style': 'dotted',
         }
       },
-      {
-        selector: ':selected',
-        style: { 'border-width': 4, 'border-color': '#ffffff' }
-      },
-      {
-        selector: '.highlighted',
-        style: { 'border-width': 4, 'border-color': '#ffffff', 'opacity': 1, 'z-index': 999 }
-      },
-      {
-        selector: '.faded',
-        style: { 'opacity': 0.12 }
-      }
+      { selector: '.highlighted', style: { 'border-width': 4, 'border-color': '#fff', 'opacity': 1, 'z-index': 999 } },
+      { selector: '.faded', style: { 'opacity': 0.08 } },
     ],
     layout: getLayoutConfig(currentLayout),
-    minZoom: 0.3,
-    maxZoom: 3,
-    wheelSensitivity: 0.3,
+    minZoom: 0.3, maxZoom: 3, wheelSensitivity: 0.25,
   });
 
+  // Tooltip on hover
+  cy.on('mouseover', 'node[type="story"]', function(evt) {
+    var node = evt.target;
+    var d = node.data();
+    tooltip.querySelector('.tt-id').textContent = d.id;
+    tooltip.querySelector('.tt-title').textContent = d.title;
+    tooltip.querySelector('.tt-meta').innerHTML =
+      '<span>' + d.gaps + ' gaps</span><span>' + d.questions + ' preguntas</span><span>' + (d.entities||[]).length + ' entidades</span>';
+    tooltip.classList.add('visible');
+  });
+  cy.on('mouseout', 'node[type="story"]', function() {
+    tooltip.classList.remove('visible');
+  });
+  cy.on('mousemove', function(evt) {
+    var pos = evt.originalEvent || evt;
+    tooltip.style.left = (pos.clientX || pos.pageX) + 14 + 'px';
+    tooltip.style.top = (pos.clientY || pos.pageY) + 14 + 'px';
+  });
+
+  // Click story
   cy.on('tap', 'node[type="story"]', async function(evt) {
     highlightNode(evt.target);
     await showStoryDetail(evt.target.data('id'));
   });
-
   cy.on('tap', function(evt) {
     if (evt.target === cy) { resetHighlight(); hidePanel(); }
   });
@@ -346,14 +415,8 @@ function highlightNode(node) {
   node.removeClass('faded').addClass('highlighted');
   node.neighborhood().removeClass('faded');
 }
-
-function resetHighlight() {
-  cy.elements().removeClass('faded').removeClass('highlighted');
-}
-
-function hidePanel() {
-  document.getElementById('panel').classList.remove('active');
-}
+function resetHighlight() { cy.elements().removeClass('faded').removeClass('highlighted'); }
+function hidePanel() { document.getElementById('panel').classList.remove('active'); }
 
 async function showStoryDetail(id) {
   const res = await fetch('/api/story/' + id);
@@ -361,49 +424,37 @@ async function showStoryDetail(id) {
   if (story.error) return;
 
   const panel = document.getElementById('panel');
-  const title = document.getElementById('panel-title');
-  const content = document.getElementById('panel-content');
-
-  title.textContent = story.id + ' \u2014 ' + story.title;
+  document.getElementById('panel-title').textContent = story.id + ' \u2014 ' + story.title;
 
   let html = '<span class="status-badge status-' + story.status + '">' + story.status + '</span>';
   html += '<h3>Narrativa</h3>';
   html += '<p><strong>Como</strong> ' + story.narrative.as_a + '<br>';
   html += '<strong>Quiero</strong> ' + story.narrative.i_want + '<br>';
   html += '<strong>Para</strong> ' + story.narrative.so_that + '</p>';
-
   html += '<h3>Entidades</h3><div>';
   story.entities_detected.forEach(function(e) { html += '<span class="tag tag-entity">' + e + '</span>'; });
-  html += '</div>';
-
-  html += '<h3>Flujos</h3><div>';
+  html += '</div><h3>Flujos</h3><div>';
   story.flows_detected.forEach(function(f) { html += '<span class="tag tag-flow">' + f + '</span>'; });
   html += '</div>';
-
   if (story.complexity_tags && story.complexity_tags.length) {
     html += '<h3>Complejidad</h3><div>';
     story.complexity_tags.forEach(function(t) { html += '<span class="tag tag-complexity">' + t + '</span>'; });
     html += '</div>';
   }
-
   if (story.dependencies && story.dependencies.length) {
     html += '<h3>Dependencias</h3><ul>';
     story.dependencies.forEach(function(d) { html += '<li>' + d + '</li>'; });
     html += '</ul>';
   }
-
   if (story.expert_analysis && story.expert_analysis.length) {
     html += '<h3>Expertos</h3><ul>';
     story.expert_analysis.forEach(function(e) {
-      html += '<li><span class="tag tag-expert">' + e.expert + '</span> ';
-      html += e.gaps.length + ' gaps, ' + e.questions.length + ' preguntas</li>';
+      html += '<li><span class="tag tag-expert">' + e.expert + '</span> ' + e.gaps.length + ' gaps, ' + e.questions.length + ' preguntas</li>';
     });
     html += '</ul>';
   }
-
-  html += '<h3 style="margin-top:12px">Gaps: ' + story.total_gaps + ' | Preguntas: ' + story.total_questions + '</h3>';
-
-  content.innerHTML = html;
+  html += '<h3 style="margin-top:14px;color:#e6edf3">Gaps: ' + story.total_gaps + ' &middot; Preguntas: ' + story.total_questions + '</h3>';
+  document.getElementById('panel-content').innerHTML = html;
   panel.classList.add('active');
 }
 
@@ -412,34 +463,27 @@ function setLayout(name) {
   document.querySelectorAll('#toolbar button').forEach(function(b) { b.classList.remove('active'); });
   var btn = document.getElementById('btn-' + name);
   if (btn) btn.classList.add('active');
+  // Keep entity/flow toggles
+  document.getElementById('btn-entities').classList.toggle('active', showEntities);
+  document.getElementById('btn-flows').classList.toggle('active', showFlows);
   cy.layout(getLayoutConfig(name)).run();
 }
-
 function toggleEntities() {
   showEntities = !showEntities;
-  var btn = document.getElementById('btn-entities');
-  btn.classList.toggle('active', showEntities);
+  document.getElementById('btn-entities').classList.toggle('active', showEntities);
   renderGraph();
 }
-
 function toggleFlows() {
   showFlows = !showFlows;
-  var btn = document.getElementById('btn-flows');
-  btn.classList.toggle('active', showFlows);
+  document.getElementById('btn-flows').classList.toggle('active', showFlows);
   renderGraph();
 }
-
 function filterByEntity(entityId) {
   if (!entityId) { resetHighlight(); return; }
   var node = cy.getElementById(entityId);
   if (node.length) { highlightNode(node); }
 }
-
-function resetView() {
-  resetHighlight();
-  hidePanel();
-  cy.fit(undefined, 60);
-}
+function resetView() { resetHighlight(); hidePanel(); cy.fit(undefined, 70); }
 
 init();
 </script>
