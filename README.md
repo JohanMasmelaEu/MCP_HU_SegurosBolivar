@@ -152,15 +152,24 @@ Abrir en navegador: [http://localhost:9751](http://localhost:9751)
 
 ## Build local (solo contribuidores)
 
+> **Importante:** El build requiere pasar los argumentos de proxy corporativo para que
+> `pip install` pueda resolver PyPI desde la subred de Seguros Bolivar. Sin estos flags,
+> el paso `RUN pip install --no-cache-dir -r requirements.txt` falla con
+> `NewConnectionError: Failed to establish a new connection: [Errno 111] Connection refused`.
+> Esto ocurre porque Docker Desktop en Windows (WSL2) no tiene salida directa a internet
+> sin el proxy corporativo.
+
 ```bash
 git clone https://github.com/JohanMasmelaEu/MCP_HU_SegurosBolivar.git
 cd MCP_HU_SegurosBolivar
-docker build --network=host -t mcp-hu-segurosbolivar:latest .
+docker build --build-arg HTTP_PROXY=%HTTP_PROXY% --build-arg HTTPS_PROXY=%HTTPS_PROXY% -t ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest .
 ```
 
-Usar imagen local:
+> En PowerShell usar `$env:HTTP_PROXY` y `$env:HTTPS_PROXY` en lugar de `%...%`.
+
+Usar imagen local en la config de Kiro:
 ```json
-"args": ["run", "-i", "--rm", "-v", ".:/workspace", "-p", "9751:9751", "mcp-hu-segurosbolivar:latest"]
+"args": ["run", "-i", "--rm", "-v", ".:/workspace", "-p", "9751:9751", "ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest"]
 ```
 
 ---

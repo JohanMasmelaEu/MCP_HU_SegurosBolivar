@@ -7,6 +7,7 @@ Transport: stdio (Docker).
 
 import json
 import logging
+from typing import Union
 
 from mcp.server.fastmcp import FastMCP
 
@@ -37,6 +38,29 @@ from src.tools.estimation_tools import (
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("mcp_hu")
 
+
+def _ensure_dict(value: Union[str, dict]) -> dict:
+    """Normaliza un parametro JSON que puede llegar como str o dict.
+
+    Algunos clientes MCP (Kiro, Claude Desktop) deserializan automaticamente
+    los parametros JSON antes de pasarlos al handler, mientras que otros
+    los envian como string crudo. Esta funcion maneja ambos casos.
+
+    Args:
+        value: Valor que puede ser un JSON string o un dict ya parseado.
+
+    Returns:
+        Diccionario parseado listo para usar.
+
+    Raises:
+        ValueError: Si el valor no es ni str ni dict valido.
+    """
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        return json.loads(value)
+    raise ValueError(f"Se esperaba str o dict, se recibio: {type(value).__name__}")
+
 mcp = FastMCP(
     name="MCP_HU_SegurosBolivar",
     version="1.0.0",
@@ -58,7 +82,7 @@ async def init_project(config: str) -> str:
     Args:
         config: JSON con project_name, domain, stakeholders y description.
     """
-    config_dict = json.loads(config)
+    config_dict = _ensure_dict(config)
     result = handle_init_project(config_dict)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
@@ -112,7 +136,7 @@ async def add_story(story_json: str) -> str:
     Args:
         story_json: JSON completo de la HU (output de analyze_story, posiblemente editado).
     """
-    story_dict = json.loads(story_json)
+    story_dict = _ensure_dict(story_json)
     result = handle_add_story(story_dict)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
@@ -196,7 +220,7 @@ async def register_completion(completion_json: str) -> str:
     Args:
         completion_json: JSON con story_id, actual_hours, y notes opcionales.
     """
-    data = json.loads(completion_json)
+    data = _ensure_dict(completion_json)
     result = handle_register_completion(data)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
