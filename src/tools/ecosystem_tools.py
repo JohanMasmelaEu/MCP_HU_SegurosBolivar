@@ -3,6 +3,7 @@
 import logging
 
 from src.engine.ecosystem import get_ecosystem
+from src.engine.ecosystem_manager import get_ecosystem_manager
 from src.engine.memory import get_memory
 from src.models.ecosystem import AppRegistration, ContractDefinition
 
@@ -12,12 +13,58 @@ logger = logging.getLogger("mcp_hu.tools.ecosystem")
 def handle_init_ecosystem(config_dict: dict) -> dict:
     """Inicializa un nuevo ecosistema de apps.
 
+    Usa el EcosystemManager para crear ecosistemas aislados. Cada ecosistema
+    tiene su propio .hu-ecosystem/ independiente.
+
     Args:
         config_dict: Dict con ecosystem_id, name, description.
 
     Returns:
         Status de la operacion.
     """
+    ecosystem_id = config_dict.get("ecosystem_id")
+    name = config_dict.get("name")
+    description = config_dict.get("description", "")
+
+    if not ecosystem_id or not name:
+        return {
+            "status": "error",
+            "message": "Se requiere 'ecosystem_id' y 'name' en la configuracion.",
+        }
+
+    manager = get_ecosystem_manager()
+
+    if manager is not None:
+        # Nuevo flujo: usar EcosystemManager para multi-ecosistema
+        try:
+            engine = manager.create_ecosystem(ecosystem_id, name, description)
+            return {
+                "status": "success",
+                "ecosystem_id": ecosystem_id,
+                "name": name,
+                "path": str(engine.ecosystem_path),
+                "message": (
+                    f"Ecosistema '{name}' inicializado y activado. "
+                    f"Registra apps con register_app para comenzar a mapear dependencias."
+                ),
+            }
+        except ValueError as e:
+            # Ecosistema ya existe — ofrecer alternativas
+            return {
+                "status": "error",
+                "message": str(e),
+                "hint": (
+                    "Opciones disponibles:\n"
+                    "- switch_ecosystem: Activar el ecosistema existente.\n"
+                    "- reset_ecosystem: Eliminar y volver a crear.\n"
+                    "- list_ecosystems: Ver todos los ecosistemas disponibles."
+                ),
+            }
+        except Exception as e:
+            logger.exception("Error inicializando ecosistema")
+            return {"status": "error", "message": f"Error: {e}"}
+
+    # Fallback legacy: sin manager
     ecosystem = get_ecosystem()
 
     if ecosystem.is_initialized:
@@ -27,16 +74,6 @@ def handle_init_ecosystem(config_dict: dict) -> dict:
                 "El ecosistema ya esta inicializado. "
                 f"Directorio: {ecosystem.ecosystem_path}"
             ),
-        }
-
-    ecosystem_id = config_dict.get("ecosystem_id")
-    name = config_dict.get("name")
-    description = config_dict.get("description", "")
-
-    if not ecosystem_id or not name:
-        return {
-            "status": "error",
-            "message": "Se requiere 'ecosystem_id' y 'name' en la configuracion.",
         }
 
     try:

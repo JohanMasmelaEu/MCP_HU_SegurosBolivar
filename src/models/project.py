@@ -6,6 +6,34 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+# ─── MULTI-WORKSPACE STATE ───────────────────────────────────────────────────────
+
+
+class ServerState(BaseModel):
+    """Estado global del servidor: workspace y ecosistema activos."""
+
+    active_workspace: Optional[str] = Field(
+        default=None, description="workspace_id activo actualmente"
+    )
+    active_ecosystem: Optional[str] = Field(
+        default=None, description="ecosystem_id activo actualmente"
+    )
+    version: str = Field(default="2.0", description="Version del formato de estado")
+
+
+class WorkspaceInfo(BaseModel):
+    """Metadata resumida de un workspace para listados."""
+
+    workspace_id: str = Field(description="Identificador unico del workspace (slug)")
+    project_name: str = Field(description="Nombre del proyecto")
+    domain: str = Field(default="", description="Dominio de negocio")
+    description: str = Field(default="", description="Descripcion del proyecto")
+    ecosystem_id: Optional[str] = Field(default=None, description="Ecosistema vinculado")
+    app_id: Optional[str] = Field(default=None, description="App ID dentro del ecosistema")
+    story_count: int = Field(default=0, description="Cantidad de HUs")
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+
+
 class ProjectConfig(BaseModel):
     """Configuracion inicial del proyecto."""
 

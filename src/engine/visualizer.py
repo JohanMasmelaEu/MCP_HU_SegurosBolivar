@@ -3,6 +3,7 @@
 Se levanta como thread en background al arrancar el MCP.
 Sirve en localhost:9751 una UI web interactiva para explorar el grafo de HUs.
 Layout jerarquico con entidades en periferia y spacing equidistante.
+Incluye selector de workspaces y ecosistemas.
 """
 
 import json
@@ -12,10 +13,13 @@ from pathlib import Path
 
 import uvicorn
 from starlette.applications import Starlette
+from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 from starlette.routing import Route
 
 from src.engine.memory import get_memory
+from src.engine.workspace_manager import get_workspace_manager
+from src.engine.ecosystem_manager import get_ecosystem_manager
 
 logger = logging.getLogger("mcp_hu.engine.visualizer")
 
@@ -158,11 +162,96 @@ async def route_neighbors(request):
     return JSONResponse(_get_neighbors(story_id))
 
 
+# ─── WORKSPACE & ECOSYSTEM MANAGEMENT API ────────────────────────────────────────
+
+
+async def route_workspaces(request: Request):
+    """API: lista workspaces disponibles y activo."""
+    manager = get_workspace_manager()
+    if not manager:
+        return JSONResponse({"workspaces": [], "active": None})
+
+    workspaces = manager.list_workspaces()
+    return JSONResponse({
+        "workspaces": [w.model_dump(mode="json") for w in workspaces],
+        "active": manager.active_workspace_id,
+    })
+
+
+async def route_switch_workspace(request: Request):
+    """API: cambia el workspace activo.
+
+    POST /api/workspaces/switch con body {"workspace_id": "..."}
+    """
+    manager = get_workspace_manager()
+    if not manager:
+        return JSONResponse({"error": "WorkspaceManager no disponible"}, status_code=500)
+
+    body = await request.json()
+    workspace_id = body.get("workspace_id", "")
+
+    if not workspace_id:
+        return JSONResponse({"error": "workspace_id requerido"}, status_code=400)
+
+    try:
+        manager.switch_workspace(workspace_id)
+        return JSONResponse({"status": "ok", "active": workspace_id})
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+
+
+async def route_ecosystems(request: Request):
+    """API: lista ecosistemas disponibles y activo."""
+    eco_manager = get_ecosystem_manager()
+    ws_manager = get_workspace_manager()
+
+    if not eco_manager:
+        return JSONResponse({"ecosystems": [], "active": None})
+
+    ecosystems = eco_manager.list_ecosystems()
+    active_id = ws_manager.active_ecosystem_id if ws_manager else None
+
+    return JSONResponse({
+        "ecosystems": ecosystems,
+        "active": active_id,
+    })
+
+
+async def route_switch_ecosystem(request: Request):
+    """API: cambia el ecosistema activo.
+
+    POST /api/ecosystems/switch con body {"ecosystem_id": "..."}
+    """
+    eco_manager = get_ecosystem_manager()
+    ws_manager = get_workspace_manager()
+
+    if not eco_manager:
+        return JSONResponse({"error": "EcosystemManager no disponible"}, status_code=500)
+
+    body = await request.json()
+    ecosystem_id = body.get("ecosystem_id", "")
+
+    if not ecosystem_id:
+        return JSONResponse({"error": "ecosystem_id requerido"}, status_code=400)
+
+    try:
+        eco_manager.switch_ecosystem(ecosystem_id)
+        if ws_manager:
+            ws_manager.set_active_ecosystem(ecosystem_id)
+        return JSONResponse({"status": "ok", "active": ecosystem_id})
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+
+
 app = Starlette(routes=[
     Route("/", route_index),
     Route("/api/graph", route_graph),
     Route("/api/story/{story_id}", route_story),
     Route("/api/neighbors/{story_id}", route_neighbors),
+    Route("/api/workspaces", route_workspaces),
+    Route("/api/workspaces/switch", route_switch_workspace, methods=["POST"]),
+    Route("/api/ecosystems", route_ecosystems),
+    Route("/api/ecosystems/switch", route_switch_ecosystem, methods=["POST"]),
 ])
 
 

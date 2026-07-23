@@ -2,6 +2,7 @@
 
 Gestiona .hu-ecosystem/ como directorio central que indexa multiples apps.
 Principio: read-only sobre los .hu-memory/ de otras apps. Solo escribe en .hu-ecosystem/.
+Soporta multiples ecosistemas via path configurable.
 """
 
 import json
@@ -21,7 +22,7 @@ from src.models.ecosystem import (
 
 logger = logging.getLogger("mcp_hu.engine.ecosystem")
 
-ECOSYSTEM_PATH = Path(os.environ.get("MCP_ECOSYSTEM_PATH", os.environ.get("MCP_WORKSPACE_PATH", "/workspace")))
+BASE_PATH = Path(os.environ.get("MCP_ECOSYSTEM_PATH", os.environ.get("MCP_WORKSPACE_PATH", "/workspace")))
 ECOSYSTEM_DIR_NAME = ".hu-ecosystem"
 
 
@@ -30,11 +31,20 @@ class EcosystemEngine:
 
     Lee .hu-memory/ de las apps registradas (read-only) y mantiene
     un indice central en .hu-ecosystem/.
+    Acepta un base_path configurable para soportar multiples ecosistemas.
     """
 
-    def __init__(self) -> None:
-        """Inicializa detectando si ya existe un ecosistema."""
-        self._ecosystem_path = ECOSYSTEM_PATH / ECOSYSTEM_DIR_NAME
+    def __init__(self, base_path: Optional[Path] = None) -> None:
+        """Inicializa detectando si ya existe un ecosistema.
+
+        Args:
+            base_path: Ruta base donde se encuentra o creara .hu-ecosystem/.
+                       Si es None, usa la ruta legacy BASE_PATH/.hu-ecosystem/.
+        """
+        if base_path is not None:
+            self._ecosystem_path = base_path / ECOSYSTEM_DIR_NAME
+        else:
+            self._ecosystem_path = BASE_PATH / ECOSYSTEM_DIR_NAME
         self._registry: Optional[EcosystemRegistry] = None
 
         if self._ecosystem_path.exists():
@@ -492,7 +502,7 @@ class EcosystemEngine:
         """
         memory_path = Path(app.memory_path)
         if not memory_path.is_absolute():
-            memory_path = ECOSYSTEM_PATH / memory_path
+            memory_path = BASE_PATH / memory_path
 
         index_path = memory_path / "index.json"
         if not index_path.exists():
@@ -577,7 +587,7 @@ class EcosystemEngine:
 
             memory_path = Path(app.memory_path)
             if not memory_path.is_absolute():
-                memory_path = ECOSYSTEM_PATH / memory_path
+                memory_path = BASE_PATH / memory_path
 
             index_path = memory_path / "index.json"
             if not index_path.exists():
@@ -643,13 +653,26 @@ class EcosystemEngine:
         return f"Campos divergentes para '{entity_name}': " + " vs ".join(parts)
 
 
-# ─── SINGLETON ───────────────────────────────────────────────────────────────────
+# ─── SINGLETON (LEGACY) ──────────────────────────────────────────────────────────
+# Se mantiene por backward-compatibility pero el EcosystemManager es la interfaz preferida.
 
 _ecosystem_instance: Optional[EcosystemEngine] = None
 
 
 def get_ecosystem() -> EcosystemEngine:
-    """Obtiene la instancia singleton del EcosystemEngine."""
+    """Obtiene la instancia activa del EcosystemEngine.
+
+    Si hay un EcosystemManager inicializado, delega a el.
+    De lo contrario, usa el patron singleton legacy.
+    """
+    from src.engine.ecosystem_manager import get_ecosystem_manager
+
+    manager = get_ecosystem_manager()
+    if manager is not None:
+        active = manager.get_active()
+        if active is not None:
+            return active
+
     global _ecosystem_instance
     if _ecosystem_instance is None:
         _ecosystem_instance = EcosystemEngine()

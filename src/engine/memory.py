@@ -2,6 +2,7 @@
 
 Toda la persistencia es JSON local en el workspace del usuario.
 El grafo se mantiene en memoria (NetworkX) y se sincroniza con graph.json.
+Soporta multiples workspaces via path configurable.
 """
 
 import json
@@ -28,7 +29,7 @@ from src.models.story import StoryAnalysis, StorySummary
 
 logger = logging.getLogger("mcp_hu.engine.memory")
 
-WORKSPACE_PATH = Path(os.environ.get("MCP_WORKSPACE_PATH", "/workspace"))
+BASE_PATH = Path(os.environ.get("MCP_WORKSPACE_PATH", "/workspace"))
 MEMORY_DIR_NAME = ".hu-memory"
 
 
@@ -37,11 +38,20 @@ class MemoryEngine:
 
     Lee y escribe archivos JSON en .hu-memory/ del workspace.
     Mantiene un grafo NetworkX en memoria para consultas rapidas de relaciones.
+    Acepta un base_path configurable para soportar multiples workspaces.
     """
 
-    def __init__(self) -> None:
-        """Inicializa el engine detectando si ya existe memoria en el workspace."""
-        self._memory_path = WORKSPACE_PATH / MEMORY_DIR_NAME
+    def __init__(self, base_path: Optional[Path] = None) -> None:
+        """Inicializa el engine detectando si ya existe memoria.
+
+        Args:
+            base_path: Ruta base donde se encuentra o creara .hu-memory/.
+                       Si es None, usa la ruta legacy BASE_PATH/.hu-memory/.
+        """
+        if base_path is not None:
+            self._memory_path = base_path / MEMORY_DIR_NAME
+        else:
+            self._memory_path = BASE_PATH / MEMORY_DIR_NAME
         self._graph: nx.DiGraph = nx.DiGraph()
         self._index: Optional[ProjectMemory] = None
         self._patterns: Optional[EstimationPatterns] = None
@@ -257,7 +267,7 @@ class MemoryEngine:
         """
         timestamp = datetime.now().strftime("%Y-%m-%d")
         zip_name = f".hu-memory-export-{timestamp}.zip"
-        zip_path = WORKSPACE_PATH / zip_name
+        zip_path = self._memory_path.parent / zip_name
 
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
             for file_path in self._memory_path.rglob("*"):
@@ -282,7 +292,7 @@ class MemoryEngine:
 
         # Backup de memoria actual si existe
         if self._memory_path.exists():
-            backup_path = WORKSPACE_PATH / f".hu-memory-backup-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            backup_path = self._memory_path.parent / f".hu-memory-backup-{datetime.now().strftime('%Y%m%d%H%M%S')}"
             shutil.move(str(self._memory_path), str(backup_path))
             logger.info("Backup creado en %s", backup_path)
 
@@ -402,12 +412,26 @@ class MemoryEngine:
         return [w for w in words if len(w) > 2 and w not in stopwords]
 
 
-# Singleton global para uso en tools
+# ─── SINGLETON (LEGACY) ──────────────────────────────────────────────────────────
+# Se mantiene por backward-compatibility pero el WorkspaceManager es la interfaz preferida.
+
 _memory_instance: Optional[MemoryEngine] = None
 
 
 def get_memory() -> MemoryEngine:
-    """Obtiene la instancia singleton del MemoryEngine."""
+    """Obtiene la instancia activa del MemoryEngine.
+
+    Si hay un WorkspaceManager inicializado, delega a el.
+    De lo contrario, usa el patron singleton legacy.
+    """
+    from src.engine.workspace_manager import get_workspace_manager
+
+    manager = get_workspace_manager()
+    if manager is not None:
+        active = manager.get_active()
+        if active is not None:
+            return active
+
     global _memory_instance
     if _memory_instance is None:
         _memory_instance = MemoryEngine()

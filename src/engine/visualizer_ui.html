@@ -154,7 +154,26 @@ body::before {
   background: rgba(255,255,255,0.04); color: var(--text-secondary);
   border: 1px solid rgba(255,255,255,0.08);
   padding: 7px 10px; border-radius: 10px; font-size: 12px;
-  font-family: inherit;
+  font-family: inherit; cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 160px;
+}
+#toolbar select:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.14);
+}
+#toolbar select:focus {
+  outline: none;
+  border-color: rgba(10,132,255,0.4);
+  box-shadow: 0 0 8px rgba(10,132,255,0.15);
+}
+#toolbar select option {
+  background: #1c1c1e; color: var(--text-primary);
+}
+#toolbar select.selector-active {
+  color: var(--accent-blue);
+  border-color: rgba(10,132,255,0.3);
+  background: rgba(10,132,255,0.08);
 }
 
 /* === TOOLTIP === */
@@ -261,6 +280,16 @@ body::before {
 </head>
 <body>
 <div id="toolbar" class="glass-panel">
+  <span class="toolbar-label">Workspace</span>
+  <select id="selectorWorkspace" onchange="switchWorkspace(this.value)">
+    <option value="">Cargando...</option>
+  </select>
+  <span class="toolbar-divider"></span>
+  <span class="toolbar-label">Ecosistema</span>
+  <select id="selectorEcosystem" onchange="switchEcosystem(this.value)">
+    <option value="">Cargando...</option>
+  </select>
+  <span class="toolbar-divider"></span>
   <span class="toolbar-label">Vista</span>
   <div class="toggle-group">
     <button onclick="setLayout('dagre')" id="btn-dagre" class="active">Jerarquico</button>
@@ -619,7 +648,112 @@ function filterByEntity(id) {
 }
 function resetView() { resetHighlight(); hidePanel(); cy.fit(undefined,80); }
 
+// ─── WORKSPACE & ECOSYSTEM SELECTORS ─────────────────────────────────────────
+
+async function loadSelectors() {
+  // Load workspaces
+  try {
+    var wsRes = await fetch('/api/workspaces');
+    var wsData = await wsRes.json();
+    var wsSel = document.getElementById('selectorWorkspace');
+    wsSel.innerHTML = '<option value="">Sin workspace</option>';
+    (wsData.workspaces || []).forEach(function(w) {
+      var opt = document.createElement('option');
+      opt.value = w.workspace_id;
+      opt.textContent = w.project_name || w.workspace_id;
+      if (w.story_count > 0) opt.textContent += ' (' + w.story_count + ' HUs)';
+      if (w.workspace_id === wsData.active) opt.selected = true;
+      wsSel.appendChild(opt);
+    });
+    wsSel.classList.toggle('selector-active', !!wsData.active);
+  } catch(e) {
+    console.warn('Error cargando workspaces:', e);
+  }
+
+  // Load ecosystems
+  try {
+    var ecoRes = await fetch('/api/ecosystems');
+    var ecoData = await ecoRes.json();
+    var ecoSel = document.getElementById('selectorEcosystem');
+    ecoSel.innerHTML = '<option value="">Sin ecosistema</option>';
+    (ecoData.ecosystems || []).forEach(function(eco) {
+      var opt = document.createElement('option');
+      opt.value = eco.ecosystem_id;
+      opt.textContent = eco.name || eco.ecosystem_id;
+      if (eco.apps_count > 0) opt.textContent += ' (' + eco.apps_count + ' apps)';
+      if (eco.ecosystem_id === ecoData.active) opt.selected = true;
+      ecoSel.appendChild(opt);
+    });
+    ecoSel.classList.toggle('selector-active', !!ecoData.active);
+  } catch(e) {
+    console.warn('Error cargando ecosistemas:', e);
+  }
+}
+
+async function switchWorkspace(workspaceId) {
+  if (!workspaceId) return;
+  var sel = document.getElementById('selectorWorkspace');
+  sel.disabled = true;
+  try {
+    var res = await fetch('/api/workspaces/switch', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({workspace_id: workspaceId})
+    });
+    var data = await res.json();
+    if (data.error) {
+      console.error('Error switching workspace:', data.error);
+      await loadSelectors();
+      return;
+    }
+    sel.classList.add('selector-active');
+    // Reload graph with new workspace data
+    await reloadGraph();
+  } catch(e) {
+    console.error('Error switching workspace:', e);
+  } finally {
+    sel.disabled = false;
+  }
+}
+
+async function switchEcosystem(ecosystemId) {
+  if (!ecosystemId) return;
+  var sel = document.getElementById('selectorEcosystem');
+  sel.disabled = true;
+  try {
+    var res = await fetch('/api/ecosystems/switch', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ecosystem_id: ecosystemId})
+    });
+    var data = await res.json();
+    if (data.error) {
+      console.error('Error switching ecosystem:', data.error);
+      await loadSelectors();
+      return;
+    }
+    sel.classList.add('selector-active');
+  } catch(e) {
+    console.error('Error switching ecosystem:', e);
+  } finally {
+    sel.disabled = false;
+  }
+}
+
+async function reloadGraph() {
+  var res = await fetch('/api/graph');
+  allData = await res.json();
+  // Rebuild entity filter
+  var sel = document.getElementById('filterEntity');
+  sel.innerHTML = '<option value="">Filtrar entidad...</option>';
+  allData.nodes.filter(function(n){ return n.data.type==='entity'; }).forEach(function(e) {
+    var o = document.createElement('option'); o.value = e.data.id; o.textContent = e.data.label; sel.appendChild(o);
+  });
+  renderGraph();
+}
+
 init();
+loadSelectors();
 </script>
 </body>
 </html>
