@@ -15,6 +15,7 @@
 - Se agregó selector de workspace y ecosistema en la UI del visualizador (puerto 9751)
 - Se agregaron 4 endpoints HTTP al visualizador: `GET /api/workspaces`, `POST /api/workspaces/switch`, `GET /api/ecosystems`, `POST /api/ecosystems/switch`
 - El grafo se recarga automáticamente al cambiar de workspace desde la UI
+- Se documentó en README la configuración `--pull always` de Docker y el troubleshooting de versiones cacheadas
 
 ### Cambiado
 - `MemoryEngine` ahora acepta `base_path` configurable en su constructor (antes hardcodeaba `/workspace/.hu-memory/`)
