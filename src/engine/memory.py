@@ -130,7 +130,7 @@ class MemoryEngine:
 
         # Actualizar conteo
         if self._index:
-            self._index.story_count = len(list((self._memory_path / "stories").glob("HU-*.json")))
+            self._index.story_count = len(list((self._memory_path / "stories").glob("*.json")))
 
         self._save_index()
         self._save_graph()
@@ -161,7 +161,7 @@ class MemoryEngine:
         stories_dir = self._memory_path / "stories"
         if not stories_dir.exists():
             return stories
-        for f in sorted(stories_dir.glob("HU-*.json")):
+        for f in sorted(stories_dir.glob("*.json")):
             data = json.loads(f.read_text(encoding="utf-8"))
             stories.append(StoryAnalysis(**data))
         return stories
@@ -176,7 +176,7 @@ class MemoryEngine:
         stories_dir = self._memory_path / "stories"
         if not stories_dir.exists():
             return summaries
-        for f in sorted(stories_dir.glob("HU-*.json")):
+        for f in sorted(stories_dir.glob("*.json")):
             data = json.loads(f.read_text(encoding="utf-8"))
             summaries.append(StorySummary(
                 id=data["id"],
@@ -199,10 +199,14 @@ class MemoryEngine:
         stories_dir = self._memory_path / "stories"
         if not stories_dir.exists():
             return "HU-001"
-        existing = list(stories_dir.glob("HU-*.json"))
+        existing = list(stories_dir.glob("*.json"))
         if not existing:
             return "HU-001"
-        max_num = max(int(f.stem.split("-")[1]) for f in existing)
+        # Filtrar solo archivos con formato HU-NNN para calcular el siguiente
+        hu_files = [f for f in existing if f.stem.startswith("HU-") and f.stem.split("-")[1].isdigit()]
+        if not hu_files:
+            return "HU-001"
+        max_num = max(int(f.stem.split("-")[1]) for f in hu_files)
         return f"HU-{max_num + 1:03d}"
 
     # ─── ENTITIES & FLOWS ────────────────────────────────────────────────────────

@@ -17,6 +17,12 @@
 - El grafo se recarga automáticamente al cambiar de workspace desde la UI
 - Se documentó en README la configuración `--pull always` de Docker y el troubleshooting de versiones cacheadas
 
+### Corregido
+- Se corrigió bug en `MemoryEngine` donde `get_all_stories()`, `get_all_summaries()`, `save_story()` y `get_next_story_id()` usaban glob `HU-*.json` que ignoraba stories con IDs no prefijados con "HU-" (ej: `IMPL-001`, `GD905-336`). Ahora usa `*.json` para reconocer cualquier formato de ID
+- Se corrigió panel lateral de detalle de HU en el visualizador que no se desplegaba al hacer click en un nodo story (causado por nodos implícitos sin atributo `type` creados por Cytoscape para edges huérfanos)
+- Se corrigió que las conexiones entre HUs quedaban visibles sin nodos asociados en el grafo — ahora `_get_graph_data()` filtra edges cuyos endpoints no existen como nodos válidos
+- Se corrigió selector de ecosistema en la UI del visualizador que no producía ningún efecto visible — ahora ejecuta `reloadGraph()` al cambiar de ecosistema
+
 ### Cambiado
 - `MemoryEngine` ahora acepta `base_path` configurable en su constructor (antes hardcodeaba `/workspace/.hu-memory/`)
 - `EcosystemEngine` ahora acepta `base_path` configurable en su constructor

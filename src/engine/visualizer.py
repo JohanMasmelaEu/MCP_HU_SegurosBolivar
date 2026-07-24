@@ -79,36 +79,42 @@ def _get_graph_data() -> dict:
         })
 
     edges = []
+    # Collect valid node IDs to filter orphan edges
+    valid_node_ids = {n["data"]["id"] for n in nodes}
+
     graph = memory.graph
     for src, tgt, attrs in graph.edges(data=True):
-        edges.append({
-            "data": {
-                "source": src,
-                "target": tgt,
-                "relation": attrs.get("relation", "related_to"),
-                "weight": attrs.get("weight", 1.0),
-            }
-        })
-
-    for entity in entities:
-        for story_id in entity.appears_in:
+        if src in valid_node_ids and tgt in valid_node_ids:
             edges.append({
                 "data": {
-                    "source": story_id,
-                    "target": f"entity:{entity.name}",
-                    "relation": "has_entity",
-                    "weight": 0.3,
+                    "source": src,
+                    "target": tgt,
+                    "relation": attrs.get("relation", "related_to"),
+                    "weight": attrs.get("weight", 1.0),
                 }
             })
 
+    for entity in entities:
+        for story_id in entity.appears_in:
+            if story_id in valid_node_ids:
+                edges.append({
+                    "data": {
+                        "source": story_id,
+                        "target": f"entity:{entity.name}",
+                        "relation": "has_entity",
+                        "weight": 0.3,
+                    }
+                })
+
     for flow in flows:
         for story_id in flow.stories_involved:
-            edges.append({
-                "data": {
-                    "source": story_id,
-                    "target": f"flow:{flow.name}",
-                    "relation": "in_flow",
-                    "weight": 0.3,
+            if story_id in valid_node_ids:
+                edges.append({
+                    "data": {
+                        "source": story_id,
+                        "target": f"flow:{flow.name}",
+                        "relation": "in_flow",
+                        "weight": 0.3,
                 }
             })
 
