@@ -81,8 +81,8 @@ body::before {
   backdrop-filter: blur(60px) saturate(2);
   -webkit-backdrop-filter: blur(60px) saturate(2);
   border-left: 1px solid var(--surface-border);
-  overflow-y: auto; padding: 28px 24px;
-  display: none; flex-direction: column; gap: 16px;
+  overflow-y: auto; padding: 0;
+  display: none; flex-direction: column; gap: 0;
   transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   transform: translateX(100%); opacity: 0;
 }
@@ -90,17 +90,86 @@ body::before {
   display: flex;
   transform: translateX(0); opacity: 1;
 }
+#panel-header {
+  padding: 16px 24px 12px;
+  border-bottom: 1px solid var(--surface-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+#panel-header .logo {
+  font-size: 11px; font-weight: 500; color: var(--text-tertiary);
+  letter-spacing: 0.3px; text-transform: uppercase;
+}
+#panel-header .close-btn {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-tertiary); width: 24px; height: 24px;
+  border-radius: 6px; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
+}
+#panel-header .close-btn:hover {
+  background: rgba(255,255,255,0.1); color: var(--text-primary);
+}
+#panel-body {
+  padding: 20px 24px 28px;
+  display: flex; flex-direction: column; gap: 20px;
+  overflow-y: auto; flex: 1;
+}
 #panel h2 {
   font-size: 17px; font-weight: 600; color: var(--text-primary);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.3px; line-height: 1.4; margin: 0;
 }
 #panel h3 {
   font-size: 11px; font-weight: 500; color: var(--text-tertiary);
-  text-transform: uppercase; letter-spacing: 0.8px; margin-top: 12px;
+  text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 8px 0;
 }
-#panel p { font-size: 14px; line-height: 1.7; color: var(--text-secondary); font-weight: 300; }
-#panel ul { padding-left: 16px; font-size: 13px; color: var(--text-secondary); font-weight: 300; }
-#panel li { margin: 5px 0; }
+#panel p { font-size: 14px; line-height: 1.7; color: var(--text-secondary); font-weight: 300; margin: 0; }
+#panel ul { padding-left: 16px; font-size: 13px; color: var(--text-secondary); font-weight: 300; margin: 0; }
+#panel li { margin: 6px 0; line-height: 1.5; }
+.panel-section {
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.panel-section:last-child { border-bottom: none; padding-bottom: 0; }
+.narrative-block {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 10px; padding: 14px 16px;
+  font-size: 13px; line-height: 1.7; color: var(--text-secondary);
+}
+.narrative-block strong {
+  color: var(--text-primary); font-weight: 500; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  display: block; margin-bottom: 2px; margin-top: 10px;
+}
+.narrative-block strong:first-child { margin-top: 0; }
+.acceptance-criteria {
+  list-style: none; padding: 0; margin: 0;
+}
+.acceptance-criteria li {
+  background: rgba(48,209,88,0.04);
+  border: 1px solid rgba(48,209,88,0.1);
+  border-radius: 8px; padding: 10px 14px;
+  margin: 6px 0; font-size: 12px; line-height: 1.6;
+}
+.acceptance-criteria .ac-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; margin-right: 6px;
+}
+.ac-given { color: var(--accent-teal); }
+.ac-when { color: var(--accent-orange); }
+.ac-then { color: var(--accent-green); }
+.stats-row {
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+.stat-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 11px; font-weight: 500;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-secondary);
+}
+.stat-pill .stat-num { color: var(--text-primary); font-weight: 600; }
 
 /* Tags */
 .tag {
@@ -212,17 +281,6 @@ body::before {
 #legend .dot-diamond { width: 7px; height: 7px; transform: rotate(45deg); flex-shrink: 0; border-radius: 1px; }
 #legend .line { width: 16px; height: 2px; flex-shrink: 0; border-radius: 1px; }
 
-/* === HEADER === */
-#header {
-  position: absolute; top: 20px; right: 20px; z-index: 20;
-  padding: 8px 16px; border-radius: 12px;
-  background: rgba(28,28,30,0.72);
-  backdrop-filter: blur(40px) saturate(1.8);
-  -webkit-backdrop-filter: blur(40px) saturate(1.8);
-  border: 1px solid var(--surface-border);
-}
-#header .logo { font-size: 13px; font-weight: 500; color: var(--text-secondary); letter-spacing: -0.2px; }
-
 /* Neural pulse animation for nodes */
 @keyframes neuralPulse {
   0%, 100% { box-shadow: 0 0 8px rgba(10,132,255,0.3); }
@@ -230,10 +288,10 @@ body::before {
 }
 
 /* Scrollbar Apple-style */
-#panel::-webkit-scrollbar { width: 4px; }
-#panel::-webkit-scrollbar-track { background: transparent; }
-#panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
-#panel::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+#panel-body::-webkit-scrollbar { width: 4px; }
+#panel-body::-webkit-scrollbar-track { background: transparent; }
+#panel-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+#panel-body::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
 
 /* Content transition */
 #panel-content {
@@ -305,20 +363,27 @@ body::before {
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 8h3M11 8h3M5 8a3 3 0 1 1 6 0 3 3 0 0 1-6 0z"/><path d="M1 4v8M15 4v8" stroke-width="1.5" stroke-linecap="round"/></svg>
     Flujos
   </button>
+  <button onclick="toggleRelations()" id="btn-relations" class="active icon-btn">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 4l6 4 6-4M2 12l6-4 6 4"/></svg>
+    Relaciones
+  </button>
   <span class="toolbar-divider"></span>
   <button onclick="resetView()">Reset</button>
   <select id="filterEntity" onchange="filterByEntity(this.value)">
     <option value="">Filtrar entidad...</option>
   </select>
 </div>
-<div id="header" class="glass-panel">
-  <span class="logo">Seguros Bolivar</span>
-</div>
 <div id="cy"></div>
 <div id="tooltip"></div>
 <div id="panel">
-  <h2 id="panel-title"></h2>
-  <div id="panel-content"></div>
+  <div id="panel-header">
+    <span class="logo">Seguros Bolivar</span>
+    <button class="close-btn" onclick="resetHighlight();hidePanel();">&times;</button>
+  </div>
+  <div id="panel-body">
+    <h2 id="panel-title"></h2>
+    <div id="panel-content"></div>
+  </div>
 </div>
 <div id="legend" class="glass-panel">
   <div class="row"><span class="dot" style="color:#ff9f0a;background:#ff9f0a"></span> HU analyzed</div>
@@ -330,7 +395,7 @@ body::before {
   <div class="row"><span class="line" style="background:#30d158"></span> impacts</div>
 </div>
 <script>
-let cy, allData = {nodes:[],edges:[]}, showEntities = true, showFlows = false, currentLayout = 'dagre';
+let cy, allData = {nodes:[],edges:[]}, showEntities = true, showFlows = false, showRelations = true, currentLayout = 'dagre';
 const tooltip = document.getElementById('tooltip');
 
 async function init() {
@@ -361,9 +426,13 @@ function getFiltered() {
     if (n.data.type==='flow' && !showFlows) return false;
     return true;
   });
+  const nodeIds = new Set(nodes.map(n => n.data.id));
   const edges = allData.edges.filter(e => {
     if (e.data.relation==='has_entity' && !showEntities) return false;
     if (e.data.relation==='in_flow' && !showFlows) return false;
+    if ((e.data.relation==='depends_on' || e.data.relation==='impacts') && !showRelations) return false;
+    // Only include edges whose both endpoints exist as visible nodes
+    if (!nodeIds.has(e.data.source) || !nodeIds.has(e.data.target)) return false;
     return true;
   });
   return [...nodes, ...edges];
@@ -580,34 +649,76 @@ async function showDetail(id) {
   var panel = document.getElementById('panel');
   document.getElementById('panel-title').textContent = s.id+' \u2014 '+s.title;
 
-  var h = '<span class="status-badge status-'+s.status+'">'+s.status+'</span>';
-  h += '<h3>Narrativa</h3><p><strong>Como</strong> '+s.narrative.as_a+'<br><strong>Quiero</strong> '+s.narrative.i_want+'<br><strong>Para</strong> '+s.narrative.so_that+'</p>';
-  h += '<h3>Entidades</h3><div>';
-  s.entities_detected.forEach(function(e){h+='<span class="tag tag-entity">'+e+'</span>';});
-  h += '</div><h3>Flujos</h3><div>';
-  s.flows_detected.forEach(function(f){h+='<span class="tag tag-flow">'+f+'</span>';});
-  h += '</div>';
-  if (s.complexity_tags&&s.complexity_tags.length) {
-    h+='<h3>Complejidad</h3><div>';
+  var h = '';
+
+  // Status + stats row
+  h += '<div class="panel-section"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
+  h += '<span class="status-badge status-'+s.status+'">'+s.status+'</span>';
+  h += '<div class="stats-row">';
+  h += '<span class="stat-pill"><span class="stat-num">'+s.total_gaps+'</span> gaps</span>';
+  h += '<span class="stat-pill"><span class="stat-num">'+s.total_questions+'</span> preguntas</span>';
+  h += '</div></div></div>';
+
+  // Narrative
+  h += '<div class="panel-section"><h3>Narrativa</h3>';
+  h += '<div class="narrative-block">';
+  h += '<strong>Como</strong>' + s.narrative.as_a;
+  h += '<strong>Quiero</strong>' + s.narrative.i_want;
+  h += '<strong>Para</strong>' + s.narrative.so_that;
+  h += '</div></div>';
+
+  // Acceptance criteria
+  if (s.acceptance_criteria && s.acceptance_criteria.length) {
+    h += '<div class="panel-section"><h3>Criterios de Aceptaci\u00f3n</h3>';
+    h += '<ul class="acceptance-criteria">';
+    s.acceptance_criteria.forEach(function(ac, i) {
+      h += '<li>';
+      if (ac.given) h += '<span class="ac-label ac-given">Given</span><span style="color:var(--text-secondary)">' + ac.given + '</span><br>';
+      if (ac.when) h += '<span class="ac-label ac-when">When</span><span style="color:var(--text-secondary)">' + ac.when + '</span><br>';
+      if (ac.then) h += '<span class="ac-label ac-then">Then</span><span style="color:var(--text-secondary)">' + ac.then + '</span>';
+      h += '</li>';
+    });
+    h += '</ul></div>';
+  }
+
+  // Entities
+  if (s.entities_detected && s.entities_detected.length) {
+    h += '<div class="panel-section"><h3>Entidades</h3><div>';
+    s.entities_detected.forEach(function(e){h+='<span class="tag tag-entity">'+e+'</span>';});
+    h += '</div></div>';
+  }
+
+  // Flows
+  if (s.flows_detected && s.flows_detected.length) {
+    h += '<div class="panel-section"><h3>Flujos</h3><div>';
+    s.flows_detected.forEach(function(f){h+='<span class="tag tag-flow">'+f+'</span>';});
+    h += '</div></div>';
+  }
+
+  // Complexity
+  if (s.complexity_tags && s.complexity_tags.length) {
+    h += '<div class="panel-section"><h3>Complejidad</h3><div>';
     s.complexity_tags.forEach(function(t){h+='<span class="tag tag-complexity">'+t+'</span>';});
-    h+='</div>';
+    h += '</div></div>';
   }
-  if (s.dependencies&&s.dependencies.length) {
-    h+='<h3>Dependencias</h3><ul>';
+
+  // Dependencies
+  if (s.dependencies && s.dependencies.length) {
+    h += '<div class="panel-section"><h3>Dependencias</h3><ul>';
     s.dependencies.forEach(function(d){h+='<li>'+d+'</li>';});
-    h+='</ul>';
+    h += '</ul></div>';
   }
-  if (s.expert_analysis&&s.expert_analysis.length) {
-    h+='<h3>Panel de Expertos</h3><ul>';
+
+  // Expert analysis
+  if (s.expert_analysis && s.expert_analysis.length) {
+    h += '<div class="panel-section"><h3>Panel de Expertos</h3><ul>';
     s.expert_analysis.forEach(function(e){
       h+='<li><span class="tag tag-expert">'+e.expert+'</span> '+e.gaps.length+' gaps &middot; '+e.questions.length+' preguntas</li>';
     });
-    h+='</ul>';
+    h += '</ul></div>';
   }
-  h+='<h3 style="margin-top:16px;color:var(--text-primary);font-size:13px">'+s.total_gaps+' gaps &middot; '+s.total_questions+' preguntas abiertas</h3>';
 
   var content = document.getElementById('panel-content');
-  // Crossfade in-place: blur out current content, swap, blur in new content
   content.classList.add('transitioning');
   setTimeout(function(){
     content.innerHTML = h;
@@ -646,6 +757,11 @@ function toggleEntities() {
 function toggleFlows() {
   showFlows=!showFlows;
   document.getElementById('btn-flows').classList.toggle('active',showFlows);
+  renderGraph();
+}
+function toggleRelations() {
+  showRelations=!showRelations;
+  document.getElementById('btn-relations').classList.toggle('active',showRelations);
   renderGraph();
 }
 function filterByEntity(id) {

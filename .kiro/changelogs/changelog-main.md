@@ -20,8 +20,13 @@
 ### Corregido
 - Se corrigió bug en `MemoryEngine` donde `get_all_stories()`, `get_all_summaries()`, `save_story()` y `get_next_story_id()` usaban glob `HU-*.json` que ignoraba stories con IDs no prefijados con "HU-" (ej: `IMPL-001`, `GD905-336`). Ahora usa `*.json` para reconocer cualquier formato de ID
 - Se corrigió panel lateral de detalle de HU en el visualizador que no se desplegaba al hacer click en un nodo story (causado por nodos implícitos sin atributo `type` creados por Cytoscape para edges huérfanos)
-- Se corrigió que las conexiones entre HUs quedaban visibles sin nodos asociados en el grafo — ahora `_get_graph_data()` filtra edges cuyos endpoints no existen como nodos válidos
+- Se corrigió que las conexiones entre HUs quedaban visibles sin nodos asociados en el grafo — ahora `_get_graph_data()` filtra edges cuyos endpoints no existen como nodos válidos, y el frontend también valida que ambos endpoints existan como nodos visibles
 - Se corrigió selector de ecosistema en la UI del visualizador que no producía ningún efecto visible — ahora ejecuta `reloadGraph()` al cambiar de ecosistema
+
+### Agregado (Visualizador)
+- Se agregó botón "Relaciones" en la toolbar de capas para toggle de edges `depends_on`/`impacts` entre HUs — permite limpiar la vista ocultando las conexiones inter-HU
+- Se agregó visualización de criterios de aceptación (Given/When/Then) en el panel lateral de detalle de HU
+- Se rediseñó el panel lateral de detalle con mejor jerarquía visual: header con logo y botón cerrar, secciones separadas con bordes sutiles, narrativa en bloque estilizado, pills de estadísticas, y criterios de aceptación con labels coloreados
 
 ### Cambiado
 - `MemoryEngine` ahora acepta `base_path` configurable en su constructor (antes hardcodeaba `/workspace/.hu-memory/`)
