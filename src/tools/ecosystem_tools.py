@@ -138,6 +138,16 @@ def handle_register_app(app_dict: dict) -> dict:
 
         # Registrar contratos asociados
         for contract_data in contracts:
+            # Normalizar: aceptar 'consumers' como alias de 'consumer_apps'
+            if "consumers" in contract_data and "consumer_apps" not in contract_data:
+                contract_data["consumer_apps"] = contract_data.pop("consumers")
+            # Normalizar: aceptar 'consumer_app' (singular) como alias
+            if "consumer_app" in contract_data and "consumer_apps" not in contract_data:
+                consumer = contract_data.pop("consumer_app")
+                contract_data["consumer_apps"] = [consumer] if consumer else []
+            # Normalizar: aceptar 'entities' como alias de 'entities_involved'
+            if "entities" in contract_data and "entities_involved" not in contract_data:
+                contract_data["entities_involved"] = contract_data.pop("entities")
             contract = ContractDefinition(**contract_data)
             ecosystem.add_contract(contract)
 

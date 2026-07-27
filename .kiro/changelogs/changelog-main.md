@@ -48,3 +48,10 @@
 - La vista macro muestra: apps como nodos con badge de salud (verde/amarillo/rojo), clusters cohesivos agrupados, fuerza de acoplamiento como grosor de línea, tipo de integración diferenciado (síncrona/asíncrona/mixta)
 - La vista micro muestra: flujos concretos entre dos apps con HUs origen/destino, entidades en tránsito con indicador de divergencia, contratos que habilitan cada flujo
 - Se agregó spec completa en `.kiro/specs/ecosystem-graph-visualizer/` (requirements, design, tasks)
+
+### Corregido
+- Se corrigió bug en `register_app` donde los contratos no poblaban `consumer_apps` porque el input usaba alias (`consumers`, `consumer_app`) que Pydantic ignoraba silenciosamente. Ahora se normalizan los alias `consumers` → `consumer_apps`, `consumer_app` → `consumer_apps`, y `entities` → `entities_involved` antes de construir el modelo
+- Se corrigió que `add_contract` en `EcosystemEngine` no actualizaba las listas `exposes_contracts`/`consumes_contracts` de las apps involucradas. Ahora se auto-sincronizan al registrar un contrato
+
+- Se corrigió bug intermitente en el toggle de capas (Flujos, Entidades, Relaciones) del visualizador de Red Neuronal: al activar/desactivar una capa, se destruía y recreaba todo el grafo Cytoscape.js, causando race conditions que impedían hacer click en HUs para ver su detalle. Ahora se usa `show()`/`hide()` sobre los elementos sin destruir la instancia
+- Se corrigió memory leak: los intervalos del neural pulse (animación de edges) no se limpiaban al reconstruir el grafo, causando múltiples intervalos acumulados contra instancias destruidas

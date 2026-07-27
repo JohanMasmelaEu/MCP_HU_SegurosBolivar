@@ -332,6 +332,9 @@ class EcosystemEngine:
     def add_contract(self, contract: ContractDefinition) -> None:
         """Agrega o actualiza un contrato en el ecosistema.
 
+        Tambien actualiza las listas exposes_contracts/consumes_contracts
+        de las apps involucradas.
+
         Args:
             contract: Definicion del contrato.
         """
@@ -347,6 +350,16 @@ class EcosystemEngine:
             self._registry.contracts[existing_idx] = contract
         else:
             self._registry.contracts.append(contract)
+
+        # Auto-sincronizar exposes_contracts/consumes_contracts en las apps
+        provider = self.get_app(contract.provider_app)
+        if provider and contract.contract_id not in provider.exposes_contracts:
+            provider.exposes_contracts.append(contract.contract_id)
+
+        for consumer_id in contract.consumer_apps:
+            consumer = self.get_app(consumer_id)
+            if consumer and contract.contract_id not in consumer.consumes_contracts:
+                consumer.consumes_contracts.append(contract.contract_id)
 
         # Guardar contrato individual
         contract_path = self._ecosystem_path / "contracts" / f"{contract.contract_id}.json"

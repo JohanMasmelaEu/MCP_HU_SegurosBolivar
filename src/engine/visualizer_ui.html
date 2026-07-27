@@ -424,6 +424,16 @@ async function init() {
   renderGraph();
 }
 
+function getAllElements() {
+  var nodes = allData.nodes || [];
+  var nodeIds = new Set(nodes.map(function(n) { return n.data.id; }));
+  var edges = (allData.edges || []).filter(function(e) {
+    // Only include edges whose both endpoints exist as nodes
+    return nodeIds.has(e.data.source) && nodeIds.has(e.data.target);
+  });
+  return nodes.concat(edges);
+}
+
 function getFiltered() {
   const nodes = allData.nodes.filter(n => {
     if (n.data.type==='entity' && !showEntities) return false;
@@ -471,7 +481,7 @@ function renderGraph() {
 
     cy = cytoscape({
       container: container,
-      elements: getFiltered(),
+      elements: getAllElements(),
       style: [
       // Story nodes — neural network synapses
       { selector: 'node[type="story"]', style: {
@@ -602,13 +612,22 @@ function renderGraph() {
   });
   cy.on('tap', function(evt){ if(evt.target===cy){resetHighlight();hidePanel();} });
 
+  // Apply current layer visibility state
+  applyLayerVisibility();
+
   }, 300); // end setTimeout fade-out
 }
 
 // Neural pulse — periodic glow animation on edges to simulate signal transmission
+var _neuralPulseIntervals = [];
 function startNeuralPulse() {
-  setInterval(function(){
-    var edges = cy.edges('[relation="depends_on"],[relation="impacts"]');
+  // Clear any previous intervals
+  _neuralPulseIntervals.forEach(function(id) { clearInterval(id); });
+  _neuralPulseIntervals = [];
+
+  _neuralPulseIntervals.push(setInterval(function(){
+    if (!cy) return;
+    var edges = cy.edges('[relation="depends_on"],[relation="impacts"]').not('.faded').not(':hidden');
     if (!edges.length) return;
     var randEdge = edges[Math.floor(Math.random()*edges.length)];
     randEdge.animate(
@@ -617,11 +636,12 @@ function startNeuralPulse() {
         randEdge.animate({style:{'width':2,'opacity':0.75}},{duration:600});
       }}
     );
-  }, 1500);
+  }, 1500));
 
   // Subtle node breathing
-  setInterval(function(){
-    var stories = cy.nodes('[type="story"]');
+  _neuralPulseIntervals.push(setInterval(function(){
+    if (!cy) return;
+    var stories = cy.nodes('[type="story"]').not('.faded').not(':hidden');
     if (!stories.length) return;
     var randNode = stories[Math.floor(Math.random()*stories.length)];
     randNode.animate(
@@ -630,15 +650,20 @@ function startNeuralPulse() {
         randNode.animate({style:{'shadow-blur':24,'shadow-opacity':0.6}},{duration:800});
       }}
     );
-  }, 2000);
+  }, 2000));
 }
 
 function highlightNode(node) {
+  // Stop any ongoing neural pulse animations to prevent style conflicts
+  cy.elements().stop(true, true);
   cy.elements().addClass('faded');
   node.removeClass('faded').addClass('highlighted');
   node.neighborhood().removeClass('faded');
 }
-function resetHighlight() { cy.elements().removeClass('faded highlighted'); }
+function resetHighlight() {
+  cy.elements().stop(true, true);
+  cy.elements().removeClass('faded highlighted');
+}
 function hidePanel() {
   var p = document.getElementById('panel');
   p.style.transform = 'translateX(100%)'; p.style.opacity = '0';
@@ -756,17 +781,48 @@ function setLayout(name) {
 function toggleEntities() {
   showEntities=!showEntities;
   document.getElementById('btn-entities').classList.toggle('active',showEntities);
-  renderGraph();
+  applyLayerVisibility();
 }
 function toggleFlows() {
   showFlows=!showFlows;
   document.getElementById('btn-flows').classList.toggle('active',showFlows);
-  renderGraph();
+  applyLayerVisibility();
 }
 function toggleRelations() {
   showRelations=!showRelations;
   document.getElementById('btn-relations').classList.toggle('active',showRelations);
-  renderGraph();
+  applyLayerVisibility();
+}
+
+function applyLayerVisibility() {
+  if (!cy) return;
+
+  // Entity nodes and their edges
+  if (showEntities) {
+    cy.nodes('[type="entity"]').show();
+    cy.edges('[relation="has_entity"]').show();
+  } else {
+    cy.nodes('[type="entity"]').hide();
+    cy.edges('[relation="has_entity"]').hide();
+  }
+
+  // Flow nodes and their edges
+  if (showFlows) {
+    cy.nodes('[type="flow"]').show();
+    cy.edges('[relation="in_flow"]').show();
+  } else {
+    cy.nodes('[type="flow"]').hide();
+    cy.edges('[relation="in_flow"]').hide();
+  }
+
+  // Relation edges (depends_on, impacts)
+  if (showRelations) {
+    cy.edges('[relation="depends_on"]').show();
+    cy.edges('[relation="impacts"]').show();
+  } else {
+    cy.edges('[relation="depends_on"]').hide();
+    cy.edges('[relation="impacts"]').hide();
+  }
 }
 function filterByEntity(id) {
   if(!id){resetHighlight();return;}
