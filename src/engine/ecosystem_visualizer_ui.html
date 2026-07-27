@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecosystem Graph - Topologia de Acoplamiento</title>
+<script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+<script src="https://unpkg.com/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
+:root {
+  --bg: #000000;
+  --surface: rgba(28,28,30,0.72);
+  --surface-border: rgba(255,255,255,0.06);
+  --text-primary: rgba(255,255,255,0.92);
+  --text-secondary: rgba(255,255,255,0.55);
+  --text-tertiary: rgba(255,255,255,0.35);
+  --accent-blue: #0a84ff;
+  --accent-purple: #bf5af2;
+  --accent-orange: #ff9f0a;
+  --accent-green: #30d158;
+  --accent-red: #ff453a;
+  --accent-teal: #64d2ff;
+  --radius: 16px;
+  --blur: blur(40px) saturate(1.8);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
+  height: 100vh; display: flex; flex-direction: column;
+  background: var(--bg); color: var(--text-primary);
+  overflow: hidden; -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 800px 600px at 20% 30%, rgba(10,132,255,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 600px 800px at 80% 70%, rgba(191,90,242,0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 900px 400px at 50% 90%, rgba(48,209,88,0.03) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+  animation: meshShift 20s ease-in-out infinite alternate;
+}
+@keyframes meshShift {
+  0% { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.05); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-radius: var(--radius);
+}
+.view-selector {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; gap: 0;
+  background: rgba(18,18,20,0.85);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--surface-border);
+  padding: 0 24px; height: 40px;
+}
+.view-tab {
+  padding: 8px 20px; text-decoration: none;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--text-secondary);
+  border-bottom: 2px solid transparent; transition: all 0.2s;
+}
+.view-tab:hover { color: var(--text-primary); }
+.view-tab.active {
+  color: var(--accent-blue);
+  border-bottom: 2px solid var(--accent-blue);
+}
+#toolbar {
+  position: fixed; top: 48px; left: 16px; z-index: 90;
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px; font-size: 12px;
+}
+.toolbar-label {
+  color: var(--text-tertiary); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+}
+.toolbar-divider {
+  width: 1px; height: 20px; background: var(--surface-border); margin: 0 4px;
+}
+#toolbar select {
+  background: rgba(255,255,255,0.06); border: 1px solid var(--surface-border);
+  color: var(--text-primary); padding: 4px 10px; border-radius: 8px;
+  font-size: 12px; outline: none; cursor: pointer;
+}
+#toolbar select:focus { border-color: var(--accent-blue); }
+.toggle-group {
+  display: flex; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--surface-border);
+}
+.toggle-group button {
+  background: transparent; border: none; color: var(--text-secondary);
+  padding: 4px 12px; font-size: 11px; cursor: pointer; transition: all 0.2s;
+}
+.toggle-group button.active {
+  background: var(--accent-blue); color: #fff;
+}
+.filter-btn {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--surface-border);
+  color: var(--text-secondary); padding: 4px 12px; border-radius: 8px;
+  font-size: 11px; cursor: pointer; transition: all 0.2s;
+}
+.filter-btn.active { background: rgba(10,132,255,0.15); border-color: var(--accent-blue); color: var(--accent-blue); }
+.filter-btn:hover { background: rgba(255,255,255,0.08); }
+#toolbar button:not(.filter-btn):not(.toggle-group button) {
+  background: rgba(255,255,255,0.06); border: 1px solid var(--surface-border);
+  color: var(--text-secondary); padding: 4px 12px; border-radius: 8px;
+  font-size: 11px; cursor: pointer; transition: all 0.2s;
+}
+#toolbar button:not(.filter-btn):not(.toggle-group button):hover {
+  background: rgba(255,255,255,0.1); color: var(--text-primary);
+}
+#view-macro {
+  flex: 1; display: flex; margin-top: 40px; position: relative; z-index: 1;
+}
+#cy { flex: 1; }
+#view-micro {
+  flex: 1; margin-top: 40px; overflow-y: auto; padding: 100px 40px 40px;
+  display: none; flex-direction: column; gap: 20px; position: relative; z-index: 1;
+}
+.micro-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; padding: 20px; margin-bottom: 10px;
+}
+.micro-app-block {
+  background: var(--surface); border: 1px solid var(--surface-border);
+  backdrop-filter: var(--blur); border-radius: 12px;
+  padding: 16px 24px; text-align: center; min-width: 200px;
+}
+.micro-app-block h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.micro-app-block span { font-size: 11px; color: var(--text-secondary); }
+.micro-connection-label {
+  font-size: 12px; color: var(--text-tertiary); text-align: center;
+  padding: 8px 16px; background: rgba(255,255,255,0.03); border-radius: 8px;
+}
+.micro-flows-list { display: flex; flex-direction: column; gap: 12px; }
+.flow-card {
+  background: var(--surface); border: 1px solid var(--surface-border);
+  backdrop-filter: var(--blur); border-radius: 12px;
+  padding: 16px; cursor: pointer; transition: all 0.2s;
+}
+.flow-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-1px); }
+.flow-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+.flow-arrow {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 12px; background: rgba(255,255,255,0.03);
+  border-radius: 8px; margin-bottom: 10px; font-size: 12px;
+}
+.flow-origin { color: var(--accent-blue); font-weight: 500; }
+.flow-direction { color: var(--text-tertiary); font-size: 16px; }
+.flow-target { color: var(--accent-purple); font-weight: 500; }
+.flow-contract { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; }
+.flow-entities { display: flex; flex-wrap: wrap; gap: 6px; }
+.entity-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500;
+}
+.entity-pill.consistent {
+  background: rgba(48,209,88,0.12); color: var(--accent-green);
+  border: 1px solid rgba(48,209,88,0.25);
+}
+.entity-pill.divergent {
+  background: rgba(255,69,58,0.12); color: var(--accent-red);
+  border: 1px solid rgba(255,69,58,0.25);
+  animation: pulse 2s ease-in-out infinite;
+}
+#panel {
+  position: fixed; top: 40px; right: 0; bottom: 0; width: 380px;
+  background: var(--surface); border-left: 1px solid var(--surface-border);
+  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  z-index: 95; display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  overflow-y: auto;
+}
+#panel.open { transform: translateX(0); }
+#panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--surface-border);
+}
+#panel-header .logo { font-size: 13px; font-weight: 600; color: var(--accent-blue); }
+.close-btn {
+  background: none; border: none; color: var(--text-secondary);
+  font-size: 22px; cursor: pointer; line-height: 1;
+  width: 28px; height: 28px; display: flex; align-items: center;
+  justify-content: center; border-radius: 6px; transition: all 0.2s;
+}
+.close-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+#panel-body { padding: 20px; flex: 1; }
+#panel-body h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+#panel-content { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+#panel-content .detail-row {
+  display: flex; justify-content: space-between; padding: 8px 0;
+  border-bottom: 1px solid var(--surface-border);
+}
+#panel-content .detail-label { color: var(--text-tertiary); font-size: 11px; text-transform: uppercase; }
+#panel-content .detail-value { color: var(--text-primary); font-weight: 500; }
+#tooltip {
+  position: fixed; z-index: 200; pointer-events: none;
+  background: rgba(28,28,30,0.92); border: 1px solid var(--surface-border);
+  backdrop-filter: blur(20px); border-radius: 10px;
+  padding: 10px 14px; font-size: 12px; color: var(--text-primary);
+  max-width: 280px; opacity: 0; transition: opacity 0.15s;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+#tooltip.visible { opacity: 1; }
+#legend {
+  position: fixed; bottom: 20px; left: 20px; z-index: 90;
+  padding: 16px 20px; font-size: 11px; min-width: 240px;
+}
+.legend-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text-tertiary); margin-bottom: 10px;
+}
+#legend .row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 0; color: var(--text-secondary);
+}
+.swatch {
+  display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 2px solid;
+}
+.swatch.rect.green { border-color: var(--accent-green); background: rgba(48,209,88,0.15); }
+.swatch.rect.yellow { border-color: var(--accent-orange); background: rgba(255,159,10,0.15); }
+.swatch.rect.red { border-color: var(--accent-red); background: rgba(255,69,58,0.15); }
+.line { display: inline-block; width: 24px; height: 2px; }
+.line.solid.blue { background: var(--accent-blue); }
+.line.dotted.orange { background: repeating-linear-gradient(90deg, var(--accent-orange) 0 4px, transparent 4px 8px); height: 2px; }
+.line.solid.purple { background: var(--accent-purple); }
+.line.dashed.gray { background: repeating-linear-gradient(90deg, rgba(255,255,255,0.3) 0 6px, transparent 6px 10px); height: 2px; }
+.thickness-demo {
+  display: inline-block; width: 24px; height: 6px; border-radius: 3px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.6));
+}
+.cluster-demo {
+  display: inline-block; width: 18px; height: 14px; border-radius: 4px;
+  border: 1px dashed rgba(255,255,255,0.3);
+}
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; gap: 12px;
+  color: var(--text-tertiary); font-size: 14px; text-align: center;
+}
+.empty-state svg { opacity: 0.3; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--surface-border);
+  color: var(--text-secondary); padding: 6px 14px; border-radius: 8px;
+  font-size: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 16px;
+}
+.back-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+</style>
+</head>
+<body>
+<nav class="view-selector">
+  <a href="/" class="view-tab">Red Neuronal</a>
+  <a href="/ecosystem" class="view-tab active">Ecosistema</a>
+</nav>
+
+<div id="toolbar" class="glass-panel">
+  <span class="toolbar-label">Ecosistema</span>
+  <select id="selectorEcosystem" onchange="switchEcosystem(this.value)">
+    <option value="">Cargando...</option>
+  </select>
+  <span class="toolbar-divider"></span>
+  <span class="toolbar-label">Vista</span>
+  <div class="toggle-group">
+    <button id="btn-macro" class="active" onclick="backToMacro()">Macro</button>
+    <button id="btn-micro" onclick="promptMicro()">Micro</button>
+  </div>
+  <span class="toolbar-divider"></span>
+  <span class="toolbar-label">Integracion</span>
+  <button class="filter-btn active" data-filter="sync" onclick="toggleFilter('sync')">Sincrona</button>
+  <button class="filter-btn active" data-filter="async" onclick="toggleFilter('async')">Asincrona</button>
+  <button class="filter-btn active" data-filter="mixed" onclick="toggleFilter('mixed')">Mixta</button>
+  <span class="toolbar-divider"></span>
+  <button class="filter-btn" id="btn-conflicts-only" onclick="toggleConflictsOnly()">Solo conflictos</button>
+  <span class="toolbar-divider"></span>
+  <button onclick="resetView()">Reset</button>
+</div>
+
+<div id="view-macro">
+  <div id="cy"></div>
+</div>
+
+<div id="view-micro" style="display:none"></div>
+<div id="panel">
+  <div id="panel-header">
+    <span class="logo">Ecosistema</span>
+    <button class="close-btn" onclick="hidePanel()">&times;</button>
+  </div>
+  <div id="panel-body">
+    <h2 id="panel-title"></h2>
+    <div id="panel-content"></div>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<div id="legend" class="glass-panel">
+  <div class="legend-title">Leyenda</div>
+  <div class="row"><span class="swatch rect green"></span> App saludable</div>
+  <div class="row"><span class="swatch rect yellow"></span> App con warnings</div>
+  <div class="row"><span class="swatch rect red"></span> App con conflictos</div>
+  <div class="row"><span class="line solid blue"></span> Integracion sincrona (REST/GraphQL)</div>
+  <div class="row"><span class="line dotted orange"></span> Integracion asincrona (eventos)</div>
+  <div class="row"><span class="line solid purple"></span> Integracion mixta</div>
+  <div class="row"><span class="line dashed gray"></span> Acoplamiento implicito (entidades)</div>
+  <div class="row"><span class="thickness-demo"></span> Grosor = fuerza de acoplamiento</div>
+  <div class="row"><span class="cluster-demo"></span> Cluster = apps cohesivas</div>
+</div>
+
+<script>
+/* ===== Global State ===== */
+let cy = null;
+let currentEcosystemId = null;
+let macroData = null;
+let currentView = 'macro';
+let activeFilters = { sync: true, async: true, mixed: true };
+let conflictsOnly = false;
+/* ===== Cytoscape Styles ===== */
+const macroStyles = [
+  { selector: 'node[type="cluster"]', style: {
+    'background-color': 'rgba(255,255,255,0.02)',
+    'border-width': 1, 'border-style': 'dashed',
+    'border-color': 'rgba(255,255,255,0.15)',
+    'shape': 'round-rectangle', 'border-radius': 20,
+    'label': 'data(label)', 'font-size': 10,
+    'text-valign': 'top', 'text-halign': 'center',
+    'color': 'rgba(255,255,255,0.35)', 'padding': 30,
+  }},
+  { selector: 'node[type="app"]', style: {
+    'shape': 'round-rectangle',
+    'width': 180, 'height': 90,
+    'background-color': 'rgba(10,132,255,0.12)',
+    'border-width': 2, 'border-color': '#0a84ff',
+    'label': 'data(label)', 'font-size': 13, 'font-weight': 500,
+    'text-valign': 'center', 'text-halign': 'center',
+    'color': 'rgba(255,255,255,0.9)',
+    'text-wrap': 'wrap', 'text-max-width': 160,
+    'shadow-blur': 20, 'shadow-color': '#0a84ff', 'shadow-opacity': 0.3,
+  }},
+  { selector: 'node[health="green"]', style: { 'border-color': '#30d158', 'shadow-color': '#30d158' }},
+  { selector: 'node[health="yellow"]', style: { 'border-color': '#ff9f0a', 'shadow-color': '#ff9f0a' }},
+  { selector: 'node[health="red"]', style: { 'border-color': '#ff453a', 'shadow-color': '#ff453a' }},
+  { selector: 'edge[type="coupling"]', style: {
+    'width': 'mapData(coupling_strength, 1, 10, 2, 8)',
+    'curve-style': 'bezier',
+    'label': 'data(label)', 'font-size': 9,
+    'text-rotation': 'autorotate',
+    'color': 'rgba(255,255,255,0.5)',
+    'text-outline-color': 'rgba(0,0,0,0.8)', 'text-outline-width': 2,
+    'text-background-color': 'rgba(0,0,0,0.6)', 'text-background-opacity': 0.8,
+    'text-background-padding': 3, 'text-background-shape': 'round-rectangle',
+  }},
+  { selector: 'edge[sync_type="sync"]', style: {
+    'line-color': 'rgba(10,132,255,0.6)',
+    'target-arrow-color': '#0a84ff', 'target-arrow-shape': 'triangle',
+    'source-arrow-color': '#0a84ff', 'source-arrow-shape': 'none',
+  }},
+  { selector: 'edge[sync_type="async"]', style: {
+    'line-color': 'rgba(255,159,10,0.6)', 'line-style': 'dotted',
+    'target-arrow-color': '#ff9f0a', 'target-arrow-shape': 'triangle',
+  }},
+  { selector: 'edge[sync_type="mixed"]', style: {
+    'line-color': 'rgba(191,90,242,0.6)',
+    'target-arrow-color': '#bf5af2', 'target-arrow-shape': 'triangle',
+  }},
+  { selector: 'edge[sync_type="implicit"]', style: {
+    'line-color': 'rgba(255,255,255,0.2)', 'line-style': 'dashed',
+    'target-arrow-shape': 'none',
+  }},
+  { selector: '.highlighted', style: { 'border-width': 3, 'shadow-blur': 40, 'shadow-opacity': 0.8, 'z-index': 999 }},
+  { selector: '.faded', style: { 'opacity': 0.15 }},
+];
+/* ===== Layout Config ===== */
+const macroLayout = {
+  name: 'cose-bilkent',
+  quality: 'proof',
+  animate: true,
+  animationDuration: 800,
+  nodeDimensionsIncludeLabels: true,
+  idealEdgeLength: 250,
+  nodeRepulsion: 10000,
+  edgeElasticity: 0.3,
+  nestingFactor: 0.15,
+  gravity: 0.2,
+  tile: true,
+  tilingPaddingVertical: 40,
+  tilingPaddingHorizontal: 40,
+  fit: true,
+  padding: 60,
+};
+
+/* ===== Initialization ===== */
+document.addEventListener('DOMContentLoaded', init);
+
+async function init() {
+  cytoscape.use(cytoscapeCoseBilkent);
+  try {
+    const res = await fetch('/api/eco/ecosystems');
+    if (!res.ok) throw new Error('Error al cargar ecosistemas');
+    const data = await res.json();
+    const ecosystems = data.ecosystems || [];
+    const activeId = data.active || null;
+    const selector = document.getElementById('selectorEcosystem');
+    selector.innerHTML = '';
+    if (ecosystems.length === 0) {
+      selector.innerHTML = '<option value="">Sin ecosistemas</option>';
+      showEmptyState('No hay ecosistemas disponibles. Crea uno con init_ecosystem primero.');
+      return;
+    }
+    ecosystems.forEach(function(eco) {
+      const opt = document.createElement('option');
+      opt.value = eco.ecosystem_id;
+      opt.textContent = eco.name || eco.ecosystem_id;
+      if (eco.apps_count > 0) opt.textContent += ' (' + eco.apps_count + ' apps)';
+      selector.appendChild(opt);
+    });
+    currentEcosystemId = activeId || ecosystems[0].ecosystem_id;
+    selector.value = currentEcosystemId;
+    loadMacroGraph();
+  } catch (err) {
+    showEmptyState('Error al conectar con el servidor: ' + err.message);
+  }
+}
+/* ===== Load Macro Graph ===== */
+async function loadMacroGraph() {
+  try {
+    const res = await fetch('/api/eco/graph/' + encodeURIComponent(currentEcosystemId));
+    if (!res.ok) throw new Error('Error al cargar grafo');
+    macroData = await res.json();
+    buildCytoscape(macroData);
+  } catch (err) {
+    showEmptyState('Error al cargar el grafo: ' + err.message);
+  }
+}
+
+function buildCytoscape(data) {
+  const container = document.getElementById('cy');
+  if (cy) { cy.destroy(); }
+  cy = cytoscape({
+    container: container,
+    elements: data.elements || { nodes: data.nodes || [], edges: data.edges || [] },
+    style: macroStyles,
+    layout: macroLayout,
+    minZoom: 0.3,
+    maxZoom: 3,
+    wheelSensitivity: 0.3,
+  });
+  bindCyEvents();
+}
+
+function bindCyEvents() {
+  cy.on('tap', 'node[type="app"]', function(evt) {
+    const node = evt.target;
+    showAppDetail(node.data());
+  });
+  cy.on('tap', 'edge[type="coupling"]', function(evt) {
+    const edge = evt.target;
+    const appA = edge.data('source');
+    const appB = edge.data('target');
+    switchToMicro(appA, appB);
+  });
+  cy.on('mouseover', 'node[type="app"]', function(evt) {
+    const node = evt.target;
+    const pos = node.renderedPosition();
+    showTooltip(pos.x, pos.y, buildNodeTooltip(node.data()));
+  });
+  cy.on('mouseout', 'node', function() { hideTooltip(); });
+  cy.on('mouseover', 'edge[type="coupling"]', function(evt) {
+    const edge = evt.target;
+    const midpoint = edge.renderedMidpoint();
+    showTooltip(midpoint.x, midpoint.y, buildEdgeTooltip(edge.data()));
+  });
+  cy.on('mouseout', 'edge', function() { hideTooltip(); });
+  cy.on('tap', function(evt) {
+    if (evt.target === cy) {
+      clearHighlights();
+      hidePanel();
+    }
+  });
+}
+/* ===== App Detail Panel ===== */
+async function showAppDetail(nodeData) {
+  const panel = document.getElementById('panel');
+  const title = document.getElementById('panel-title');
+  const content = document.getElementById('panel-content');
+  title.textContent = nodeData.label || nodeData.app_id || nodeData.id;
+  content.innerHTML = '<p style="color:var(--text-tertiary)">Cargando detalles...</p>';
+  panel.classList.add('open');
+  const appId = (nodeData.app_id || nodeData.id || '').replace('app:', '');
+  try {
+    const res = await fetch('/api/eco/app/' + encodeURIComponent(currentEcosystemId) + '/' + encodeURIComponent(appId));
+    if (!res.ok) throw new Error('No se pudieron cargar los detalles');
+    const detail = await res.json();
+    content.innerHTML = renderAppDetailHTML(detail);
+  } catch (err) {
+    content.innerHTML = '<p style="color:var(--accent-red)">' + escapeHtml(err.message) + '</p>';
+  }
+}
+
+function renderAppDetailHTML(detail) {
+  let html = '';
+  html += '<div class="detail-row"><span class="detail-label">App ID</span><span class="detail-value">' + escapeHtml(detail.app_id || '') + '</span></div>';
+  html += '<div class="detail-row"><span class="detail-label">Equipo</span><span class="detail-value">' + escapeHtml(detail.team || 'Sin equipo') + '</span></div>';
+  html += '<div class="detail-row"><span class="detail-label">Acoplamiento</span><span class="detail-value">' + escapeHtml(detail.coupling_type || '') + '</span></div>';
+  html += '<div class="detail-row"><span class="detail-label">Historias</span><span class="detail-value">' + (detail.story_count || 0) + '</span></div>';
+  if (detail.entities && detail.entities.length > 0) {
+    html += '<div style="margin-top:16px"><span class="detail-label">Entidades (' + detail.entities.length + ')</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">';
+    detail.entities.forEach(function(e) {
+      html += '<span class="entity-pill consistent">' + escapeHtml(e) + '</span>';
+    });
+    html += '</div></div>';
+  }
+  if (detail.flows && detail.flows.length > 0) {
+    html += '<div style="margin-top:16px"><span class="detail-label">Flujos (' + detail.flows.length + ')</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">';
+    detail.flows.forEach(function(f) {
+      html += '<span class="entity-pill consistent" style="background:rgba(191,90,242,0.12);color:var(--accent-purple);border-color:rgba(191,90,242,0.25)">' + escapeHtml(f) + '</span>';
+    });
+    html += '</div></div>';
+  }
+  if (detail.contracts_exposed && detail.contracts_exposed.length > 0) {
+    html += '<div style="margin-top:16px"><span class="detail-label">Contratos Expuestos</span>';
+    detail.contracts_exposed.forEach(function(c) {
+      html += '<div class="detail-row"><span class="detail-value" style="font-size:12px">' + escapeHtml(c.name) + '</span><span class="detail-label">' + escapeHtml(c.type) + ' v' + escapeHtml(c.version) + '</span></div>';
+    });
+    html += '</div>';
+  }
+  if (detail.contracts_consumed && detail.contracts_consumed.length > 0) {
+    html += '<div style="margin-top:16px"><span class="detail-label">Contratos Consumidos</span>';
+    detail.contracts_consumed.forEach(function(c) {
+      html += '<div class="detail-row"><span class="detail-value" style="font-size:12px">' + escapeHtml(c.name) + '</span><span class="detail-label">' + escapeHtml(c.type) + ' v' + escapeHtml(c.version) + '</span></div>';
+    });
+    html += '</div>';
+  }
+  if (detail.depends_on && detail.depends_on.length > 0) {
+    html += '<div style="margin-top:16px"><span class="detail-label">Depende de</span><div style="margin-top:6px;font-size:12px;color:var(--text-secondary)">' + detail.depends_on.join(', ') + '</div></div>';
+  }
+  if (detail.depended_by && detail.depended_by.length > 0) {
+    html += '<div style="margin-top:16px"><span class="detail-label">Dependido por</span><div style="margin-top:6px;font-size:12px;color:var(--text-secondary)">' + detail.depended_by.join(', ') + '</div></div>';
+  }
+  if (detail.shared_entities && detail.shared_entities.length > 0) {
+    html += '<div style="margin-top:16px"><span class="detail-label">Entidades Compartidas</span>';
+    detail.shared_entities.forEach(function(e) {
+      const cls = e.is_consistent ? 'consistent' : 'divergent';
+      html += '<div style="margin-top:6px"><span class="entity-pill ' + cls + '">' + escapeHtml(e.entity) + (e.is_consistent ? '' : ' ⚠') + '</span>';
+      if (!e.is_consistent && e.divergence) html += '<div style="font-size:11px;color:var(--accent-red);margin-top:4px;padding-left:8px">' + escapeHtml(e.divergence) + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+  return html;
+}
+/* ===== Micro View ===== */
+async function switchToMicro(appA, appB) {
+  currentView = 'micro';
+  updateToggleState();
+  document.getElementById('view-macro').style.display = 'none';
+  const microEl = document.getElementById('view-micro');
+  microEl.style.display = 'flex';
+  microEl.innerHTML = '<div class="empty-state"><p>Cargando flujos...</p></div>';
+  const appAId = appA.replace('app:', '');
+  const appBId = appB.replace('app:', '');
+  try {
+    const url = '/api/eco/flows/' + encodeURIComponent(currentEcosystemId) + '/' + encodeURIComponent(appAId) + '/' + encodeURIComponent(appBId);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Error al cargar flujos');
+    const data = await res.json();
+    renderMicroView(data, appAId, appBId);
+  } catch (err) {
+    microEl.innerHTML = '<div class="empty-state"><p style="color:var(--accent-red)">' + escapeHtml(err.message) + '</p></div>';
+  }
+}
+
+function renderMicroView(data, appA, appB) {
+  const microEl = document.getElementById('view-micro');
+  const appAInfo = data.app_a || { name: appA, app_id: appA };
+  const appBInfo = data.app_b || { name: appB, app_id: appB };
+  const flows = data.flows || [];
+  const summary = data.coupling_summary || {};
+
+  let html = '';
+  html += '<button class="back-btn" onclick="backToMacro()">&#8592; Volver al grafo</button>';
+  html += '<div class="micro-header">';
+  html += '  <div class="micro-app-block"><h3>' + escapeHtml(appAInfo.name) + '</h3><span>' + escapeHtml(appAInfo.team || appAInfo.app_id) + ' · ' + (appAInfo.story_count || 0) + ' HUs</span></div>';
+  html += '  <div class="micro-connection-label">' + (summary.contracts_count || 0) + ' contratos &middot; ' + (summary.shared_entities_count || 0) + ' entidades<br><span style="font-size:10px;color:var(--text-tertiary)">Fuerza: ' + (summary.coupling_strength || 0) + '</span></div>';
+  html += '  <div class="micro-app-block"><h3>' + escapeHtml(appBInfo.name) + '</h3><span>' + escapeHtml(appBInfo.team || appBInfo.app_id) + ' · ' + (appBInfo.story_count || 0) + ' HUs</span></div>';
+  html += '</div>';
+  html += '<div class="micro-flows-list">';
+
+  if (flows.length === 0 && (!data.implicit_shared_entities || data.implicit_shared_entities.length === 0)) {
+    html += '<div class="empty-state"><p>No se encontraron flujos formales entre estas aplicaciones</p></div>';
+  } else {
+    flows.forEach(function(flow) {
+      const originName = flow.origin ? flow.origin.app_name : appA;
+      const targetName = flow.target ? flow.target.app_name : appB;
+      const dirArrow = flow.direction === 'b_to_a' ? '&#8592;' : '&#8594;';
+      html += '<div class="flow-card" onclick="showFlowDetailFromData(this)" data-flow=\'' + escapeAttr(JSON.stringify(flow)) + '\'>';
+      html += '  <div class="flow-title">' + escapeHtml(flow.flow_name || 'Flujo') + '</div>';
+      html += '  <div class="flow-arrow">';
+      html += '    <span class="flow-origin">' + escapeHtml(originName) + '</span>';
+      html += '    <span class="flow-direction">' + dirArrow + '</span>';
+      html += '    <span class="flow-target">' + escapeHtml(targetName) + '</span>';
+      html += '  </div>';
+      if (flow.contract) {
+        html += '  <div class="flow-contract">Contrato: ' + escapeHtml(flow.contract.name || '') + ' (' + escapeHtml(flow.contract.type || '') + ' v' + escapeHtml(String(flow.contract.version || '1')) + ')</div>';
+      }
+      if (flow.entities_in_transit && flow.entities_in_transit.length > 0) {
+        html += '  <div class="flow-entities">';
+        flow.entities_in_transit.forEach(function(e) {
+          const cls = e.is_consistent ? 'consistent' : 'divergent';
+          const warn = e.is_consistent ? '' : ' &#9888;';
+          html += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + warn + '</span>';
+        });
+        html += '  </div>';
+      }
+      html += '</div>';
+    });
+
+    /* Implicit shared entities (no contract) */
+    if (data.implicit_shared_entities && data.implicit_shared_entities.length > 0) {
+      html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--surface-border)">';
+      html += '<div class="flow-title" style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Entidades compartidas sin contrato formal (acoplamiento implicito)</div>';
+      html += '<div class="flow-entities">';
+      data.implicit_shared_entities.forEach(function(e) {
+        const cls = e.is_consistent ? 'consistent' : 'divergent';
+        const warn = e.is_consistent ? '' : ' &#9888;';
+        html += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.entity) + warn + '</span>';
+      });
+      html += '</div></div>';
+    }
+  }
+  html += '</div>';
+  microEl.innerHTML = html;
+}
+/* ===== Flow Detail in Panel ===== */
+function showFlowDetailFromData(el) {
+  try {
+    const flow = JSON.parse(el.getAttribute('data-flow'));
+    const panel = document.getElementById('panel');
+    const title = document.getElementById('panel-title');
+    const content = document.getElementById('panel-content');
+    title.textContent = flow.flow_name || 'Detalle del flujo';
+    let html = '';
+    html += '<div class="detail-row"><span class="detail-label">Flujo</span><span class="detail-value">' + escapeHtml(flow.flow_name || '') + '</span></div>';
+    html += '<div class="detail-row"><span class="detail-label">Direccion</span><span class="detail-value">' + (flow.direction === 'b_to_a' ? '← (B a A)' : '→ (A a B)') + '</span></div>';
+    if (flow.origin) {
+      html += '<div class="detail-row"><span class="detail-label">Origen</span><span class="detail-value">' + escapeHtml(flow.origin.app_name || flow.origin.app_id || '') + '</span></div>';
+    }
+    if (flow.target) {
+      html += '<div class="detail-row"><span class="detail-label">Destino</span><span class="detail-value">' + escapeHtml(flow.target.app_name || flow.target.app_id || '') + '</span></div>';
+    }
+    if (flow.contract) {
+      html += '<div style="margin-top:16px"><span class="detail-label">Contrato</span>';
+      html += '<div class="detail-row"><span class="detail-label">Nombre</span><span class="detail-value">' + escapeHtml(flow.contract.name || '') + '</span></div>';
+      html += '<div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value">' + escapeHtml(flow.contract.type || '') + '</span></div>';
+      html += '<div class="detail-row"><span class="detail-label">Version</span><span class="detail-value">v' + escapeHtml(String(flow.contract.version || '1')) + '</span></div>';
+      if (flow.contract.spec_reference) {
+        html += '<div class="detail-row"><span class="detail-label">Spec</span><span class="detail-value" style="font-size:11px">' + escapeHtml(flow.contract.spec_reference) + '</span></div>';
+      }
+      html += '</div>';
+    }
+    if (flow.entities_in_transit && flow.entities_in_transit.length > 0) {
+      html += '<div style="margin-top:16px"><span class="detail-label">Entidades en Transito</span><div style="margin-top:8px">';
+      flow.entities_in_transit.forEach(function(e) {
+        const cls = e.is_consistent ? 'consistent' : 'divergent';
+        html += '<div style="margin-bottom:8px"><span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + (e.is_consistent ? '' : ' ⚠') + '</span>';
+        if (!e.is_consistent && e.divergence) {
+          html += '<div style="font-size:11px;color:var(--accent-red);margin-top:4px;padding-left:8px">' + escapeHtml(e.divergence) + '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div></div>';
+    }
+    content.innerHTML = html;
+    panel.classList.add('open');
+  } catch (err) { /* parse error — ignore */ }
+}
+
+/* ===== View Toggle ===== */
+function backToMacro() {
+  currentView = 'macro';
+  updateToggleState();
+  document.getElementById('view-micro').style.display = 'none';
+  document.getElementById('view-macro').style.display = 'flex';
+  if (cy) cy.resize();
+}
+
+function promptMicro() {
+  if (currentView === 'micro') return;
+  showTooltipMessage('Haz click en una conexion entre apps para ver los flujos detallados');
+}
+
+function updateToggleState() {
+  const btnMacro = document.getElementById('btn-macro');
+  const btnMicro = document.getElementById('btn-micro');
+  if (currentView === 'macro') {
+    btnMacro.classList.add('active');
+    btnMicro.classList.remove('active');
+  } else {
+    btnMacro.classList.remove('active');
+    btnMicro.classList.add('active');
+  }
+}
+/* ===== Filters ===== */
+function toggleFilter(type) {
+  activeFilters[type] = !activeFilters[type];
+  const btn = document.querySelector('.filter-btn[data-filter="' + type + '"]');
+  if (btn) btn.classList.toggle('active', activeFilters[type]);
+  applyFilters();
+}
+
+function toggleConflictsOnly() {
+  conflictsOnly = !conflictsOnly;
+  const btn = document.getElementById('btn-conflicts-only');
+  btn.classList.toggle('active', conflictsOnly);
+  applyFilters();
+}
+
+function applyFilters() {
+  if (!cy) return;
+  /* Show/hide edges based on sync_type filter */
+  cy.edges('[type="coupling"]').forEach(function(edge) {
+    const syncType = edge.data('sync_type');
+    if (syncType && activeFilters[syncType] === false) {
+      edge.hide();
+    } else {
+      edge.show();
+    }
+  });
+  /* Conflicts only: fade healthy apps */
+  if (conflictsOnly) {
+    cy.nodes('[health="green"]').addClass('faded');
+    cy.nodes('[health="yellow"], [health="red"]').removeClass('faded');
+  } else {
+    cy.nodes().removeClass('faded');
+  }
+}
+
+function resetView() {
+  activeFilters = { sync: true, async: true, mixed: true };
+  conflictsOnly = false;
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    if (btn.dataset.filter) btn.classList.add('active');
+  });
+  document.getElementById('btn-conflicts-only').classList.remove('active');
+  if (cy) {
+    cy.elements().show();
+    cy.elements().removeClass('faded highlighted');
+    cy.fit(undefined, 60);
+  }
+  hidePanel();
+}
+
+/* ===== Ecosystem Switch ===== */
+function switchEcosystem(id) {
+  if (!id) return;
+  currentEcosystemId = id;
+  if (currentView === 'micro') { backToMacro(); }
+  loadMacroGraph();
+}
+/* ===== Tooltip ===== */
+function showTooltip(x, y, html) {
+  const tip = document.getElementById('tooltip');
+  tip.innerHTML = html;
+  tip.style.left = (x + 20) + 'px';
+  tip.style.top = (y + 60) + 'px';
+  tip.style.transform = '';
+  tip.classList.add('visible');
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').classList.remove('visible');
+}
+
+function showTooltipMessage(msg) {
+  const tip = document.getElementById('tooltip');
+  tip.innerHTML = '<p>' + escapeHtml(msg) + '</p>';
+  tip.style.left = '50%';
+  tip.style.top = '50%';
+  tip.style.transform = 'translate(-50%, -50%)';
+  tip.classList.add('visible');
+  setTimeout(function() {
+    tip.classList.remove('visible');
+    tip.style.transform = '';
+  }, 3000);
+}
+
+function buildNodeTooltip(data) {
+  let html = '<strong>' + escapeHtml(data.label || data.id) + '</strong>';
+  if (data.team) html += '<br><span style="color:var(--text-secondary)">Equipo: ' + escapeHtml(data.team) + '</span>';
+  if (data.story_count !== undefined) html += '<br><span style="color:var(--text-secondary)">' + data.story_count + ' HUs · ' + (data.entities_count || 0) + ' entidades</span>';
+  if (data.coupling_type) html += '<br><span style="color:var(--text-secondary)">' + escapeHtml(data.coupling_type) + '</span>';
+  if (data.health) {
+    const color = data.health === 'green' ? 'var(--accent-green)' : data.health === 'yellow' ? 'var(--accent-orange)' : 'var(--accent-red)';
+    html += '<br><span style="color:' + color + '">● ' + escapeHtml(data.health) + '</span>';
+  }
+  return html;
+}
+
+function buildEdgeTooltip(data) {
+  let html = '<strong>Acoplamiento</strong>';
+  if (data.label) html += '<br>' + escapeHtml(data.label);
+  if (data.coupling_strength) html += '<br><span style="color:var(--text-secondary)">Fuerza: ' + data.coupling_strength + '/10</span>';
+  if (data.sync_type) html += '<br><span style="color:var(--text-secondary)">Tipo: ' + escapeHtml(data.sync_type) + '</span>';
+  html += '<br><span style="color:var(--accent-blue);font-size:10px">Click para ver flujos</span>';
+  return html;
+}
+
+/* ===== Panel ===== */
+function hidePanel() {
+  document.getElementById('panel').classList.remove('open');
+}
+
+/* ===== Highlights ===== */
+function clearHighlights() {
+  if (cy) { cy.elements().removeClass('highlighted faded'); }
+}
+/* ===== Empty State ===== */
+function showEmptyState(msg) {
+  const container = document.getElementById('cy');
+  container.innerHTML = '<div class="empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><p>' + escapeHtml(msg) + '</p></div>';
+}
+
+/* ===== Utility ===== */
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(String(str)));
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+</script>
+</body>
+</html>

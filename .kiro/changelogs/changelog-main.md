@@ -39,3 +39,12 @@
 
 ### Eliminado
 - Se eliminó el patrón singleton rígido que impedía tener más de un proyecto/ecosistema
+
+### Agregado (Ecosystem Graph Visualizer)
+- Se creó `src/engine/ecosystem_visualizer.py` con lógica backend para la vista de ecosistema: grafo macro (topología de acoplamiento), flujos micro (punto A → punto B), detalle de apps, e indicadores de salud
+- Se creó `src/engine/ecosystem_visualizer_ui.html` con UI completa: vista macro (Cytoscape.js con compound nodes para clusters cohesivos, grosor de edges proporcional a fuerza de acoplamiento), vista micro (diagrama de flujos tipo secuencia en HTML/CSS), panel lateral de detalle, leyenda, filtros por tipo de integración
+- Se agregaron 6 nuevas rutas HTTP al visualizador existente (puerto 9751): `GET /ecosystem`, `GET /api/eco/ecosystems`, `GET /api/eco/graph/{id}`, `GET /api/eco/flows/{id}/{app_a}/{app_b}`, `GET /api/eco/app/{id}/{app_id}`, `GET /api/eco/health/{id}`
+- Se agregó selector de vista (tabs) en la UI existente: "Red Neuronal" ↔ "Ecosistema" para navegar entre las dos vistas desde el mismo puerto
+- La vista macro muestra: apps como nodos con badge de salud (verde/amarillo/rojo), clusters cohesivos agrupados, fuerza de acoplamiento como grosor de línea, tipo de integración diferenciado (síncrona/asíncrona/mixta)
+- La vista micro muestra: flujos concretos entre dos apps con HUs origen/destino, entidades en tránsito con indicador de divergencia, contratos que habilitan cada flujo
+- Se agregó spec completa en `.kiro/specs/ecosystem-graph-visualizer/` (requirements, design, tasks)

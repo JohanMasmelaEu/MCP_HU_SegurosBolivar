@@ -20,6 +20,14 @@ from starlette.routing import Route
 from src.engine.memory import get_memory
 from src.engine.workspace_manager import get_workspace_manager
 from src.engine.ecosystem_manager import get_ecosystem_manager
+from src.engine.ecosystem_visualizer import (
+    route_ecosystem_index,
+    route_eco_ecosystems,
+    route_eco_graph,
+    route_eco_flows,
+    route_eco_app_detail,
+    route_eco_health,
+)
 
 logger = logging.getLogger("mcp_hu.engine.visualizer")
 
@@ -258,6 +266,13 @@ app = Starlette(routes=[
     Route("/api/workspaces/switch", route_switch_workspace, methods=["POST"]),
     Route("/api/ecosystems", route_ecosystems),
     Route("/api/ecosystems/switch", route_switch_ecosystem, methods=["POST"]),
+    # ─── Ecosystem Graph Visualizer ───────────────────────────────────────────
+    Route("/ecosystem", route_ecosystem_index),
+    Route("/api/eco/ecosystems", route_eco_ecosystems),
+    Route("/api/eco/graph/{ecosystem_id}", route_eco_graph),
+    Route("/api/eco/flows/{ecosystem_id}/{app_a}/{app_b}", route_eco_flows),
+    Route("/api/eco/app/{ecosystem_id}/{app_id}", route_eco_app_detail),
+    Route("/api/eco/health/{ecosystem_id}", route_eco_health),
 ])
 
 

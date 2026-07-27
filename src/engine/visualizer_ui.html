@@ -337,7 +337,11 @@ body::before {
 </style>
 </head>
 <body>
-<div id="toolbar" class="glass-panel">
+<nav class="view-selector" style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:0;background:rgba(18,18,20,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--surface-border);padding:0 24px;height:36px">
+  <a href="/" style="padding:6px 18px;text-decoration:none;font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--accent-blue);border-bottom:2px solid var(--accent-blue)">Red Neuronal</a>
+  <a href="/ecosystem" style="padding:6px 18px;text-decoration:none;font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-secondary);border-bottom:2px solid transparent">Ecosistema</a>
+</nav>
+<div id="toolbar" class="glass-panel" style="top:44px">
   <span class="toolbar-label">Workspace</span>
   <select id="selectorWorkspace" onchange="switchWorkspace(this.value)">
     <option value="">Cargando...</option>
