@@ -656,6 +656,9 @@ function startNeuralPulse() {
 function highlightNode(node) {
   // Stop any ongoing neural pulse animations to prevent style conflicts
   cy.elements().stop(true, true);
+  // Reset previous highlight before applying new one
+  cy.elements().removeClass('faded highlighted');
+  // Apply new highlight
   cy.elements().addClass('faded');
   node.removeClass('faded').addClass('highlighted');
   node.neighborhood().removeClass('faded');
@@ -664,10 +667,12 @@ function resetHighlight() {
   cy.elements().stop(true, true);
   cy.elements().removeClass('faded highlighted');
 }
+var _hidePanelTimeout = null;
 function hidePanel() {
   var p = document.getElementById('panel');
   p.style.transform = 'translateX(100%)'; p.style.opacity = '0';
-  setTimeout(function(){ p.classList.remove('active'); p.style.display = 'none'; }, 500);
+  if (_hidePanelTimeout) clearTimeout(_hidePanelTimeout);
+  _hidePanelTimeout = setTimeout(function(){ p.classList.remove('active'); p.style.display = 'none'; _hidePanelTimeout = null; }, 500);
 }
 
 async function showDetail(id) {
@@ -754,7 +759,8 @@ async function showDetail(id) {
     content.classList.remove('transitioning');
   }, 250);
 
-  // Show panel: set display first, then animate in on next frame for transition to work
+  // Show panel: cancel any pending hide, then animate in
+  if (_hidePanelTimeout) { clearTimeout(_hidePanelTimeout); _hidePanelTimeout = null; }
   panel.style.display = 'flex';
   panel.classList.add('active');
   requestAnimationFrame(function(){
