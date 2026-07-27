@@ -311,6 +311,139 @@ body::before {
   border-color: rgba(255,255,255,0.18); color: var(--text-primary);
   transform: translateX(-2px);
 }
+/* ===== Flow Selector ===== */
+.flow-selector {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; margin-bottom: 16px;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+}
+.flow-selector-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--text-tertiary); white-space: nowrap;
+}
+.flow-selector select {
+  flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-primary); padding: 8px 12px; border-radius: 8px;
+  font-size: 12px; font-family: inherit; cursor: pointer; outline: none;
+}
+.flow-selector select:focus { border-color: rgba(10,132,255,0.4); }
+/* ===== Diagram Tabs ===== */
+.diagram-tabs {
+  display: flex; gap: 2px; margin-bottom: 20px;
+  background: rgba(255,255,255,0.02); border-radius: 10px; padding: 3px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.diagram-tab {
+  flex: 1; padding: 8px 16px; border: none; border-radius: 8px;
+  background: transparent; color: var(--text-tertiary);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.3px;
+  cursor: pointer; transition: all 0.2s;
+}
+.diagram-tab.active {
+  background: rgba(10,132,255,0.15); color: var(--accent-blue);
+}
+.diagram-tab:hover:not(.active) { color: var(--text-secondary); }
+/* ===== Sequence Diagram ===== */
+.seq-diagram {
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px; padding: 24px; margin-bottom: 16px;
+}
+.seq-diagram.technical { border-color: rgba(191,90,242,0.15); }
+.seq-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text-tertiary); margin-bottom: 4px;
+}
+.seq-subtitle {
+  font-size: 15px; font-weight: 600; color: var(--text-primary);
+  letter-spacing: -0.2px; margin-bottom: 20px;
+}
+.seq-participants {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 4px;
+}
+.seq-participant {
+  padding: 10px 20px; border-radius: 10px; font-size: 12px; font-weight: 600;
+  text-align: center; min-width: 140px;
+}
+.seq-participant.origin {
+  background: rgba(10,132,255,0.1); border: 1px solid rgba(10,132,255,0.25);
+  color: var(--accent-blue);
+}
+.seq-participant.target {
+  background: rgba(191,90,242,0.1); border: 1px solid rgba(191,90,242,0.25);
+  color: var(--accent-purple);
+}
+.seq-participant-name { font-size: 12px; font-weight: 600; }
+.seq-participant-role { font-size: 9px; color: var(--text-tertiary); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+.seq-participant-spacer { flex: 1; }
+.seq-body {
+  display: flex; padding: 0 20px; min-height: 120px;
+}
+.seq-lifeline {
+  width: 2px; background: rgba(255,255,255,0.08); border-radius: 1px;
+  margin: 0 4px;
+}
+.seq-lifeline.left { margin-left: 50px; }
+.seq-lifeline.right { margin-right: 50px; }
+.seq-messages { flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 16px 12px; }
+.seq-message {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 14px; border-radius: 10px;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+}
+.seq-message.msg-right { align-items: flex-start; border-left: 3px solid rgba(10,132,255,0.4); }
+.seq-message.msg-left { align-items: flex-end; border-right: 3px solid rgba(191,90,242,0.4); }
+.seq-msg-label { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.seq-msg-type {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 2px 8px; border-radius: 4px;
+}
+.seq-msg-type.sync { background: rgba(10,132,255,0.15); color: var(--accent-blue); }
+.seq-msg-type.async { background: rgba(255,159,10,0.15); color: var(--accent-orange); }
+.seq-msg-type.response { background: rgba(48,209,88,0.15); color: var(--accent-green); }
+.seq-msg-name { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+.seq-msg-arrow {
+  width: 100%; height: 2px; background: rgba(10,132,255,0.3);
+  border-radius: 1px; position: relative;
+}
+.seq-msg-arrow.dashed { background: repeating-linear-gradient(90deg, rgba(10,132,255,0.3) 0 6px, transparent 6px 10px); }
+.seq-msg-arrow::after {
+  content: ''; position: absolute; right: 0; top: -3px;
+  border: 4px solid transparent; border-left-color: rgba(10,132,255,0.5);
+}
+.msg-left .seq-msg-arrow::after { right: auto; left: 0; border-left-color: transparent; border-right-color: rgba(191,90,242,0.5); }
+.seq-msg-data { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.seq-msg-payload {
+  font-size: 11px; color: var(--text-secondary); margin-top: 4px;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.seq-msg-payload code {
+  font-family: "SF Mono", "Fira Code", monospace; font-size: 10px;
+  background: rgba(255,255,255,0.04); padding: 2px 6px; border-radius: 4px;
+  color: var(--accent-teal);
+}
+.payload-label { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; }
+.payload-warn { font-size: 10px; color: var(--accent-red); }
+.seq-note {
+  text-align: center; font-size: 11px; color: var(--text-tertiary);
+  padding: 8px; font-style: italic;
+}
+.seq-note-actor { font-weight: 600; color: var(--text-secondary); font-style: normal; }
+.seq-activation {
+  text-align: center; padding: 8px 14px;
+  background: rgba(191,90,242,0.06); border: 1px solid rgba(191,90,242,0.12);
+  border-radius: 6px;
+}
+.seq-activation-label { font-size: 10px; color: var(--accent-purple); font-family: "SF Mono", monospace; }
+.seq-meta {
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.04);
+  font-size: 11px; color: var(--text-tertiary);
+}
+.seq-meta strong { color: var(--text-secondary); font-weight: 600; }
+.seq-meta code { font-family: "SF Mono", monospace; font-size: 10px; color: var(--accent-teal); }
+.diagram-panel { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -383,39 +516,38 @@ let conflictsOnly = false;
 /* ===== Cytoscape Styles ===== */
 const macroStyles = [
   { selector: 'node[type="cluster"]', style: {
-    'background-color': 'rgba(100,180,255,0.04)',
-    'background-opacity': 1,
-    'border-width': 1.5, 'border-style': 'solid',
-    'border-color': 'rgba(140,200,255,0.2)',
-    'border-opacity': 1,
-    'shape': 'round-rectangle', 'border-radius': 24,
+    'background-color': 'rgba(100,180,255,0.03)',
+    'background-opacity': 0.6,
+    'border-width': 1, 'border-style': 'solid',
+    'border-color': 'rgba(140,200,255,0.12)',
+    'border-opacity': 0.7,
+    'shape': 'round-rectangle', 'border-radius': 28,
     'label': 'data(label)', 'font-size': 10,
     'text-valign': 'top', 'text-halign': 'center',
     'text-margin-y': -4,
-    'color': 'rgba(160,200,255,0.5)',
+    'color': 'rgba(160,200,255,0.4)',
     'padding': 35,
-    'shadow-blur': 30, 'shadow-color': 'rgba(100,180,255,0.15)', 'shadow-opacity': 0.6,
-    'shadow-offset-x': 0, 'shadow-offset-y': 4,
+    'shadow-blur': 40, 'shadow-color': 'rgba(100,180,255,0.08)', 'shadow-opacity': 0.5,
+    'shadow-offset-x': 0, 'shadow-offset-y': 6,
   }},
   { selector: 'node[type="app"]', style: {
     'shape': 'round-rectangle',
     'width': 180, 'height': 90,
-    'background-color': 'rgba(10,132,255,0.08)',
-    'background-opacity': 1,
-    'border-width': 1.5, 'border-color': 'rgba(10,132,255,0.5)',
+    'background-color': 'rgba(10,132,255,0.05)',
+    'background-opacity': 0.7,
+    'border-width': 1, 'border-color': 'rgba(10,132,255,0.35)',
+    'border-opacity': 0.8,
     'label': 'data(label)', 'font-size': 13, 'font-weight': 500,
     'text-valign': 'center', 'text-halign': 'center',
     'color': 'rgba(255,255,255,0.92)',
     'text-wrap': 'wrap', 'text-max-width': 160,
-    'shadow-blur': 24, 'shadow-color': 'rgba(10,132,255,0.25)', 'shadow-opacity': 0.7,
+    'shadow-blur': 28, 'shadow-color': 'rgba(10,132,255,0.15)', 'shadow-opacity': 0.6,
     'shadow-offset-x': 0, 'shadow-offset-y': 4,
     'overlay-opacity': 0,
-    'transition-property': 'shadow-blur, shadow-opacity, border-color',
-    'transition-duration': '0.3s',
   }},
-  { selector: 'node[health="green"]', style: { 'border-color': 'rgba(48,209,88,0.6)', 'shadow-color': 'rgba(48,209,88,0.3)' }},
-  { selector: 'node[health="yellow"]', style: { 'border-color': 'rgba(255,159,10,0.6)', 'shadow-color': 'rgba(255,159,10,0.3)' }},
-  { selector: 'node[health="red"]', style: { 'border-color': 'rgba(255,69,58,0.6)', 'shadow-color': 'rgba(255,69,58,0.3)' }},
+  { selector: 'node[health="green"]', style: { 'border-color': 'rgba(48,209,88,0.4)', 'shadow-color': 'rgba(48,209,88,0.15)' }},
+  { selector: 'node[health="yellow"]', style: { 'border-color': 'rgba(255,159,10,0.4)', 'shadow-color': 'rgba(255,159,10,0.15)' }},
+  { selector: 'node[health="red"]', style: { 'border-color': 'rgba(255,69,58,0.5)', 'shadow-color': 'rgba(255,69,58,0.2)' }},
   { selector: 'edge[type="coupling"]', style: {
     'width': 'mapData(coupling_strength, 1, 10, 2, 8)',
     'curve-style': 'bezier',
@@ -643,6 +775,10 @@ function renderAppDetailHTML(detail) {
   return html;
 }
 /* ===== Micro View ===== */
+var _microFlowsData = null;
+var _microAppA = null;
+var _microAppB = null;
+
 async function switchToMicro(appA, appB) {
   currentView = 'micro';
   updateToggleState();
@@ -652,11 +788,14 @@ async function switchToMicro(appA, appB) {
   microEl.innerHTML = '<div class="empty-state"><p>Cargando flujos...</p></div>';
   const appAId = appA.replace('app:', '');
   const appBId = appB.replace('app:', '');
+  _microAppA = appAId;
+  _microAppB = appBId;
   try {
     const url = '/api/eco/flows/' + encodeURIComponent(currentEcosystemId) + '/' + encodeURIComponent(appAId) + '/' + encodeURIComponent(appBId);
     const res = await fetch(url);
     if (!res.ok) throw new Error('Error al cargar flujos');
     const data = await res.json();
+    _microFlowsData = data;
     renderMicroView(data, appAId, appBId);
   } catch (err) {
     microEl.innerHTML = '<div class="empty-state"><p style="color:var(--accent-red)">' + escapeHtml(err.message) + '</p></div>';
@@ -672,57 +811,294 @@ function renderMicroView(data, appA, appB) {
 
   let html = '';
   html += '<button class="back-btn" onclick="backToMacro()">&#8592; Volver al grafo</button>';
+
+  /* Header: apps + summary */
   html += '<div class="micro-header">';
   html += '  <div class="micro-app-block"><h3>' + escapeHtml(appAInfo.name) + '</h3><span>' + escapeHtml(appAInfo.team || appAInfo.app_id) + ' · ' + (appAInfo.story_count || 0) + ' HUs</span></div>';
   html += '  <div class="micro-connection-label">' + (summary.contracts_count || 0) + ' contratos &middot; ' + (summary.shared_entities_count || 0) + ' entidades<br><span style="font-size:10px;color:var(--text-tertiary)">Fuerza: ' + (summary.coupling_strength || 0) + '</span></div>';
   html += '  <div class="micro-app-block"><h3>' + escapeHtml(appBInfo.name) + '</h3><span>' + escapeHtml(appBInfo.team || appBInfo.app_id) + ' · ' + (appBInfo.story_count || 0) + ' HUs</span></div>';
   html += '</div>';
-  html += '<div class="micro-flows-list">';
+
+  /* Flow selector — respects active filters */
+  if (flows.length > 0) {
+    html += '<div class="flow-selector">';
+    html += '  <label class="flow-selector-label">Flujo</label>';
+    html += '  <select id="microFlowSelector" onchange="selectMicroFlow(this.value)">';
+    html += '    <option value="">Selecciona un flujo para ver su diagrama de secuencia...</option>';
+    flows.forEach(function(flow, idx) {
+      var contractType = flow.contract ? flow.contract.type : 'unknown';
+      var syncCategory = (contractType === 'async_event') ? 'async' : (contractType === 'rest_api' || contractType === 'graphql') ? 'sync' : 'mixed';
+      /* Check if this flow passes current filters */
+      var passesFilter = activeFilters[syncCategory] !== false;
+      if (conflictsOnly) {
+        var hasConflict = (flow.entities_in_transit || []).some(function(e) { return !e.is_consistent; });
+        if (!hasConflict) passesFilter = false;
+      }
+      if (passesFilter) {
+        var arrow = flow.direction === 'b_to_a' ? '←' : '→';
+        var origin = flow.origin ? flow.origin.app_name : appA;
+        var target = flow.target ? flow.target.app_name : appB;
+        var typeLabel = contractType === 'async_event' ? '⚡' : contractType === 'graphql' ? '◆' : '●';
+        html += '    <option value="' + idx + '">' + typeLabel + ' ' + escapeHtml(flow.flow_name || 'Flujo ' + (idx+1)) + ' (' + escapeHtml(origin) + ' ' + arrow + ' ' + escapeHtml(target) + ')</option>';
+      }
+    });
+    html += '  </select>';
+    html += '</div>';
+  }
+
+  /* Diagram container (initially shows overview) */
+  html += '<div id="micro-diagram-area">';
 
   if (flows.length === 0 && (!data.implicit_shared_entities || data.implicit_shared_entities.length === 0)) {
     html += '<div class="empty-state"><p>No se encontraron flujos formales entre estas aplicaciones</p></div>';
-  } else {
-    flows.forEach(function(flow) {
-      const originName = flow.origin ? flow.origin.app_name : appA;
-      const targetName = flow.target ? flow.target.app_name : appB;
-      const dirArrow = flow.direction === 'b_to_a' ? '&#8592;' : '&#8594;';
-      html += '<div class="flow-card" onclick="showFlowDetailFromData(this)" data-flow=\'' + escapeAttr(JSON.stringify(flow)) + '\'>';
-      html += '  <div class="flow-title">' + escapeHtml(flow.flow_name || 'Flujo') + '</div>';
-      html += '  <div class="flow-arrow">';
-      html += '    <span class="flow-origin">' + escapeHtml(originName) + '</span>';
-      html += '    <span class="flow-direction">' + dirArrow + '</span>';
-      html += '    <span class="flow-target">' + escapeHtml(targetName) + '</span>';
-      html += '  </div>';
-      if (flow.contract) {
-        html += '  <div class="flow-contract">Contrato: ' + escapeHtml(flow.contract.name || '') + ' (' + escapeHtml(flow.contract.type || '') + ' v' + escapeHtml(String(flow.contract.version || '1')) + ')</div>';
-      }
-      if (flow.entities_in_transit && flow.entities_in_transit.length > 0) {
-        html += '  <div class="flow-entities">';
-        flow.entities_in_transit.forEach(function(e) {
-          const cls = e.is_consistent ? 'consistent' : 'divergent';
-          const warn = e.is_consistent ? '' : ' &#9888;';
-          html += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + warn + '</span>';
-        });
-        html += '  </div>';
-      }
-      html += '</div>';
-    });
+  } else if (flows.length > 0) {
+    html += '<div class="empty-state" style="padding:40px 0"><p style="color:var(--text-tertiary)">Selecciona un flujo del dropdown para ver sus diagramas de secuencia</p></div>';
+  }
 
-    /* Implicit shared entities (no contract) */
-    if (data.implicit_shared_entities && data.implicit_shared_entities.length > 0) {
-      html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--surface-border)">';
-      html += '<div class="flow-title" style="font-size:12px;color:var(--text-tertiary);margin-bottom:12px">Entidades compartidas sin contrato formal (acoplamiento implicito)</div>';
-      html += '<div class="flow-entities">';
-      data.implicit_shared_entities.forEach(function(e) {
-        const cls = e.is_consistent ? 'consistent' : 'divergent';
-        const warn = e.is_consistent ? '' : ' &#9888;';
-        html += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.entity) + warn + '</span>';
+  /* Implicit shared entities */
+  if (data.implicit_shared_entities && data.implicit_shared_entities.length > 0) {
+    html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--surface-border)">';
+    html += '<div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Entidades compartidas sin contrato formal</div>';
+    html += '<div class="flow-entities">';
+    data.implicit_shared_entities.forEach(function(e) {
+      var cls = e.is_consistent ? 'consistent' : 'divergent';
+      var warn = e.is_consistent ? '' : ' &#9888;';
+      html += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.entity) + warn + '</span>';
+    });
+    html += '</div></div>';
+  }
+
+  html += '</div>'; /* end micro-diagram-area */
+  microEl.innerHTML = html;
+}
+
+/* Called when user selects a flow from the dropdown */
+function selectMicroFlow(idxStr) {
+  if (!idxStr || !_microFlowsData) return;
+  var idx = parseInt(idxStr, 10);
+  var flows = _microFlowsData.flows || [];
+  if (idx < 0 || idx >= flows.length) return;
+  var flow = flows[idx];
+  renderFlowDiagrams(flow);
+}
+
+/* Renders both sequence diagrams for a selected flow */
+function renderFlowDiagrams(flow) {
+  var area = document.getElementById('micro-diagram-area');
+  var originApp = flow.origin ? flow.origin.app_name : _microAppA;
+  var targetApp = flow.target ? flow.target.app_name : _microAppB;
+  var contract = flow.contract || {};
+  var entities = flow.entities_in_transit || [];
+
+  var html = '';
+
+  /* Tabs: Business / Technical */
+  html += '<div class="diagram-tabs">';
+  html += '  <button class="diagram-tab active" onclick="showDiagramTab(\'business\', this)">Proceso de Negocio</button>';
+  html += '  <button class="diagram-tab" onclick="showDiagramTab(\'technical\', this)">Secuencia Tecnica</button>';
+  html += '</div>';
+
+  /* ═══ BUSINESS SEQUENCE DIAGRAM ═══ */
+  html += '<div class="diagram-panel" id="diagram-business">';
+  html += renderBusinessDiagram(flow, originApp, targetApp, contract, entities);
+  html += '</div>';
+
+  /* ═══ TECHNICAL SEQUENCE DIAGRAM ═══ */
+  html += '<div class="diagram-panel" id="diagram-technical" style="display:none">';
+  html += renderTechnicalDiagram(flow, originApp, targetApp, contract, entities);
+  html += '</div>';
+
+  area.innerHTML = html;
+}
+
+/* Business-level sequence diagram: process flow */
+function renderBusinessDiagram(flow, originApp, targetApp, contract, entities) {
+  var h = '';
+  h += '<div class="seq-diagram">';
+  h += '  <div class="seq-title">Diagrama de Secuencia — Proceso de Negocio</div>';
+  h += '  <div class="seq-subtitle">' + escapeHtml(flow.flow_name || 'Flujo') + '</div>';
+
+  /* Participants */
+  h += '  <div class="seq-participants">';
+  h += '    <div class="seq-participant origin">' + escapeHtml(originApp) + '</div>';
+  h += '    <div class="seq-participant-spacer"></div>';
+  h += '    <div class="seq-participant target">' + escapeHtml(targetApp) + '</div>';
+  h += '  </div>';
+
+  /* Lifelines + Messages */
+  h += '  <div class="seq-body">';
+  h += '    <div class="seq-lifeline left"></div>';
+  h += '    <div class="seq-messages">';
+
+  /* Request message */
+  var requestEntities = entities.filter(function(e) { return !e.direction || e.direction === 'request' || e.direction === 'event_payload'; });
+  var responseEntities = entities.filter(function(e) { return e.direction === 'response'; });
+  var isAsync = contract.type === 'async_event';
+  var dirClass = flow.direction === 'b_to_a' ? 'msg-left' : 'msg-right';
+  var revClass = flow.direction === 'b_to_a' ? 'msg-right' : 'msg-left';
+
+  /* Step 1: Initiative */
+  h += '      <div class="seq-message ' + dirClass + '">';
+  h += '        <div class="seq-msg-label">';
+  if (isAsync) {
+    h += '          <span class="seq-msg-type async">Evento</span>';
+  } else {
+    h += '          <span class="seq-msg-type sync">Solicitud</span>';
+  }
+  h += '          <span class="seq-msg-name">' + escapeHtml(contract.name || flow.flow_name || '') + '</span>';
+  h += '        </div>';
+  h += '        <div class="seq-msg-arrow ' + (isAsync ? 'dashed' : '') + '"></div>';
+  if (requestEntities.length > 0) {
+    h += '        <div class="seq-msg-data">';
+    requestEntities.forEach(function(e) {
+      var cls = e.is_consistent ? 'consistent' : 'divergent';
+      h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + (e.is_consistent ? '' : ' ⚠') + '</span>';
+    });
+    h += '        </div>';
+  }
+  h += '      </div>';
+
+  /* Step 2: Processing note */
+  h += '      <div class="seq-note">';
+  h += '        <span class="seq-note-actor">' + escapeHtml(targetApp) + '</span> procesa la solicitud';
+  h += '      </div>';
+
+  /* Step 3: Response (only for sync) */
+  if (!isAsync && responseEntities.length > 0) {
+    h += '      <div class="seq-message ' + revClass + '">';
+    h += '        <div class="seq-msg-label">';
+    h += '          <span class="seq-msg-type response">Respuesta</span>';
+    h += '        </div>';
+    h += '        <div class="seq-msg-arrow dashed"></div>';
+    h += '        <div class="seq-msg-data">';
+    responseEntities.forEach(function(e) {
+      var cls = e.is_consistent ? 'consistent' : 'divergent';
+      h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + (e.is_consistent ? '' : ' ⚠') + '</span>';
+    });
+    h += '        </div>';
+    h += '      </div>';
+  } else if (!isAsync) {
+    h += '      <div class="seq-message ' + revClass + '">';
+    h += '        <div class="seq-msg-label"><span class="seq-msg-type response">Confirmacion</span></div>';
+    h += '        <div class="seq-msg-arrow dashed"></div>';
+    h += '      </div>';
+  }
+
+  h += '    </div>'; /* end seq-messages */
+  h += '    <div class="seq-lifeline right"></div>';
+  h += '  </div>'; /* end seq-body */
+  h += '</div>'; /* end seq-diagram */
+  return h;
+}
+
+/* Technical-level sequence diagram: algorithmic detail */
+function renderTechnicalDiagram(flow, originApp, targetApp, contract, entities) {
+  var h = '';
+  h += '<div class="seq-diagram technical">';
+  h += '  <div class="seq-title">Diagrama de Secuencia — Tecnico/Algoritmico</div>';
+  h += '  <div class="seq-subtitle">' + escapeHtml(flow.flow_name || 'Flujo') + '</div>';
+
+  /* Participants with technical names */
+  h += '  <div class="seq-participants">';
+  h += '    <div class="seq-participant origin"><div class="seq-participant-name">' + escapeHtml(originApp) + '</div><div class="seq-participant-role">Client</div></div>';
+  h += '    <div class="seq-participant-spacer"></div>';
+  h += '    <div class="seq-participant target"><div class="seq-participant-name">' + escapeHtml(targetApp) + '</div><div class="seq-participant-role">Service</div></div>';
+  h += '  </div>';
+
+  /* Technical lifelines + calls */
+  h += '  <div class="seq-body">';
+  h += '    <div class="seq-lifeline left"></div>';
+  h += '    <div class="seq-messages">';
+
+  var isAsync = contract.type === 'async_event';
+  var dirClass = flow.direction === 'b_to_a' ? 'msg-left' : 'msg-right';
+  var revClass = flow.direction === 'b_to_a' ? 'msg-right' : 'msg-left';
+
+  /* Call */
+  h += '      <div class="seq-message ' + dirClass + '">';
+  h += '        <div class="seq-msg-label">';
+  if (isAsync) {
+    h += '          <span class="seq-msg-type async">publish</span>';
+    h += '          <span class="seq-msg-name">topic: ' + escapeHtml(contract.name || '') + '</span>';
+  } else {
+    var method = contract.type === 'graphql' ? 'QUERY/MUTATION' : 'POST';
+    h += '          <span class="seq-msg-type sync">' + method + '</span>';
+    h += '          <span class="seq-msg-name">' + escapeHtml(contract.spec_reference || contract.name || '') + '</span>';
+  }
+  h += '        </div>';
+  h += '        <div class="seq-msg-arrow ' + (isAsync ? 'dashed' : '') + '"></div>';
+
+  /* Request payload */
+  if (entities.length > 0) {
+    var requestEnts = entities.filter(function(e) { return !e.direction || e.direction === 'request' || e.direction === 'event_payload'; });
+    if (requestEnts.length > 0) {
+      h += '        <div class="seq-msg-payload">';
+      h += '          <span class="payload-label">payload:</span>';
+      h += '          <code>{';
+      requestEnts.forEach(function(e, i) {
+        h += ' ' + escapeHtml(e.name);
+        if (i < requestEnts.length - 1) h += ',';
       });
-      html += '</div></div>';
+      h += ' }</code>';
+      if (requestEnts.some(function(e) { return !e.is_consistent; })) {
+        h += '          <span class="payload-warn">⚠ divergencia de esquema</span>';
+      }
+      h += '        </div>';
     }
   }
-  html += '</div>';
-  microEl.innerHTML = html;
+  h += '      </div>';
+
+  /* Processing activation */
+  h += '      <div class="seq-activation">';
+  h += '        <span class="seq-activation-label">validate → process → persist</span>';
+  h += '      </div>';
+
+  /* Response */
+  if (!isAsync) {
+    h += '      <div class="seq-message ' + revClass + '">';
+    h += '        <div class="seq-msg-label">';
+    h += '          <span class="seq-msg-type response">200 OK</span>';
+    h += '        </div>';
+    h += '        <div class="seq-msg-arrow dashed"></div>';
+    var responseEnts = entities.filter(function(e) { return e.direction === 'response'; });
+    if (responseEnts.length > 0) {
+      h += '        <div class="seq-msg-payload">';
+      h += '          <span class="payload-label">response:</span>';
+      h += '          <code>{';
+      responseEnts.forEach(function(e, i) {
+        h += ' ' + escapeHtml(e.name);
+        if (i < responseEnts.length - 1) h += ',';
+      });
+      h += ' }</code>';
+      h += '        </div>';
+    }
+    h += '      </div>';
+  } else {
+    h += '      <div class="seq-note">';
+    h += '        <span class="seq-note-actor">async</span> — fire and forget (no response)';
+    h += '      </div>';
+  }
+
+  /* Contract version */
+  h += '      <div class="seq-meta">';
+  h += '        Contrato: <strong>' + escapeHtml(contract.name || '') + '</strong> v' + escapeHtml(String(contract.version || '1'));
+  h += '        · Tipo: ' + escapeHtml(contract.type || 'unknown');
+  if (contract.spec_reference) h += ' · Spec: <code>' + escapeHtml(contract.spec_reference) + '</code>';
+  h += '      </div>';
+
+  h += '    </div>'; /* end seq-messages */
+  h += '    <div class="seq-lifeline right"></div>';
+  h += '  </div>'; /* end seq-body */
+  h += '</div>'; /* end seq-diagram */
+  return h;
+}
+
+/* Tab switching for diagrams */
+function showDiagramTab(tab, btn) {
+  document.querySelectorAll('.diagram-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('diagram-business').style.display = tab === 'business' ? 'block' : 'none';
+  document.getElementById('diagram-technical').style.display = tab === 'technical' ? 'block' : 'none';
 }
 /* ===== Flow Detail in Panel ===== */
 function showFlowDetailFromData(el) {
@@ -813,7 +1189,6 @@ function applyFilters() {
   /* Show/hide edges based on sync_type filter */
   cy.edges('[type="coupling"]').forEach(function(edge) {
     var syncType = edge.data('sync_type');
-    /* "implicit" is always shown unless conflicts-only is active */
     if (syncType === 'implicit') {
       edge.show();
     } else if (syncType && activeFilters[syncType] === false) {
@@ -836,6 +1211,10 @@ function applyFilters() {
   } else {
     cy.nodes().removeClass('faded');
     cy.edges().removeClass('faded');
+  }
+  /* If micro view is active, re-render the flow selector with updated filters */
+  if (currentView === 'micro' && _microFlowsData) {
+    renderMicroView(_microFlowsData, _microAppA, _microAppB);
   }
 }
 
