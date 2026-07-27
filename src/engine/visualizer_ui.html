@@ -8,13 +8,10 @@
 <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
 <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
-
 :root {
   --bg: #000000;
-  --surface: rgba(28,28,30,0.72);
+  --surface: rgba(28,28,30,0.92);
   --surface-border: rgba(255,255,255,0.06);
-  --surface-glow: rgba(255,255,255,0.02);
   --text-primary: rgba(255,255,255,0.92);
   --text-secondary: rgba(255,255,255,0.55);
   --text-tertiary: rgba(255,255,255,0.35);
@@ -25,70 +22,40 @@
   --accent-red: #ff453a;
   --accent-teal: #64d2ff;
   --radius: 16px;
-  --blur: blur(40px) saturate(1.8);
 }
-
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
   height: 100vh; display: flex;
-  background: var(--bg); color: var(--text-primary);
+  background: linear-gradient(145deg, #000000 0%, #0a0a0c 50%, #000000 100%);
+  color: var(--text-primary);
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-/* Neural ambient mesh */
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background:
-    radial-gradient(ellipse 800px 600px at 20% 30%, rgba(10,132,255,0.06) 0%, transparent 70%),
-    radial-gradient(ellipse 600px 800px at 80% 70%, rgba(191,90,242,0.05) 0%, transparent 70%),
-    radial-gradient(ellipse 900px 400px at 50% 90%, rgba(48,209,88,0.03) 0%, transparent 60%);
-  pointer-events: none; z-index: 0;
-  animation: meshShift 20s ease-in-out infinite alternate;
-}
-@keyframes meshShift {
-  0% { opacity: 0.7; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1.05); }
-}
-
-#cy {
-  flex: 1; z-index: 1;
-  position: relative;
-  background: transparent;
-}
-
-/* Apple glass surface */
+#cy { flex: 1; z-index: 1; position: relative; background: transparent; }
 .glass-panel {
-  background: var(--surface);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
+  background: rgba(28,28,30,0.92);
   border: 1px solid var(--surface-border);
   border-radius: var(--radius);
-  box-shadow:
-    0 0 0 0.5px rgba(255,255,255,0.05) inset,
-    0 20px 60px -10px rgba(0,0,0,0.5),
-    0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 0 0 0.5px rgba(255,255,255,0.05) inset, 0 20px 60px -10px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.2);
 }
-
-/* === PANEL LATERAL === */
 #panel {
   width: 380px; z-index: 10;
-  background: rgba(28,28,30,0.88);
-  backdrop-filter: blur(60px) saturate(2);
-  -webkit-backdrop-filter: blur(60px) saturate(2);
+  background: rgba(22,22,24,0.96);
   border-left: 1px solid var(--surface-border);
   overflow-y: auto; padding: 0;
-  display: none; flex-direction: column; gap: 0;
-  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-  transform: translateX(100%); opacity: 0;
+  display: flex; flex-direction: column; gap: 0;
+  position: fixed; top: 36px; right: 0; bottom: 0;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.25s ease;
 }
 #panel.active {
-  display: flex;
-  transform: translateX(0); opacity: 1;
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 #panel-header {
   padding: 16px 24px 12px;
@@ -142,9 +109,7 @@ body::before {
   display: block; margin-bottom: 2px; margin-top: 10px;
 }
 .narrative-block strong:first-child { margin-top: 0; }
-.acceptance-criteria {
-  list-style: none; padding: 0; margin: 0;
-}
+.acceptance-criteria { list-style: none; padding: 0; margin: 0; }
 .acceptance-criteria li {
   background: rgba(48,209,88,0.04);
   border: 1px solid rgba(48,209,88,0.1);
@@ -158,9 +123,7 @@ body::before {
 .ac-given { color: var(--accent-teal); }
 .ac-when { color: var(--accent-orange); }
 .ac-then { color: var(--accent-green); }
-.stats-row {
-  display: flex; gap: 12px; flex-wrap: wrap;
-}
+.stats-row { display: flex; gap: 12px; flex-wrap: wrap; }
 .stat-pill {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 5px 12px; border-radius: 20px;
@@ -170,20 +133,15 @@ body::before {
   color: var(--text-secondary);
 }
 .stat-pill .stat-num { color: var(--text-primary); font-weight: 600; }
-
-/* Tags */
 .tag {
   display: inline-flex; align-items: center;
   padding: 4px 10px; border-radius: 20px;
   font-size: 11px; font-weight: 500; margin: 3px 4px 3px 0;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.tag:hover { transform: scale(1.05); }
 .tag-entity { background: rgba(10,132,255,0.12); color: var(--accent-blue); border: 1px solid rgba(10,132,255,0.2); }
 .tag-flow { background: rgba(191,90,242,0.12); color: var(--accent-purple); border: 1px solid rgba(191,90,242,0.2); }
 .tag-complexity { background: rgba(255,159,10,0.12); color: var(--accent-orange); border: 1px solid rgba(255,159,10,0.2); }
 .tag-expert { background: rgba(48,209,88,0.12); color: var(--accent-green); border: 1px solid rgba(48,209,88,0.2); }
-
 .status-badge {
   display: inline-flex; align-items: center;
   padding: 5px 14px; border-radius: 20px;
@@ -192,15 +150,11 @@ body::before {
 .status-analyzed { background: rgba(255,159,10,0.12); color: var(--accent-orange); border: 1px solid rgba(255,159,10,0.2); }
 .status-refined { background: rgba(10,132,255,0.12); color: var(--accent-blue); border: 1px solid rgba(10,132,255,0.2); }
 .status-completed { background: rgba(48,209,88,0.12); color: var(--accent-green); border: 1px solid rgba(48,209,88,0.2); }
-
-/* === TOOLBAR === */
 #toolbar {
   position: absolute; top: 20px; left: 20px; z-index: 20;
   display: flex; gap: 6px; align-items: center;
   padding: 6px 8px; border-radius: 14px;
-  background: rgba(28,28,30,0.72);
-  backdrop-filter: blur(40px) saturate(1.8);
-  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  background: rgba(28,28,30,0.92);
   border: 1px solid var(--surface-border);
   box-shadow: 0 8px 40px rgba(0,0,0,0.4);
 }
@@ -244,8 +198,6 @@ body::before {
   border-color: rgba(10,132,255,0.3);
   background: rgba(10,132,255,0.08);
 }
-
-/* === TOOLTIP === */
 #tooltip {
   position: fixed; z-index: 9999;
   padding: 12px 16px; border-radius: 14px;
@@ -265,14 +217,10 @@ body::before {
 #tooltip .tt-title { font-size: 14px; color: var(--text-primary); font-weight: 500; margin-top: 4px; letter-spacing: -0.2px; }
 #tooltip .tt-desc { font-size: 12px; color: var(--text-secondary); margin-top: 6px; line-height: 1.5; font-weight: 300; }
 #tooltip .tt-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
-
-/* === LEGEND === */
 #legend {
   position: absolute; bottom: 20px; left: 20px; z-index: 20;
   padding: 16px 20px; border-radius: 14px; font-size: 11px;
-  background: rgba(28,28,30,0.72);
-  backdrop-filter: blur(40px) saturate(1.8);
-  -webkit-backdrop-filter: blur(40px) saturate(1.8);
+  background: rgba(28,28,30,0.92);
   border: 1px solid var(--surface-border);
   box-shadow: 0 8px 40px rgba(0,0,0,0.4);
 }
@@ -280,33 +228,17 @@ body::before {
 #legend .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
 #legend .dot-diamond { width: 7px; height: 7px; transform: rotate(45deg); flex-shrink: 0; border-radius: 1px; }
 #legend .line { width: 16px; height: 2px; flex-shrink: 0; border-radius: 1px; }
-
-/* Neural pulse animation for nodes */
-@keyframes neuralPulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(10,132,255,0.3); }
-  50% { box-shadow: 0 0 20px rgba(10,132,255,0.6); }
-}
-
-/* Scrollbar Apple-style */
 #panel-body::-webkit-scrollbar { width: 4px; }
 #panel-body::-webkit-scrollbar-track { background: transparent; }
 #panel-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
 #panel-body::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
-
-/* Content transition */
 #panel-content {
-  transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1), filter 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 #panel-content.transitioning {
   opacity: 0;
   filter: blur(4px);
 }
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Toggle switch Apple style */
 .toggle-group {
   display: flex; align-items: center; gap: 6px;
   background: rgba(255,255,255,0.03);
@@ -317,7 +249,7 @@ body::before {
   background: transparent !important; border: none !important;
   color: var(--text-tertiary) !important; padding: 6px 14px !important;
   border-radius: 8px !important; font-size: 11px !important;
-  transition: all 0.3s cubic-bezier(0.25,1,0.5,1) !important;
+  transition: all 0.25s cubic-bezier(0.25,1,0.5,1) !important;
 }
 .toggle-group button.active {
   background: rgba(10,132,255,0.18) !important;
@@ -337,7 +269,7 @@ body::before {
 </style>
 </head>
 <body>
-<nav class="view-selector" style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:0;background:rgba(18,18,20,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--surface-border);padding:0 24px;height:36px">
+<nav class="view-selector" style="position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:0;background:rgba(18,18,20,0.92);border-bottom:1px solid var(--surface-border);padding:0 24px;height:36px">
   <a href="/" style="padding:6px 18px;text-decoration:none;font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--accent-blue);border-bottom:2px solid var(--accent-blue)">Red Neuronal</a>
   <a href="/ecosystem" style="padding:6px 18px;text-decoration:none;font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-secondary);border-bottom:2px solid transparent">Ecosistema</a>
 </nav>
@@ -400,6 +332,8 @@ body::before {
 </div>
 <script>
 let cy, allData = {nodes:[],edges:[]}, showEntities = true, showFlows = false, showRelations = true, currentLayout = 'dagre';
+let _pulseActive = true;
+let _pulseRafId = null;
 const tooltip = document.getElementById('tooltip');
 
 async function init() {
@@ -410,13 +344,6 @@ async function init() {
     const o = document.createElement('option'); o.value = e.data.id; o.textContent = e.data.label; sel.appendChild(o);
   });
 
-  // Global mouse tracker for tooltip position (works even outside cy nodes)
-  document.addEventListener('mousemove', function(e) {
-    tooltip.style.left = (e.clientX + 16) + 'px';
-    tooltip.style.top = (e.clientY + 14) + 'px';
-  });
-
-  // Safety: hide tooltip when mouse leaves the graph area
   document.getElementById('cy').addEventListener('mouseleave', function() {
     tooltip.classList.remove('visible');
   });
@@ -428,66 +355,38 @@ function getAllElements() {
   var nodes = allData.nodes || [];
   var nodeIds = new Set(nodes.map(function(n) { return n.data.id; }));
   var edges = (allData.edges || []).filter(function(e) {
-    // Only include edges whose both endpoints exist as nodes
     return nodeIds.has(e.data.source) && nodeIds.has(e.data.target);
   });
   return nodes.concat(edges);
 }
 
-function getFiltered() {
-  const nodes = allData.nodes.filter(n => {
-    if (n.data.type==='entity' && !showEntities) return false;
-    if (n.data.type==='flow' && !showFlows) return false;
-    return true;
-  });
-  const nodeIds = new Set(nodes.map(n => n.data.id));
-  const edges = allData.edges.filter(e => {
-    if (e.data.relation==='has_entity' && !showEntities) return false;
-    if (e.data.relation==='in_flow' && !showFlows) return false;
-    if ((e.data.relation==='depends_on' || e.data.relation==='impacts') && !showRelations) return false;
-    // Only include edges whose both endpoints exist as visible nodes
-    if (!nodeIds.has(e.data.source) || !nodeIds.has(e.data.target)) return false;
-    return true;
-  });
-  return [...nodes, ...edges];
-}
-
 function layoutCfg(name) {
   if (name==='dagre') return {
     name:'dagre', rankDir:'TB', nodeSep:100, edgeSep:50, rankSep:150,
-    animate:true, animationDuration:1000, animationEasing:'ease-in-out-cubic',
-    fit:true, padding:80
+    animate:false, fit:true, padding:80
   };
   return {
     name:'concentric',
     concentric: n => n.data('type')==='story'?3:n.data('type')==='flow'?2:1,
     levelWidth: ()=>1, minNodeSpacing:100,
-    animate:true, animationDuration:1000, fit:true, padding:80
+    animate:false, fit:true, padding:80
   };
 }
 
 function renderGraph() {
   var container = document.getElementById('cy');
+  if (cy) cy.destroy();
 
-  // Fade out, rebuild, fade in
-  container.style.transition = 'opacity 0.25s ease';
-  container.style.opacity = '0';
-
-  setTimeout(function(){
-    if (cy) cy.destroy();
-
-    // Remove transition during build to avoid interference
-    container.style.transition = 'none';
-
-    cy = cytoscape({
-      container: container,
-      elements: getAllElements(),
-      style: [
-      // Story nodes — neural network synapses
+  cy = cytoscape({
+    container: container,
+    elements: getAllElements(),
+    textureOnViewport: true,
+    hideEdgesOnViewport: true,
+    style: [
       { selector: 'node[type="story"]', style: {
         'label':'data(label)',
         'text-valign':'bottom','text-halign':'center','text-margin-y':12,
-        'font-size':'12px','font-weight':'500','letter-spacing':'-0.2px',
+        'font-size':'12px','font-weight':'500',
         'color':'rgba(255,255,255,0.85)',
         'text-outline-color':'rgba(0,0,0,0.8)','text-outline-width':2,
         'background-color': function(e){
@@ -507,10 +406,7 @@ function renderGraph() {
           return s==='completed'?'#30d158':s==='refined'?'#0a84ff':'#ff9f0a';
         },
         'overlay-opacity':0, 'overlay-padding':6,
-        'transition-property':'shadow-blur,shadow-opacity,width,height,border-width',
-        'transition-duration':'0.3s','transition-timing-function':'ease-out',
       }},
-      // Entity nodes — small synaptic terminals
       { selector: 'node[type="entity"]', style: {
         'label':'data(label)',
         'font-size':'9px','color':'rgba(100,210,255,0.8)',
@@ -522,7 +418,6 @@ function renderGraph() {
         'shadow-blur':8,'shadow-opacity':0.4,'shadow-color':'#64d2ff',
         'overlay-opacity':0, 'overlay-padding':4,
       }},
-      // Flow nodes
       { selector: 'node[type="flow"]', style: {
         'label':'data(label)',
         'font-size':'9px','color':'rgba(191,90,242,0.8)',
@@ -534,7 +429,6 @@ function renderGraph() {
         'shadow-blur':8,'shadow-opacity':0.3,'shadow-color':'#bf5af2',
         'overlay-opacity':0, 'overlay-padding':4,
       }},
-      // Edges — neural pathways
       { selector: 'edge[relation="depends_on"]', style: {
         'line-color':'rgba(255,69,58,0.6)',
         'target-arrow-color':'#ff453a','target-arrow-shape':'triangle','arrow-scale':1,
@@ -562,30 +456,29 @@ function renderGraph() {
         'line-color':'rgba(255,255,255,0.08)',
         'curve-style':'bezier','width':1,'line-style':'dashed','opacity':0.3,
       }},
-      // States
       { selector: '.highlighted', style: {
         'border-width':3,'border-color':'#fff','border-opacity':1,
         'shadow-blur':40,'shadow-opacity':0.9,'opacity':1,'z-index':999,
       }},
-      { selector: '.faded', style: { 'opacity':0.06 }},
+      { selector: 'node.faded', style: { 'opacity':0.06 }},
+      { selector: 'edge.faded', style: { 'opacity':0.06 }},
+      { selector: 'edge[relation="depends_on"].faded', style: { 'opacity':0.06 }},
+      { selector: 'edge[relation="impacts"].faded', style: { 'opacity':0.06 }},
+      { selector: 'edge[relation="has_entity"].faded', style: { 'opacity':0.06 }},
+      { selector: 'edge[relation="in_flow"].faded', style: { 'opacity':0.06 }},
+      { selector: 'edge[relation="related_to"].faded', style: { 'opacity':0.06 }},
     ],
     layout: layoutCfg(currentLayout),
     minZoom:0.3, maxZoom:3, wheelSensitivity:0.2,
   });
 
-  // Fade in new graph
-  setTimeout(function(){
-    container.style.transition = 'opacity 0.4s ease';
-    container.style.opacity = '1';
-  }, 80);
-
-  // Neural pulse effect
   startNeuralPulse();
 
-  // --- TOOLTIP ---
+  // Tooltip using renderedPosition from Cytoscape event
   cy.on('mouseover', 'node', function(evt){
     clearTimeout(window._ttHide);
     var d = evt.target.data();
+    var pos = evt.renderedPosition || evt.target.renderedPosition();
     var html = '';
     if (d.type === 'story') {
       html = '<div class="tt-id">' + d.id + '</div><div class="tt-title">' + d.title + '</div><div class="tt-desc">Historia de usuario con ' + (d.entities||[]).length + ' entidades y ' + (d.flows||[]).length + ' flujos.</div><div class="tt-meta"><span>' + d.gaps + ' gaps</span><span>' + d.questions + ' preguntas</span></div>';
@@ -596,6 +489,9 @@ function renderGraph() {
     }
     if (html) {
       tooltip.innerHTML = html;
+      var cyRect = document.getElementById('cy').getBoundingClientRect();
+      tooltip.style.left = (cyRect.left + pos.x + 16) + 'px';
+      tooltip.style.top = (cyRect.top + pos.y + 14) + 'px';
       tooltip.classList.add('visible');
     }
   });
@@ -604,7 +500,6 @@ function renderGraph() {
     window._ttHide = setTimeout(function(){ tooltip.classList.remove('visible'); }, 120);
   });
 
-  // Click story for detail panel
   cy.on('tap', 'node[type="story"]', async function(evt){
     tooltip.classList.remove('visible');
     highlightNode(evt.target);
@@ -612,53 +507,64 @@ function renderGraph() {
   });
   cy.on('tap', function(evt){ if(evt.target===cy){resetHighlight();hidePanel();} });
 
-  // Apply current layer visibility state
   applyLayerVisibility();
-
-  }, 300); // end setTimeout fade-out
 }
 
-// Neural pulse — periodic glow animation on edges to simulate signal transmission
-var _neuralPulseIntervals = [];
+// Neural pulse with requestAnimationFrame - reduced frequency
+var _lastEdgePulse = 0;
+var _lastNodePulse = 0;
+var _edgePulseInterval = 4000;
+var _nodePulseInterval = 5000;
+
 function startNeuralPulse() {
-  // Clear any previous intervals
-  _neuralPulseIntervals.forEach(function(id) { clearInterval(id); });
-  _neuralPulseIntervals = [];
+  if (_pulseRafId) cancelAnimationFrame(_pulseRafId);
 
-  _neuralPulseIntervals.push(setInterval(function(){
-    if (!cy) return;
-    var edges = cy.edges('[relation="depends_on"],[relation="impacts"]').not('.faded').not(':hidden');
-    if (!edges.length) return;
-    var randEdge = edges[Math.floor(Math.random()*edges.length)];
-    randEdge.animate(
-      {style:{'width':4,'opacity':1}},
-      {duration:400, complete:function(){
-        randEdge.animate({style:{'width':2,'opacity':0.75}},{duration:600});
-      }}
-    );
-  }, 1500));
+  function pulseLoop(timestamp) {
+    if (!cy || !_pulseActive) {
+      _pulseRafId = requestAnimationFrame(pulseLoop);
+      return;
+    }
 
-  // Subtle node breathing
-  _neuralPulseIntervals.push(setInterval(function(){
-    if (!cy) return;
-    var stories = cy.nodes('[type="story"]').not('.faded').not(':hidden');
-    if (!stories.length) return;
-    var randNode = stories[Math.floor(Math.random()*stories.length)];
-    randNode.animate(
-      {style:{'shadow-blur':36,'shadow-opacity':0.8}},
-      {duration:600, complete:function(){
-        randNode.animate({style:{'shadow-blur':24,'shadow-opacity':0.6}},{duration:800});
-      }}
-    );
-  }, 2000));
+    // Edge pulse every 4 seconds, animate 1 element at a time
+    if (timestamp - _lastEdgePulse >= _edgePulseInterval) {
+      _lastEdgePulse = timestamp;
+      var edges = cy.edges('[relation="depends_on"],[relation="impacts"]').not('.faded').not(':hidden');
+      if (edges.length) {
+        var randEdge = edges[Math.floor(Math.random()*edges.length)];
+        randEdge.animate(
+          {style:{'width':4,'opacity':1}},
+          {duration:400, complete:function(){
+            randEdge.animate({style:{'width':2,'opacity':0.75}},{duration:600});
+          }}
+        );
+      }
+    }
+
+    // Node breathing every 5 seconds
+    if (timestamp - _lastNodePulse >= _nodePulseInterval) {
+      _lastNodePulse = timestamp;
+      var stories = cy.nodes('[type="story"]').not('.faded').not(':hidden');
+      if (stories.length) {
+        var randNode = stories[Math.floor(Math.random()*stories.length)];
+        randNode.animate(
+          {style:{'shadow-blur':36,'shadow-opacity':0.8}},
+          {duration:600, complete:function(){
+            randNode.animate({style:{'shadow-blur':24,'shadow-opacity':0.6}},{duration:800});
+          }}
+        );
+      }
+    }
+
+    _pulseRafId = requestAnimationFrame(pulseLoop);
+  }
+
+  _pulseRafId = requestAnimationFrame(pulseLoop);
 }
 
 function highlightNode(node) {
-  // Stop any ongoing neural pulse animations to prevent style conflicts
+  _pulseActive = false;
   cy.elements().stop(true, true);
-  // Reset previous highlight before applying new one
   cy.elements().removeClass('faded highlighted');
-  // Apply new highlight
   cy.elements().addClass('faded');
   node.removeClass('faded').addClass('highlighted');
   node.neighborhood().removeClass('faded');
@@ -666,13 +572,10 @@ function highlightNode(node) {
 function resetHighlight() {
   cy.elements().stop(true, true);
   cy.elements().removeClass('faded highlighted');
+  _pulseActive = true;
 }
-var _hidePanelTimeout = null;
 function hidePanel() {
-  var p = document.getElementById('panel');
-  p.style.transform = 'translateX(100%)'; p.style.opacity = '0';
-  if (_hidePanelTimeout) clearTimeout(_hidePanelTimeout);
-  _hidePanelTimeout = setTimeout(function(){ p.classList.remove('active'); p.style.display = 'none'; _hidePanelTimeout = null; }, 500);
+  document.getElementById('panel').classList.remove('active');
 }
 
 async function showDetail(id) {
@@ -685,7 +588,6 @@ async function showDetail(id) {
 
   var h = '';
 
-  // Status + stats row
   h += '<div class="panel-section"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
   h += '<span class="status-badge status-'+s.status+'">'+s.status+'</span>';
   h += '<div class="stats-row">';
@@ -693,7 +595,6 @@ async function showDetail(id) {
   h += '<span class="stat-pill"><span class="stat-num">'+s.total_questions+'</span> preguntas</span>';
   h += '</div></div></div>';
 
-  // Narrative
   h += '<div class="panel-section"><h3>Narrativa</h3>';
   h += '<div class="narrative-block">';
   h += '<strong>Como</strong>' + s.narrative.as_a;
@@ -701,7 +602,6 @@ async function showDetail(id) {
   h += '<strong>Para</strong>' + s.narrative.so_that;
   h += '</div></div>';
 
-  // Acceptance criteria
   if (s.acceptance_criteria && s.acceptance_criteria.length) {
     h += '<div class="panel-section"><h3>Criterios de Aceptaci\u00f3n</h3>';
     h += '<ul class="acceptance-criteria">';
@@ -715,35 +615,30 @@ async function showDetail(id) {
     h += '</ul></div>';
   }
 
-  // Entities
   if (s.entities_detected && s.entities_detected.length) {
     h += '<div class="panel-section"><h3>Entidades</h3><div>';
     s.entities_detected.forEach(function(e){h+='<span class="tag tag-entity">'+e+'</span>';});
     h += '</div></div>';
   }
 
-  // Flows
   if (s.flows_detected && s.flows_detected.length) {
     h += '<div class="panel-section"><h3>Flujos</h3><div>';
     s.flows_detected.forEach(function(f){h+='<span class="tag tag-flow">'+f+'</span>';});
     h += '</div></div>';
   }
 
-  // Complexity
   if (s.complexity_tags && s.complexity_tags.length) {
     h += '<div class="panel-section"><h3>Complejidad</h3><div>';
     s.complexity_tags.forEach(function(t){h+='<span class="tag tag-complexity">'+t+'</span>';});
     h += '</div></div>';
   }
 
-  // Dependencies
   if (s.dependencies && s.dependencies.length) {
     h += '<div class="panel-section"><h3>Dependencias</h3><ul>';
     s.dependencies.forEach(function(d){h+='<li>'+d+'</li>';});
     h += '</ul></div>';
   }
 
-  // Expert analysis
   if (s.expert_analysis && s.expert_analysis.length) {
     h += '<div class="panel-section"><h3>Panel de Expertos</h3><ul>';
     s.expert_analysis.forEach(function(e){
@@ -757,32 +652,16 @@ async function showDetail(id) {
   setTimeout(function(){
     content.innerHTML = h;
     content.classList.remove('transitioning');
-  }, 250);
+  }, 200);
 
-  // Show panel: cancel any pending hide, then animate in
-  if (_hidePanelTimeout) { clearTimeout(_hidePanelTimeout); _hidePanelTimeout = null; }
-  panel.style.display = 'flex';
   panel.classList.add('active');
-  requestAnimationFrame(function(){
-    requestAnimationFrame(function(){
-      panel.style.transform='translateX(0)'; panel.style.opacity='1';
-    });
-  });
 }
 
 function setLayout(name) {
   currentLayout = name;
-  // Toggle group: only layout buttons inside .toggle-group
   document.querySelectorAll('.toggle-group button').forEach(b=>b.classList.remove('active'));
   var btn=document.getElementById('btn-'+name); if(btn)btn.classList.add('active');
-  // Fade transition for layout change
-  var container = document.getElementById('cy');
-  container.style.transition = 'opacity 0.25s ease';
-  container.style.opacity = '0.3';
-  setTimeout(function(){
-    cy.layout(layoutCfg(name)).run();
-    setTimeout(function(){ container.style.opacity = '1'; }, 200);
-  }, 250);
+  cy.layout(layoutCfg(name)).run();
 }
 function toggleEntities() {
   showEntities=!showEntities;
@@ -802,8 +681,6 @@ function toggleRelations() {
 
 function applyLayerVisibility() {
   if (!cy) return;
-
-  // Entity nodes and their edges
   if (showEntities) {
     cy.nodes('[type="entity"]').show();
     cy.edges('[relation="has_entity"]').show();
@@ -811,8 +688,6 @@ function applyLayerVisibility() {
     cy.nodes('[type="entity"]').hide();
     cy.edges('[relation="has_entity"]').hide();
   }
-
-  // Flow nodes and their edges
   if (showFlows) {
     cy.nodes('[type="flow"]').show();
     cy.edges('[relation="in_flow"]').show();
@@ -820,8 +695,6 @@ function applyLayerVisibility() {
     cy.nodes('[type="flow"]').hide();
     cy.edges('[relation="in_flow"]').hide();
   }
-
-  // Relation edges (depends_on, impacts)
   if (showRelations) {
     cy.edges('[relation="depends_on"]').show();
     cy.edges('[relation="impacts"]').show();
@@ -836,10 +709,7 @@ function filterByEntity(id) {
 }
 function resetView() { resetHighlight(); hidePanel(); cy.fit(undefined,80); }
 
-// ─── WORKSPACE & ECOSYSTEM SELECTORS ─────────────────────────────────────────
-
 async function loadSelectors() {
-  // Load workspaces
   try {
     var wsRes = await fetch('/api/workspaces');
     var wsData = await wsRes.json();
@@ -858,7 +728,6 @@ async function loadSelectors() {
     console.warn('Error cargando workspaces:', e);
   }
 
-  // Load ecosystems
   try {
     var ecoRes = await fetch('/api/ecosystems');
     var ecoData = await ecoRes.json();
@@ -895,7 +764,6 @@ async function switchWorkspace(workspaceId) {
       return;
     }
     sel.classList.add('selector-active');
-    // Reload graph with new workspace data
     await reloadGraph();
   } catch(e) {
     console.error('Error switching workspace:', e);
@@ -921,7 +789,6 @@ async function switchEcosystem(ecosystemId) {
       return;
     }
     sel.classList.add('selector-active');
-    // Reload graph with new ecosystem context
     await reloadGraph();
   } catch(e) {
     console.error('Error switching ecosystem:', e);
@@ -933,7 +800,6 @@ async function switchEcosystem(ecosystemId) {
 async function reloadGraph() {
   var res = await fetch('/api/graph');
   allData = await res.json();
-  // Rebuild entity filter
   var sel = document.getElementById('filterEntity');
   sel.innerHTML = '<option value="">Filtrar entidad...</option>';
   allData.nodes.filter(function(n){ return n.data.type==='entity'; }).forEach(function(e) {

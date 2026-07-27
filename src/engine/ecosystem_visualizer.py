@@ -355,7 +355,7 @@ def _calculate_coupling_edges(
 
     for i, app_a_id in enumerate(app_ids):
         for app_b_id in app_ids[i + 1:]:
-            # Contratos entre app_a y app_b (en cualquier direccion)
+            # Contratos explícitos entre app_a y app_b
             pair_contracts = [
                 c for c in contracts
                 if (c.provider_app == app_a_id and app_b_id in c.consumer_apps)
@@ -433,11 +433,21 @@ def _build_flows_between_apps(
     shared_entities = engine.get_shared_entities()
 
     # Contratos entre las dos apps
+    # Paso 1: buscar contratos explícitos (consumer_apps poblado)
     pair_contracts = [
         c for c in contracts
         if (c.provider_app == app_a_id and app_b_id in c.consumer_apps)
         or (c.provider_app == app_b_id and app_a_id in c.consumer_apps)
     ]
+
+    # Paso 2: si no hay explícitos, incluir todos los contratos provistos
+    # por cualquiera de las dos apps (cuando consumer_apps está vacío).
+    # Esto permite visualizar los flujos aún sin consumers definidos.
+    if not pair_contracts:
+        pair_contracts = [
+            c for c in contracts
+            if not c.consumer_apps and c.provider_app in (app_a_id, app_b_id)
+        ]
 
     # Entidades compartidas entre ambas
     pair_shared = [
