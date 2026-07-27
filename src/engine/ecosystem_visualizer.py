@@ -16,7 +16,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 
 from src.engine.ecosystem_manager import get_ecosystem_manager
-from src.engine.ecosystem import EcosystemEngine
+from src.engine.ecosystem import BASE_PATH, EcosystemEngine
 from src.models.ecosystem import (
     AppRegistration,
     ContractDefinition,
@@ -625,7 +625,7 @@ def _get_ecosystem_engine(ecosystem_id: str) -> Optional[EcosystemEngine]:
     """Obtiene un EcosystemEngine por ID.
 
     Si el ecosystem_id coincide con el ecosistema activo, lo retorna directamente.
-    Si no, intenta cargarlo desde disco via el manager.
+    Si no, carga el engine desde disco sin cambiar el ecosistema activo.
 
     Args:
         ecosystem_id: ID del ecosistema.
@@ -642,9 +642,13 @@ def _get_ecosystem_engine(ecosystem_id: str) -> Optional[EcosystemEngine]:
     if active and active.registry and active.registry.ecosystem_id == ecosystem_id:
         return active
 
-    # Intentar cargarlo
-    try:
-        engine = manager.switch_ecosystem(ecosystem_id)
-        return engine
-    except ValueError:
+    # Cargar sin cambiar el activo (read-only)
+    ecosystem_path = BASE_PATH / "ecosystems" / ecosystem_id
+    if not ecosystem_path.exists():
         return None
+
+    engine = EcosystemEngine(base_path=ecosystem_path)
+    if not engine.is_initialized:
+        return None
+
+    return engine

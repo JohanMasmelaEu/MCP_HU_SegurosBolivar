@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ecosystem Graph - Topologia de Acoplamiento</title>
 <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
+<script src="https://unpkg.com/layout-base@2.0.1/layout-base.js"></script>
+<script src="https://unpkg.com/cose-base@2.2.0/cose-base.js"></script>
 <script src="https://unpkg.com/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
@@ -406,7 +408,6 @@ const macroLayout = {
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
-  cytoscape.use(cytoscapeCoseBilkent);
   try {
     const res = await fetch('/api/eco/ecosystems');
     if (!res.ok) throw new Error('Error al cargar ecosistemas');
@@ -448,10 +449,17 @@ async function loadMacroGraph() {
 
 function buildCytoscape(data) {
   const container = document.getElementById('cy');
-  if (cy) { cy.destroy(); }
+  container.innerHTML = '';
+  var nodes = data.nodes || [];
+  var edges = data.edges || [];
+  if (nodes.length === 0) {
+    showEmptyState('No hay apps registradas en este ecosistema. Usa register_app para comenzar.');
+    return;
+  }
+  if (cy) { cy.destroy(); cy = null; }
   cy = cytoscape({
     container: container,
-    elements: data.elements || { nodes: data.nodes || [], edges: data.edges || [] },
+    elements: { nodes: nodes, edges: edges },
     style: macroStyles,
     layout: macroLayout,
     minZoom: 0.3,
@@ -480,8 +488,11 @@ function bindCyEvents() {
   cy.on('mouseout', 'node', function() { hideTooltip(); });
   cy.on('mouseover', 'edge[type="coupling"]', function(evt) {
     const edge = evt.target;
-    const midpoint = edge.renderedMidpoint();
-    showTooltip(midpoint.x, midpoint.y, buildEdgeTooltip(edge.data()));
+    var srcPos = edge.source().renderedPosition();
+    var tgtPos = edge.target().renderedPosition();
+    var midX = (srcPos.x + tgtPos.x) / 2;
+    var midY = (srcPos.y + tgtPos.y) / 2;
+    showTooltip(midX, midY, buildEdgeTooltip(edge.data()));
   });
   cy.on('mouseout', 'edge', function() { hideTooltip(); });
   cy.on('tap', function(evt) {
