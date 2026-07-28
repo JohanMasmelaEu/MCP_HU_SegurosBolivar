@@ -537,79 +537,167 @@ body::before {
   font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
   color: var(--text-tertiary); margin-bottom: 10px;
 }
-/* ===== Process Diagram ===== */
-.proc-diagram { padding: 8px 0; }
-.proc-lanes-header {
-  display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px;
-  padding: 10px 16px; margin-bottom: 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+/* ===== Process Diagram (Pipeline Style) ===== */
+.proc-diagram { padding: 8px 0; display: flex; flex-direction: column; gap: 0; }
+.proc-flow-block {
+  background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px; padding: 24px; margin-bottom: 0;
+  position: relative;
 }
-.proc-lane-title {
-  font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.8px; color: var(--text-tertiary);
+.proc-flow-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+  padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.proc-lane-title.left { text-align: left; color: var(--accent-blue); }
-.proc-lane-title.center { text-align: center; }
-.proc-lane-title.right { text-align: right; color: var(--accent-purple); }
-.proc-steps { display: flex; flex-direction: column; gap: 0; }
-.proc-step { position: relative; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
-.proc-step:last-child { border-bottom: none; }
-.proc-step-connector {
-  position: absolute; left: 50%; top: 0; transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center;
+.proc-flow-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.proc-flow-separator {
+  height: 1px; margin: 20px 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
 }
 .proc-step-num {
-  width: 22px; height: 22px; border-radius: 50%;
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 700;
-  background: rgba(255,255,255,0.06); color: var(--text-tertiary);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(10,132,255,0.12); color: var(--accent-blue);
+  border: 1px solid rgba(10,132,255,0.25);
 }
-.proc-step-row {
-  display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center;
-  padding: 0 8px;
+/* Pipeline: vertical flow with left rail */
+.proc-pipeline {
+  display: flex; flex-direction: column; align-items: stretch; gap: 0;
+  position: relative; padding-left: 40px;
 }
-.proc-col { min-height: 60px; display: flex; align-items: center; }
-.proc-col.active { justify-content: center; }
-.proc-col.passive { justify-content: center; opacity: 0.4; }
-.proc-col-center { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 200px; }
-.proc-action-box {
-  padding: 12px 16px; border-radius: 10px; width: 100%; max-width: 240px;
+/* Vertical rail connecting all steps */
+.proc-pipeline::before {
+  content: ''; position: absolute; left: 18px; top: 24px; bottom: 24px;
+  width: 2px; background: linear-gradient(180deg,
+    rgba(10,132,255,0.4) 0%,
+    rgba(191,90,242,0.4) 50%,
+    rgba(48,209,88,0.4) 100%
+  );
+  border-radius: 1px;
 }
-.proc-action-box.initiator {
-  background: rgba(10,132,255,0.06); border: 1px solid rgba(10,132,255,0.15);
+.proc-pipeline-step {
+  display: flex; align-items: stretch; gap: 16px; padding: 14px 18px;
+  border-radius: 12px; background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  transition: border-color 0.2s, background 0.2s;
 }
-.proc-action-box.receiver {
-  background: rgba(191,90,242,0.06); border: 1px solid rgba(191,90,242,0.15);
+.proc-pipeline-step:hover {
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
 }
-.proc-action-title {
-  font-size: 9px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.5px; color: var(--text-tertiary); margin-bottom: 4px;
+.proc-pipeline-step.response {
+  border-color: rgba(48,209,88,0.15); background: rgba(48,209,88,0.025);
 }
-.proc-action-desc { font-size: 12px; font-weight: 500; color: var(--text-primary); }
-.proc-action-data { font-size: 11px; color: var(--text-secondary); margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-.proc-action-result { font-size: 10px; color: var(--accent-green); margin-top: 6px; font-weight: 500; }
-.proc-contract-box {
-  padding: 10px 14px; border-radius: 8px; text-align: center; min-width: 160px;
+.proc-pipeline-step.response:hover { border-color: rgba(48,209,88,0.25); }
+/* Step indicator on the rail */
+.proc-pipeline-step::before {
+  content: ''; position: absolute; left: -31px; top: 50%; transform: translateY(-50%);
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(10,132,255,0.3); border: 2px solid rgba(10,132,255,0.6);
+  box-shadow: 0 0 8px rgba(10,132,255,0.2);
 }
-.proc-contract-box.sync { background: rgba(10,132,255,0.05); border: 1px solid rgba(10,132,255,0.12); }
-.proc-contract-box.async { background: rgba(255,159,10,0.05); border: 1px solid rgba(255,159,10,0.12); }
-.proc-contract-type { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary); }
-.proc-contract-name { font-size: 11px; font-weight: 600; color: var(--text-primary); margin-top: 3px; }
-.proc-contract-spec { margin-top: 4px; }
-.proc-contract-spec code { font-size: 9px; font-family: "SF Mono", monospace; color: var(--accent-teal); background: rgba(100,210,255,0.06); padding: 1px 5px; border-radius: 3px; }
-.proc-contract-ver { font-size: 9px; color: var(--text-tertiary); margin-top: 3px; }
-.proc-flow-arrow {
-  width: 40px; height: 2px; position: relative;
+.proc-pipeline-step.response::before {
+  background: rgba(48,209,88,0.3); border-color: rgba(48,209,88,0.6);
+  box-shadow: 0 0 8px rgba(48,209,88,0.2);
 }
-.proc-flow-arrow.right { background: linear-gradient(90deg, rgba(10,132,255,0.4), rgba(191,90,242,0.4)); }
-.proc-flow-arrow.left { background: linear-gradient(90deg, rgba(191,90,242,0.4), rgba(10,132,255,0.4)); }
-.proc-flow-arrow::after {
-  content: ''; position: absolute; top: -3px;
-  border: 4px solid transparent;
+.proc-pipeline-actor {
+  min-width: 130px; max-width: 130px; padding: 10px 14px; border-radius: 10px;
+  text-align: center; flex-shrink: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
 }
-.proc-flow-arrow.right::after { right: -2px; border-left-color: rgba(191,90,242,0.5); }
-.proc-flow-arrow.left::after { left: -2px; border-right-color: rgba(10,132,255,0.5); }
+.proc-pipeline-actor.consumer {
+  background: rgba(10,132,255,0.06); border: 1px solid rgba(10,132,255,0.2);
+}
+.proc-pipeline-actor.provider {
+  background: rgba(191,90,242,0.06); border: 1px solid rgba(191,90,242,0.2);
+}
+.proc-pipeline-actor-name {
+  font-size: 11px; font-weight: 600; color: var(--text-primary); line-height: 1.3;
+}
+.proc-pipeline-actor-role {
+  font-size: 9px; color: var(--text-tertiary); text-transform: uppercase;
+  letter-spacing: 0.5px; margin-top: 3px; font-weight: 600;
+}
+.proc-pipeline-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.proc-pipeline-endpoint { margin-bottom: 8px; }
+.proc-pipeline-endpoint code {
+  font-family: "SF Mono", "Fira Code", monospace; font-size: 11px;
+  background: rgba(100,210,255,0.08); padding: 4px 10px; border-radius: 5px;
+  color: var(--accent-teal); border: 1px solid rgba(100,210,255,0.12);
+}
+.proc-pipeline-data { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.proc-pipeline-data-label {
+  font-size: 9px; color: var(--text-tertiary); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.3px; margin-right: 4px;
+}
+.proc-pipeline-contract {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.proc-pipeline-contract-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.proc-pipeline-contract-ver {
+  font-size: 9px; color: var(--text-tertiary); background: rgba(255,255,255,0.04);
+  padding: 2px 6px; border-radius: 4px;
+}
+/* Pipeline stages (internal processing steps) */
+.proc-pipeline-stages {
+  background: rgba(191,90,242,0.03); border: 1px solid rgba(191,90,242,0.1);
+  border-radius: 10px; padding: 12px 14px;
+}
+.proc-pipeline-stages-title {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--accent-purple); margin-bottom: 10px;
+}
+.proc-pipeline-stage {
+  padding: 6px 0;
+}
+.proc-pipeline-stage-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+}
+.proc-pipeline-stage-num {
+  width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; background: rgba(191,90,242,0.15); color: var(--accent-purple);
+  border: 1px solid rgba(191,90,242,0.2);
+}
+.proc-pipeline-stage-name {
+  font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: capitalize;
+}
+.proc-pipeline-stage-entities {
+  display: flex; flex-wrap: wrap; gap: 4px; padding-left: 26px; margin-top: 2px;
+}
+.proc-pipeline-stage-arrow {
+  display: flex; align-items: center; justify-content: center;
+  padding: 4px 0 4px 26px; color: rgba(191,90,242,0.4); font-size: 14px;
+}
+/* Connector arrows between pipeline steps */
+.proc-pipeline-connector {
+  display: flex; align-items: center; padding: 6px 0; margin-left: 0; position: relative;
+}
+.proc-pipeline-connector::before {
+  content: ''; position: absolute; left: -22px; top: 50%; transform: translateY(-50%);
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(10,132,255,0.2);
+}
+.proc-pipeline-arrow-down {
+  display: flex; align-items: center; gap: 8px; padding-left: 4px;
+}
+.proc-pipeline-arrow-down::before {
+  content: ''; display: block; width: 24px; height: 2px;
+  background: linear-gradient(90deg, rgba(10,132,255,0.3), rgba(10,132,255,0.5));
+  border-radius: 1px;
+}
+.proc-pipeline-arrow-down::after {
+  content: '▼'; font-size: 8px; color: rgba(10,132,255,0.5);
+}
+.proc-pipeline-arrow-down.response::before {
+  background: linear-gradient(90deg, rgba(48,209,88,0.3), rgba(48,209,88,0.5));
+}
+.proc-pipeline-arrow-down.response::after { color: rgba(48,209,88,0.5); }
+/* Flow direction label in connectors */
+.proc-pipeline-connector-label {
+  font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text-tertiary); margin-left: 8px;
+}
 /* Diagram view container */
 .diagram-view { min-height: 100px; }
 </style>
@@ -1156,150 +1244,164 @@ function renderProcessDiagram(flows, appAInfo, appBInfo) {
 
   h += '<div class="proc-diagram">';
 
-  /* Swim lane headers */
-  h += '<div class="proc-lanes-header">';
-  h += '  <div class="proc-lane-title left">' + escapeHtml(appAInfo.name) + '</div>';
-  h += '  <div class="proc-lane-title center">Interaccion</div>';
-  h += '  <div class="proc-lane-title right">' + escapeHtml(appBInfo.name) + '</div>';
-  h += '</div>';
-
-  /* Process steps — connected flow */
-  h += '<div class="proc-steps">';
-
   flows.forEach(function(flow, idx) {
     var isRight = flow.direction !== 'b_to_a';
     var contract = flow.contract || {};
     var isAsync = contract.type === 'async_event';
     var entities = flow.entities_in_transit || [];
-
-    /* Determine pattern based on contract type:
-       - rest_api / graphql: request → process → response (3 sub-steps)
-       - async_event: publish → consume (2 sub-steps) */
     var isSync = !isAsync;
 
-    h += '<div class="proc-step">';
+    var consumerApp = isRight ? appAInfo : appBInfo;
+    var providerApp = isRight ? appBInfo : appAInfo;
 
-    /* Step header with number */
-    h += '  <div class="proc-step-connector"><span class="proc-step-num">' + (idx+1) + '</span></div>';
+    /* Flow header */
+    h += '<div class="proc-flow-block">';
+    h += '  <div class="proc-flow-header">';
+    h += '    <span class="proc-step-num">' + (idx + 1) + '</span>';
+    h += '    <span class="proc-flow-name">' + escapeHtml(flow.flow_name || contract.name || '') + '</span>';
+    h += '    <span class="seq-int-badge ' + (isAsync ? 'async' : 'sync') + '">' + (isAsync ? 'evento' : (contract.type === 'graphql' ? 'graphql' : 'rest_api')) + '</span>';
+    h += '  </div>';
 
-    /* === SUB-STEP 1: REQUEST / PUBLISH === */
-    h += '  <div class="proc-step-row">';
+    /* Pipeline visualization */
+    h += '  <div class="proc-pipeline">';
 
-    /* Initiator column (consumer sends request) */
-    h += '    <div class="proc-col active">';
-    if (isRight) {
-      h += '      <div class="proc-action-box initiator">';
-      h += '        <div class="proc-action-title">' + (isSync ? 'Request' : 'Publish') + '</div>';
-      h += '        <div class="proc-action-desc">' + escapeHtml(contract.spec_reference || contract.name || flow.flow_name || '') + '</div>';
-      if (entities.length > 0) {
-        h += '        <div class="proc-action-data">';
-        entities.slice(0, 5).forEach(function(e) {
-          var cls = e.is_consistent ? 'consistent' : 'divergent';
-          h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + '</span>';
-        });
-        if (entities.length > 5) h += '<span class="entity-pill consistent">+' + (entities.length - 5) + '</span>';
-        h += '</div>';
-      }
-      h += '      </div>';
-    }
-    h += '    </div>';
-
-    /* Center column: arrow → contract */
-    h += '    <div class="proc-col-center">';
-    h += '      <div class="proc-flow-arrow ' + (isRight ? 'right' : 'left') + '"></div>';
-    h += '      <div class="proc-contract-box ' + (isAsync ? 'async' : 'sync') + '">';
-    h += '        <div class="proc-contract-type">' + (isAsync ? 'Evento' : (contract.type === 'graphql' ? 'GraphQL' : 'REST API')) + '</div>';
-    h += '        <div class="proc-contract-name">' + escapeHtml(contract.name || flow.flow_name || '') + '</div>';
-    if (contract.spec_reference) h += '        <div class="proc-contract-spec"><code>' + escapeHtml(contract.spec_reference) + '</code></div>';
-    h += '        <div class="proc-contract-ver">v' + escapeHtml(String(contract.version || '1')) + '</div>';
+    /* STEP 1: Consumer sends request */
+    h += '    <div class="proc-pipeline-step">';
+    h += '      <div class="proc-pipeline-actor consumer">';
+    h += '        <div class="proc-pipeline-actor-name">' + escapeHtml(consumerApp.name) + '</div>';
+    h += '        <div class="proc-pipeline-actor-role">' + (isSync ? 'Request' : 'Publish') + '</div>';
     h += '      </div>';
-    h += '      <div class="proc-flow-arrow ' + (isRight ? 'right' : 'left') + '"></div>';
+    h += '      <div class="proc-pipeline-content">';
+    if (contract.spec_reference) {
+      h += '        <div class="proc-pipeline-endpoint"><code>' + escapeHtml(contract.spec_reference) + '</code></div>';
+    }
+    /* Show input entities (category = request or first few) */
+    var requestEntities = entities.filter(function(e) { return e.category === 'request'; });
+    if (requestEntities.length === 0) requestEntities = entities.slice(0, 3);
+    if (requestEntities.length > 0) {
+      h += '        <div class="proc-pipeline-data">';
+      h += '          <span class="proc-pipeline-data-label">Envia:</span>';
+      requestEntities.forEach(function(e) {
+        var cls = e.is_consistent ? 'consistent' : 'divergent';
+        h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + '</span>';
+      });
+      h += '        </div>';
+    }
+    h += '      </div>';
     h += '    </div>';
 
-    /* Receiver column (provider processes) */
-    h += '    <div class="proc-col active">';
-    if (isRight) {
-      h += '      <div class="proc-action-box receiver">';
-      h += '        <div class="proc-action-title">' + (isAsync ? 'Consume' : 'Procesa') + '</div>';
-      h += '        <div class="proc-action-desc">' + escapeHtml(flow.flow_name || contract.name || '') + '</div>';
-      h += '      </div>';
-    } else {
-      h += '      <div class="proc-action-box initiator">';
-      h += '        <div class="proc-action-title">' + (isSync ? 'Request' : 'Publish') + '</div>';
-      h += '        <div class="proc-action-desc">' + escapeHtml(contract.spec_reference || contract.name || flow.flow_name || '') + '</div>';
-      if (entities.length > 0) {
-        h += '        <div class="proc-action-data">';
-        entities.slice(0, 5).forEach(function(e) {
+    /* Arrow: Request going to provider */
+    h += '    <div class="proc-pipeline-connector">';
+    h += '      <div class="proc-pipeline-arrow-down"></div>';
+    h += '      <span class="proc-pipeline-connector-label">' + (isSync ? 'invoca' : 'publica') + '</span>';
+    h += '    </div>';
+
+    /* STEP 2: Provider processes (contract box) */
+    h += '    <div class="proc-pipeline-step">';
+    h += '      <div class="proc-pipeline-actor provider">';
+    h += '        <div class="proc-pipeline-actor-name">' + escapeHtml(providerApp.name) + '</div>';
+    h += '        <div class="proc-pipeline-actor-role">' + (isAsync ? 'Consume' : 'Procesa') + '</div>';
+    h += '      </div>';
+    h += '      <div class="proc-pipeline-content">';
+    h += '        <div class="proc-pipeline-contract">';
+    h += '          <span class="proc-pipeline-contract-name">' + escapeHtml(contract.name || flow.flow_name || '') + '</span>';
+    h += '          <span class="proc-pipeline-contract-ver">v' + escapeHtml(String(contract.version || '1')) + '</span>';
+    h += '        </div>';
+
+    /* Internal pipeline steps: group entities by category to show processing stages */
+    var grouped = _groupEntitiesByCategory(entities);
+    var categoryKeys = Object.keys(grouped).filter(function(k) { return k !== 'request' && k !== 'general'; });
+
+    if (categoryKeys.length > 0) {
+      h += '        <div class="proc-pipeline-stages">';
+      h += '          <div class="proc-pipeline-stages-title">Pipeline interno:</div>';
+      categoryKeys.forEach(function(cat, catIdx) {
+        h += '          <div class="proc-pipeline-stage">';
+        h += '            <div class="proc-pipeline-stage-header">';
+        h += '              <span class="proc-pipeline-stage-num">' + (catIdx + 1) + '</span>';
+        h += '              <span class="proc-pipeline-stage-name">' + escapeHtml(cat) + '</span>';
+        h += '            </div>';
+        h += '            <div class="proc-pipeline-stage-entities">';
+        grouped[cat].forEach(function(e) {
           var cls = e.is_consistent ? 'consistent' : 'divergent';
           h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + '</span>';
         });
-        if (entities.length > 5) h += '<span class="entity-pill consistent">+' + (entities.length - 5) + '</span>';
-        h += '</div>';
-      }
-      h += '      </div>';
+        h += '            </div>';
+        if (catIdx < categoryKeys.length - 1) {
+          h += '            <div class="proc-pipeline-stage-arrow">&#9660;</div>';
+        }
+        h += '          </div>';
+      });
+      h += '        </div>';
+    } else if (entities.length > 0) {
+      /* No categories: show flat entities as what gets processed */
+      h += '        <div class="proc-pipeline-stages">';
+      h += '          <div class="proc-pipeline-stages-title">Entidades procesadas:</div>';
+      h += '          <div class="proc-pipeline-stage-entities">';
+      entities.forEach(function(e) {
+        var cls = e.is_consistent ? 'consistent' : 'divergent';
+        h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + '</span>';
+      });
+      h += '          </div>';
+      h += '        </div>';
     }
+    h += '      </div>';
     h += '    </div>';
 
-    h += '  </div>'; /* end proc-step-row (request) */
-
-    /* === SUB-STEP 2: RESPONSE (only for sync patterns) === */
+    /* STEP 3: Response (sync only) */
     if (isSync) {
-      h += '  <div class="proc-step-row" style="margin-top: 8px;">';
-
-      /* Response: provider returns to consumer */
-      h += '    <div class="proc-col active">';
-      if (isRight) {
-        h += '      <div class="proc-action-box initiator" style="border-color: rgba(48,209,88,0.2); background: rgba(48,209,88,0.04);">';
-        h += '        <div class="proc-action-title" style="color: var(--accent-green);">Recibe respuesta</div>';
-        if (entities.length > 0) {
-          var entityNames = entities.map(function(e) { return e.name; }).join(', ');
-          h += '        <div class="proc-action-desc" style="font-size:11px; color: var(--text-secondary);">{' + escapeHtml(entityNames) + '}</div>';
-        }
-        h += '      </div>';
-      }
+      /* Arrow: Response returning to consumer */
+      h += '    <div class="proc-pipeline-connector">';
+      h += '      <div class="proc-pipeline-arrow-down response"></div>';
+      h += '      <span class="proc-pipeline-connector-label" style="color:var(--accent-green);">retorna</span>';
       h += '    </div>';
 
-      /* Center: response arrow (reversed) */
-      h += '    <div class="proc-col-center">';
-      h += '      <div class="proc-flow-arrow ' + (isRight ? 'left' : 'right') + '" style="background: linear-gradient(90deg, rgba(48,209,88,0.3), rgba(48,209,88,0.5));"></div>';
-      h += '      <div style="font-size:9px; color: var(--accent-green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Response</div>';
-      h += '      <div class="proc-flow-arrow ' + (isRight ? 'left' : 'right') + '" style="background: linear-gradient(90deg, rgba(48,209,88,0.3), rgba(48,209,88,0.5));"></div>';
-      h += '    </div>';
-
-      /* Provider side (sends response) */
-      h += '    <div class="proc-col active">';
-      if (isRight) {
-        h += '      <div class="proc-action-box receiver" style="border-color: rgba(48,209,88,0.2); background: rgba(48,209,88,0.04);">';
-        h += '        <div class="proc-action-title" style="color: var(--accent-green);">Retorna</div>';
-        h += '        <div class="proc-action-desc" style="font-size:11px;">' + escapeHtml(entities.length > 0 ? entities.length + ' entidades' : 'OK') + '</div>';
-        h += '      </div>';
+      h += '    <div class="proc-pipeline-step response">';
+      h += '      <div class="proc-pipeline-actor consumer">';
+      h += '        <div class="proc-pipeline-actor-name">' + escapeHtml(consumerApp.name) + '</div>';
+      h += '        <div class="proc-pipeline-actor-role">Recibe</div>';
+      h += '      </div>';
+      h += '      <div class="proc-pipeline-content">';
+      if (entities.length > 0) {
+        var responseEntities = entities.filter(function(e) { return e.category !== 'request'; });
+        if (responseEntities.length === 0) responseEntities = entities;
+        h += '        <div class="proc-pipeline-data">';
+        h += '          <span class="proc-pipeline-data-label">Recibe:</span>';
+        responseEntities.slice(0, 6).forEach(function(e) {
+          var cls = e.is_consistent ? 'consistent' : 'divergent';
+          h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + '</span>';
+        });
+        if (responseEntities.length > 6) h += '<span class="entity-pill consistent">+' + (responseEntities.length - 6) + '</span>';
+        h += '        </div>';
       } else {
-        h += '      <div class="proc-action-box initiator" style="border-color: rgba(48,209,88,0.2); background: rgba(48,209,88,0.04);">';
-        h += '        <div class="proc-action-title" style="color: var(--accent-green);">Recibe respuesta</div>';
-        if (entities.length > 0) {
-          var entityNames2 = entities.map(function(e) { return e.name; }).join(', ');
-          h += '        <div class="proc-action-desc" style="font-size:11px; color: var(--text-secondary);">{' + escapeHtml(entityNames2) + '}</div>';
-        }
-        h += '      </div>';
+        h += '        <div class="proc-pipeline-data"><span class="proc-pipeline-data-label">200 OK</span></div>';
       }
+      h += '      </div>';
       h += '    </div>';
-
-      h += '  </div>'; /* end proc-step-row (response) */
     }
 
-    h += '</div>'; /* end proc-step */
+    h += '  </div>'; /* end proc-pipeline */
+    h += '</div>'; /* end proc-flow-block */
 
-    /* Connector between steps */
+    /* Separator between flows */
     if (idx < flows.length - 1) {
-      h += '<div style="display:flex; justify-content:center; padding: 4px 0;">';
-      h += '  <div style="width:2px; height:20px; background: rgba(255,255,255,0.08); border-radius:1px;"></div>';
-      h += '</div>';
+      h += '<div class="proc-flow-separator"></div>';
     }
   });
 
-  h += '</div>'; /* end proc-steps */
   h += '</div>'; /* end proc-diagram */
   return h;
+}
+
+/* Helper: group entities by category */
+function _groupEntitiesByCategory(entities) {
+  var groups = {};
+  entities.forEach(function(e) {
+    var cat = e.category || 'general';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(e);
+  });
+  return groups;
 }
 
 /* ===== View Toggle ===== */
