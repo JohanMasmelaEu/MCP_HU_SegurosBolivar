@@ -584,8 +584,9 @@ body::before {
   display: flex; align-items: stretch; gap: 16px; padding: 16px 20px;
   border-radius: 12px; background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.08);
-  position: relative; min-width: 0;
+  position: relative; min-width: 0; max-width: 100%; overflow: hidden;
   transition: border-color 0.2s, background 0.2s;
+  box-sizing: border-box;
 }
 .proc-pipeline-step:hover {
   border-color: rgba(255,255,255,0.12);
@@ -624,14 +625,14 @@ body::before {
   font-size: 9px; color: var(--text-tertiary); text-transform: uppercase;
   letter-spacing: 0.5px; margin-top: 3px; font-weight: 600;
 }
-.proc-pipeline-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+.proc-pipeline-content { flex: 1; min-width: 0; max-width: calc(100% - 162px); display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
 .proc-pipeline-endpoint { margin-bottom: 8px; }
 .proc-pipeline-endpoint code {
   font-family: "SF Mono", "Fira Code", monospace; font-size: 11px;
   background: rgba(100,210,255,0.08); padding: 4px 10px; border-radius: 5px;
   color: var(--accent-teal); border: 1px solid rgba(100,210,255,0.12);
 }
-.proc-pipeline-data { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; max-width: 100%; overflow: hidden; }
+.proc-pipeline-data { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; max-width: 100%; overflow: hidden; box-sizing: border-box; }
 .proc-pipeline-data-label {
   font-size: 9px; color: var(--text-tertiary); font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.3px; margin-right: 4px;
@@ -648,6 +649,7 @@ body::before {
 .proc-pipeline-stages {
   background: rgba(191,90,242,0.03); border: 1px solid rgba(191,90,242,0.1);
   border-radius: 10px; padding: 12px 14px;
+  overflow: hidden; max-width: 100%; box-sizing: border-box;
 }
 .proc-pipeline-stages-title {
   font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
@@ -669,7 +671,7 @@ body::before {
 }
 .proc-pipeline-stage-entities {
   display: flex; flex-wrap: wrap; gap: 5px; padding-left: 26px; margin-top: 4px;
-  max-width: 100%; overflow: hidden;
+  max-width: 100%; overflow: hidden; box-sizing: border-box;
 }
 .proc-pipeline-stage-arrow {
   display: flex; align-items: center; justify-content: center;
@@ -1287,10 +1289,11 @@ function renderProcessDiagram(flows, appAInfo, appBInfo) {
     if (requestEntities.length > 0) {
       h += '        <div class="proc-pipeline-data">';
       h += '          <span class="proc-pipeline-data-label">Envia:</span>';
-      requestEntities.forEach(function(e) {
+      requestEntities.slice(0, 6).forEach(function(e) {
         var cls = e.is_consistent ? 'consistent' : 'divergent';
         h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + '</span>';
       });
+      if (requestEntities.length > 6) h += '<span class="entity-pill consistent">+' + (requestEntities.length - 6) + '</span>';
       h += '        </div>';
     }
     h += '      </div>';
@@ -1318,20 +1321,26 @@ function renderProcessDiagram(flows, appAInfo, appBInfo) {
     var grouped = _groupEntitiesByCategory(entities);
     var categoryKeys = Object.keys(grouped).filter(function(k) { return k !== 'request' && k !== 'general'; });
 
+    var MAX_ENTITIES_PER_STAGE = 8;
+
     if (categoryKeys.length > 0) {
       h += '        <div class="proc-pipeline-stages">';
       h += '          <div class="proc-pipeline-stages-title">Pipeline interno:</div>';
       categoryKeys.forEach(function(cat, catIdx) {
+        var catEntities = grouped[cat];
         h += '          <div class="proc-pipeline-stage">';
         h += '            <div class="proc-pipeline-stage-header">';
         h += '              <span class="proc-pipeline-stage-num">' + (catIdx + 1) + '</span>';
         h += '              <span class="proc-pipeline-stage-name">' + escapeHtml(cat) + '</span>';
         h += '            </div>';
         h += '            <div class="proc-pipeline-stage-entities">';
-        grouped[cat].forEach(function(e) {
+        catEntities.slice(0, MAX_ENTITIES_PER_STAGE).forEach(function(e) {
           var cls = e.is_consistent ? 'consistent' : 'divergent';
           h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + '</span>';
         });
+        if (catEntities.length > MAX_ENTITIES_PER_STAGE) {
+          h += '<span class="entity-pill consistent">+' + (catEntities.length - MAX_ENTITIES_PER_STAGE) + '</span>';
+        }
         h += '            </div>';
         if (catIdx < categoryKeys.length - 1) {
           h += '            <div class="proc-pipeline-stage-arrow">&#9660;</div>';
@@ -1344,10 +1353,13 @@ function renderProcessDiagram(flows, appAInfo, appBInfo) {
       h += '        <div class="proc-pipeline-stages">';
       h += '          <div class="proc-pipeline-stages-title">Entidades procesadas:</div>';
       h += '          <div class="proc-pipeline-stage-entities">';
-      entities.forEach(function(e) {
+      entities.slice(0, MAX_ENTITIES_PER_STAGE).forEach(function(e) {
         var cls = e.is_consistent ? 'consistent' : 'divergent';
         h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + '</span>';
       });
+      if (entities.length > MAX_ENTITIES_PER_STAGE) {
+        h += '<span class="entity-pill consistent">+' + (entities.length - MAX_ENTITIES_PER_STAGE) + '</span>';
+      }
       h += '          </div>';
       h += '        </div>';
     }

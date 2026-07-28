@@ -91,3 +91,9 @@
 - Se corrigió el espaciado interno de los pasos del pipeline (`.proc-pipeline-step`): se incrementó padding de 14px a 16px y se agregó `min-width: 0` para contener overflow
 - Se corrigió la poca separación entre interacciones del diagrama de secuencia: se aumentó padding de `.seq-int` de 12px a 16px
 - Se corrigió el texto de las flechas (`.seq-arrow-text`) que se desbordaba en endpoints largos: se agregó `text-overflow: ellipsis` y `white-space: nowrap`
+
+### Corregido (Ecosystem Visualizer — Proceso 2026-07-27)
+- Se corrigió desbordamiento de entidades en el Diagrama de Proceso: los entity pills en los pasos del pipeline (consumer "Envía", provider "Entidades procesadas" y stages por categoría) se salían del contenedor cuando había muchas entidades registradas en un contrato
+- Se agregó `max-width: calc(100% - 162px)` a `.proc-pipeline-content` para contener correctamente el ancho relativo al actor lateral
+- Se agregó `overflow: hidden`, `max-width: 100%` y `box-sizing: border-box` a `.proc-pipeline-step`, `.proc-pipeline-stages`, `.proc-pipeline-data` y `.proc-pipeline-stage-entities`
+- Se agregó límite de entidades visibles en el paso del provider (máximo 8 por categoría/stage con indicador "+N") y en el paso del consumer "Envía" (máximo 6 con indicador "+N"), consistente con el patrón ya usado en el paso de "Recibe"
