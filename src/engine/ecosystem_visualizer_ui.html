@@ -254,7 +254,7 @@ body::before {
 }
 #tooltip.visible { opacity: 1; }
 #legend {
-  position: fixed; bottom: 16px; left: 16px; z-index: 90;
+  position: fixed; bottom: 16px; right: 16px; z-index: 90;
   padding: 10px 14px; font-size: 10px; min-width: 180px;
   background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
   border: 1px solid rgba(255,255,255,0.06);
@@ -350,6 +350,7 @@ body::before {
   display: flex; gap: 2px; margin-bottom: 20px;
   background: rgba(255,255,255,0.02); border-radius: 10px; padding: 3px;
   border: 1px solid rgba(255,255,255,0.06);
+  position: relative; z-index: 2;
 }
 .diagram-tab {
   flex: 1; padding: 8px 16px; border: none; border-radius: 8px;
@@ -465,8 +466,8 @@ body::before {
 .seq-full { display: flex; flex-direction: column; gap: 0; }
 .seq-participants-bar {
   display: flex; align-items: stretch; justify-content: space-between;
-  gap: 16px; margin-bottom: 16px; position: sticky; top: 80px; z-index: 5;
-  padding: 16px 20px; background: rgba(0,0,0,0.85);
+  gap: 16px; margin-bottom: 16px; position: sticky; top: 0; z-index: 10;
+  padding: 16px 20px; background: rgba(0,0,0,0.95);
   border-radius: 14px; border: 1px solid rgba(255,255,255,0.06);
   backdrop-filter: blur(20px);
 }
@@ -480,13 +481,13 @@ body::before {
 .seq-p-meta { font-size: 10px; color: var(--text-tertiary); margin-top: 3px; }
 .seq-p-summary { font-size: 11px; color: var(--text-tertiary); align-self: center; text-align: center; flex: 1; min-width: 0; }
 .seq-empty { text-align: center; padding: 40px; color: var(--text-tertiary); font-size: 13px; }
-.seq-canvas { display: flex; position: relative; min-height: 200px; overflow: hidden; }
+.seq-canvas { display: flex; position: relative; min-height: 200px; }
 .seq-ll {
   width: 2px; background: rgba(255,255,255,0.06); border-radius: 1px; flex-shrink: 0;
 }
 .seq-ll.left { margin-left: 90px; }
 .seq-ll.right { margin-right: 90px; }
-.seq-msgs { flex: 1; display: flex; flex-direction: column; gap: 0; padding: 8px 0; min-width: 0; overflow: hidden; }
+.seq-msgs { flex: 1; display: flex; flex-direction: column; gap: 0; padding: 8px 0; min-width: 0; }
 .seq-int { padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
 .seq-int:last-child { border-bottom: none; }
 .seq-int-label {
@@ -504,7 +505,7 @@ body::before {
 .seq-int-badge.sync { background: rgba(10,132,255,0.12); color: var(--accent-blue); }
 .seq-int-badge.async { background: rgba(255,159,10,0.12); color: var(--accent-orange); }
 /* Arrow */
-.seq-arrow { display: flex; flex-direction: column; gap: 6px; padding: 8px 16px; position: relative; min-width: 0; overflow: hidden; }
+.seq-arrow { display: flex; flex-direction: column; gap: 6px; padding: 8px 16px; position: relative; min-width: 0; overflow-x: hidden; }
 .seq-arrow.right { padding-left: 24px; }
 .seq-arrow.left { padding-right: 24px; align-items: flex-end; }
 .seq-arrow-text { font-size: 11px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
@@ -546,7 +547,7 @@ body::before {
 .proc-flow-block {
   background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px; padding: 28px;
-  position: relative;
+  position: relative; z-index: 1;
 }
 .proc-flow-header {
   display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
@@ -704,7 +705,7 @@ body::before {
   color: var(--text-secondary); margin-left: 10px;
 }
 /* Diagram view container */
-.diagram-view { min-height: 120px; overflow: hidden; }
+.diagram-view { min-height: 120px; position: relative; z-index: 1; }
 </style>
 </head>
 <body>
