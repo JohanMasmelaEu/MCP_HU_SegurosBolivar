@@ -79,3 +79,15 @@
 - Se rediseñó la leyenda del ecosistema para que sea menos intrusiva: inicia colapsada por defecto, tamaño reducido, opacidad 50% que sube a 100% solo al hover. Funciona como ayuda contextual sin robar protagonismo al diagrama
 - Se rediseñó completamente el Diagrama de Proceso con estilo pipeline vertical: cada flujo muestra los pasos internos (Request → Pipeline interno → Response) con actores (consumer/provider) en cada paso, stages internos agrupados por categoría de entidades, y conectores verticales con flechas entre pasos. Los pipelines multi-stage como OCR ahora muestran cada etapa interna (pertinencia, calidad, extracción, etc.) como sub-pasos numerados y conectados
 - Se mejoró la claridad visual de las relaciones de flujo en el Diagrama de Proceso: se agregó un rail vertical izquierdo que conecta todos los pasos con gradiente de color (azul→púrpura→verde), indicadores circulares en cada paso sobre el rail, labels de dirección en los conectores ("invoca", "publica", "retorna"), flechas con símbolo ▼ entre pasos, y hover state en cada step para interactividad. Los stages internos del pipeline ahora usan ▼ como conector visual entre etapas
+
+### Corregido (Ecosystem Visualizer — Layout 2026-07-27)
+- Se corrigió desbordamiento horizontal de entity pills en los diagramas de Secuencia y Proceso: se agregó `max-width`, `overflow: hidden`, y `text-overflow: ellipsis` a `.entity-pill`
+- Se corrigió que los contenedores de entidades (`.seq-arrow-entities`, `.proc-pipeline-data`, `.proc-pipeline-stage-entities`) no contenían el overflow — ahora tienen `max-width: 100%` y `overflow: hidden` con `flex-wrap: wrap`
+- Se corrigió la barra de participantes (`.seq-participants-bar`) que no tenía contención visual ni margen inferior: se agregó border-radius, borde sutil, backdrop-filter, y margin-bottom
+- Se corrigió que las cajas de participantes (`.seq-p-box`) podían crecer sin límite: se agregó `max-width: 280px` y `flex-shrink: 0`
+- Se corrigió que el área de mensajes del diagrama de secuencia (`.seq-msgs`) no restringía el overflow de su contenido: se agregó `min-width: 0` y `overflow: hidden`
+- Se corrigió la falta de separación vertical entre bloques del diagrama de proceso: se cambió `gap: 0` a `gap: 24px` en `.proc-diagram`
+- Se corrigió la poca visibilidad de los conectores entre pasos del pipeline: se aumentó el tamaño de los dots del rail (de 10px a 12px), se intensificaron los colores del gradiente del rail vertical, y se aumentó el tamaño de las flechas ▼ (de 8px a 10px)
+- Se corrigió el espaciado interno de los pasos del pipeline (`.proc-pipeline-step`): se incrementó padding de 14px a 16px y se agregó `min-width: 0` para contener overflow
+- Se corrigió la poca separación entre interacciones del diagrama de secuencia: se aumentó padding de `.seq-int` de 12px a 16px
+- Se corrigió el texto de las flechas (`.seq-arrow-text`) que se desbordaba en endpoints largos: se agregó `text-overflow: ellipsis` y `white-space: nowrap`

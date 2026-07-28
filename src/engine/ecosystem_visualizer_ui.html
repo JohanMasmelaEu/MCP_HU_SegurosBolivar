@@ -144,8 +144,8 @@ body::before {
 }
 #cy { flex: 1; }
 #view-micro {
-  flex: 1; margin-top: 40px; overflow-y: auto; padding: 100px 40px 40px;
-  display: none; flex-direction: column; gap: 20px; position: relative; z-index: 1;
+  flex: 1; margin-top: 40px; overflow-y: auto; padding: 100px 48px 48px;
+  display: none; flex-direction: column; gap: 24px; position: relative; z-index: 1;
 }
 .micro-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -193,10 +193,11 @@ body::before {
 .flow-direction { color: var(--text-tertiary); font-size: 16px; }
 .flow-target { color: var(--accent-purple); font-weight: 500; }
 .flow-contract { font-size: 11px; color: var(--text-secondary); margin-bottom: 8px; }
-.flow-entities { display: flex; flex-wrap: wrap; gap: 6px; }
+.flow-entities { display: flex; flex-wrap: wrap; gap: 6px; max-width: 100%; }
 .entity-pill {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis;
 }
 .entity-pill.consistent {
   background: rgba(48,209,88,0.12); color: var(--accent-green);
@@ -464,26 +465,29 @@ body::before {
 .seq-full { display: flex; flex-direction: column; gap: 0; }
 .seq-participants-bar {
   display: flex; align-items: stretch; justify-content: space-between;
-  gap: 16px; margin-bottom: 0; position: sticky; top: 80px; z-index: 5;
-  padding: 16px 0; background: rgba(0,0,0,0.8);
+  gap: 16px; margin-bottom: 16px; position: sticky; top: 80px; z-index: 5;
+  padding: 16px 20px; background: rgba(0,0,0,0.85);
+  border-radius: 14px; border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
 }
 .seq-p-box {
   padding: 14px 24px; border-radius: 12px; text-align: center; min-width: 180px;
+  max-width: 280px; flex-shrink: 0;
 }
 .seq-p-box.left { background: rgba(10,132,255,0.08); border: 1px solid rgba(10,132,255,0.2); }
 .seq-p-box.right { background: rgba(191,90,242,0.08); border: 1px solid rgba(191,90,242,0.2); }
 .seq-p-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
 .seq-p-meta { font-size: 10px; color: var(--text-tertiary); margin-top: 3px; }
-.seq-p-summary { font-size: 11px; color: var(--text-tertiary); align-self: center; text-align: center; }
+.seq-p-summary { font-size: 11px; color: var(--text-tertiary); align-self: center; text-align: center; flex: 1; min-width: 0; }
 .seq-empty { text-align: center; padding: 40px; color: var(--text-tertiary); font-size: 13px; }
-.seq-canvas { display: flex; position: relative; min-height: 200px; }
+.seq-canvas { display: flex; position: relative; min-height: 200px; overflow: hidden; }
 .seq-ll {
   width: 2px; background: rgba(255,255,255,0.06); border-radius: 1px; flex-shrink: 0;
 }
 .seq-ll.left { margin-left: 90px; }
 .seq-ll.right { margin-right: 90px; }
-.seq-msgs { flex: 1; display: flex; flex-direction: column; gap: 0; padding: 8px 0; }
-.seq-int { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.seq-msgs { flex: 1; display: flex; flex-direction: column; gap: 0; padding: 8px 0; min-width: 0; overflow: hidden; }
+.seq-int { padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
 .seq-int:last-child { border-bottom: none; }
 .seq-int-label {
   display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
@@ -500,10 +504,10 @@ body::before {
 .seq-int-badge.sync { background: rgba(10,132,255,0.12); color: var(--accent-blue); }
 .seq-int-badge.async { background: rgba(255,159,10,0.12); color: var(--accent-orange); }
 /* Arrow */
-.seq-arrow { display: flex; flex-direction: column; gap: 4px; padding: 4px 16px; position: relative; }
+.seq-arrow { display: flex; flex-direction: column; gap: 6px; padding: 8px 16px; position: relative; min-width: 0; overflow: hidden; }
 .seq-arrow.right { padding-left: 24px; }
 .seq-arrow.left { padding-right: 24px; align-items: flex-end; }
-.seq-arrow-text { font-size: 11px; color: var(--text-secondary); }
+.seq-arrow-text { font-size: 11px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 .seq-arrow-text code {
   font-family: "SF Mono", "Fira Code", monospace; font-size: 10px;
   background: rgba(100,210,255,0.08); padding: 1px 5px; border-radius: 3px; color: var(--accent-teal);
@@ -530,7 +534,7 @@ body::before {
 .seq-arrow.async.left .seq-arrow-tip { border-right-color: rgba(255,159,10,0.6); }
 .seq-arrow.response.right .seq-arrow-tip { border-left-color: rgba(48,209,88,0.4); }
 .seq-arrow.response.left .seq-arrow-tip { border-right-color: rgba(48,209,88,0.4); }
-.seq-arrow-entities { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.seq-arrow-entities { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; max-width: 100%; overflow: hidden; }
 .seq-resp-lbl { font-size: 10px; color: var(--accent-green); font-weight: 600; }
 .seq-implicit { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.04); }
 .seq-implicit-title {
@@ -538,20 +542,20 @@ body::before {
   color: var(--text-tertiary); margin-bottom: 10px;
 }
 /* ===== Process Diagram (Pipeline Style) ===== */
-.proc-diagram { padding: 8px 0; display: flex; flex-direction: column; gap: 0; }
+.proc-diagram { padding: 8px 0; display: flex; flex-direction: column; gap: 24px; }
 .proc-flow-block {
-  background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 14px; padding: 24px; margin-bottom: 0;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 28px;
   position: relative;
 }
 .proc-flow-header {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
-  padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 .proc-flow-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
 .proc-flow-separator {
-  height: 1px; margin: 20px 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  height: 2px; margin: 0;
+  background: linear-gradient(90deg, transparent 10%, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.06) 70%, transparent 90%);
 }
 .proc-step-num {
   width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
@@ -563,23 +567,23 @@ body::before {
 /* Pipeline: vertical flow with left rail */
 .proc-pipeline {
   display: flex; flex-direction: column; align-items: stretch; gap: 0;
-  position: relative; padding-left: 40px;
+  position: relative; padding-left: 44px; margin-top: 8px;
 }
 /* Vertical rail connecting all steps */
 .proc-pipeline::before {
-  content: ''; position: absolute; left: 18px; top: 24px; bottom: 24px;
+  content: ''; position: absolute; left: 20px; top: 28px; bottom: 28px;
   width: 2px; background: linear-gradient(180deg,
-    rgba(10,132,255,0.4) 0%,
-    rgba(191,90,242,0.4) 50%,
-    rgba(48,209,88,0.4) 100%
+    rgba(10,132,255,0.5) 0%,
+    rgba(191,90,242,0.5) 50%,
+    rgba(48,209,88,0.5) 100%
   );
   border-radius: 1px;
 }
 .proc-pipeline-step {
-  display: flex; align-items: stretch; gap: 16px; padding: 14px 18px;
-  border-radius: 12px; background: rgba(255,255,255,0.025);
-  border: 1px solid rgba(255,255,255,0.06);
-  position: relative;
+  display: flex; align-items: stretch; gap: 16px; padding: 16px 20px;
+  border-radius: 12px; background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  position: relative; min-width: 0;
   transition: border-color 0.2s, background 0.2s;
 }
 .proc-pipeline-step:hover {
@@ -592,14 +596,14 @@ body::before {
 .proc-pipeline-step.response:hover { border-color: rgba(48,209,88,0.25); }
 /* Step indicator on the rail */
 .proc-pipeline-step::before {
-  content: ''; position: absolute; left: -31px; top: 50%; transform: translateY(-50%);
-  width: 10px; height: 10px; border-radius: 50%;
-  background: rgba(10,132,255,0.3); border: 2px solid rgba(10,132,255,0.6);
-  box-shadow: 0 0 8px rgba(10,132,255,0.2);
+  content: ''; position: absolute; left: -33px; top: 50%; transform: translateY(-50%);
+  width: 12px; height: 12px; border-radius: 50%;
+  background: rgba(10,132,255,0.4); border: 2px solid rgba(10,132,255,0.7);
+  box-shadow: 0 0 10px rgba(10,132,255,0.3);
 }
 .proc-pipeline-step.response::before {
-  background: rgba(48,209,88,0.3); border-color: rgba(48,209,88,0.6);
-  box-shadow: 0 0 8px rgba(48,209,88,0.2);
+  background: rgba(48,209,88,0.4); border-color: rgba(48,209,88,0.7);
+  box-shadow: 0 0 10px rgba(48,209,88,0.3);
 }
 .proc-pipeline-actor {
   min-width: 130px; max-width: 130px; padding: 10px 14px; border-radius: 10px;
@@ -619,14 +623,14 @@ body::before {
   font-size: 9px; color: var(--text-tertiary); text-transform: uppercase;
   letter-spacing: 0.5px; margin-top: 3px; font-weight: 600;
 }
-.proc-pipeline-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.proc-pipeline-content { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
 .proc-pipeline-endpoint { margin-bottom: 8px; }
 .proc-pipeline-endpoint code {
   font-family: "SF Mono", "Fira Code", monospace; font-size: 11px;
   background: rgba(100,210,255,0.08); padding: 4px 10px; border-radius: 5px;
   color: var(--accent-teal); border: 1px solid rgba(100,210,255,0.12);
 }
-.proc-pipeline-data { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.proc-pipeline-data { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; max-width: 100%; overflow: hidden; }
 .proc-pipeline-data-label {
   font-size: 9px; color: var(--text-tertiary); font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.3px; margin-right: 4px;
@@ -663,7 +667,8 @@ body::before {
   font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: capitalize;
 }
 .proc-pipeline-stage-entities {
-  display: flex; flex-wrap: wrap; gap: 4px; padding-left: 26px; margin-top: 2px;
+  display: flex; flex-wrap: wrap; gap: 5px; padding-left: 26px; margin-top: 4px;
+  max-width: 100%; overflow: hidden;
 }
 .proc-pipeline-stage-arrow {
   display: flex; align-items: center; justify-content: center;
@@ -671,35 +676,35 @@ body::before {
 }
 /* Connector arrows between pipeline steps */
 .proc-pipeline-connector {
-  display: flex; align-items: center; padding: 6px 0; margin-left: 0; position: relative;
+  display: flex; align-items: center; padding: 10px 0; margin-left: 0; position: relative;
 }
 .proc-pipeline-connector::before {
   content: ''; position: absolute; left: -22px; top: 50%; transform: translateY(-50%);
-  width: 6px; height: 6px; border-radius: 50%;
-  background: rgba(10,132,255,0.2);
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(10,132,255,0.3);
 }
 .proc-pipeline-arrow-down {
-  display: flex; align-items: center; gap: 8px; padding-left: 4px;
+  display: flex; align-items: center; gap: 10px; padding-left: 4px;
 }
 .proc-pipeline-arrow-down::before {
-  content: ''; display: block; width: 24px; height: 2px;
-  background: linear-gradient(90deg, rgba(10,132,255,0.3), rgba(10,132,255,0.5));
+  content: ''; display: block; width: 32px; height: 2px;
+  background: linear-gradient(90deg, rgba(10,132,255,0.4), rgba(10,132,255,0.7));
   border-radius: 1px;
 }
 .proc-pipeline-arrow-down::after {
-  content: '▼'; font-size: 8px; color: rgba(10,132,255,0.5);
+  content: '▼'; font-size: 10px; color: rgba(10,132,255,0.7);
 }
 .proc-pipeline-arrow-down.response::before {
-  background: linear-gradient(90deg, rgba(48,209,88,0.3), rgba(48,209,88,0.5));
+  background: linear-gradient(90deg, rgba(48,209,88,0.4), rgba(48,209,88,0.7));
 }
-.proc-pipeline-arrow-down.response::after { color: rgba(48,209,88,0.5); }
+.proc-pipeline-arrow-down.response::after { color: rgba(48,209,88,0.7); }
 /* Flow direction label in connectors */
 .proc-pipeline-connector-label {
-  font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-  color: var(--text-tertiary); margin-left: 8px;
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--text-secondary); margin-left: 10px;
 }
 /* Diagram view container */
-.diagram-view { min-height: 100px; }
+.diagram-view { min-height: 120px; overflow: hidden; }
 </style>
 </head>
 <body>
