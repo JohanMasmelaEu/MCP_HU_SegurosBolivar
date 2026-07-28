@@ -55,3 +55,25 @@
 
 - Se corrigió bug intermitente en el toggle de capas (Flujos, Entidades, Relaciones) del visualizador de Red Neuronal: al activar/desactivar una capa, se destruía y recreaba todo el grafo Cytoscape.js, causando race conditions que impedían hacer click en HUs para ver su detalle. Ahora se usa `show()`/`hide()` sobre los elementos sin destruir la instancia
 - Se corrigió memory leak: los intervalos del neural pulse (animación de edges) no se limpiaban al reconstruir el grafo, causando múltiples intervalos acumulados contra instancias destruidas
+
+### Corregido (Ecosystem Visualizer — 2026-07-27)
+- Se corrigió bug donde registrar un contrato con `role: "consumer"` creaba un contrato separado en vez de agregar la app al array `consumer_apps[]` del contrato provider existente. Ahora `handle_register_app` detecta `role="consumer"`, busca el contrato provider por `contract_id` o `provider_app`, y agrega la app como consumidor
+- Se corrigió que `add_contract` en `EcosystemEngine` sobreescribía `consumer_apps` al actualizar un contrato existente. Ahora hace merge preservando consumidores previos
+- Se corrigió tooltip de "Acoplamiento" que persistía visible sin hover en las vistas Micro/Macro y no desaparecía al cambiar de tab (Diagrama de Secuencia ↔ Diagrama de Proceso). Se agregó tracking de timer con `_clearTooltipTimer()` y llamadas a `hideTooltip()` en `switchDiagramType`, `backToMacro`, y `switchToMicro`
+- Se corrigió leyenda que tapaba contenido del diagrama en pantallas de resolución normal. Ahora es colapsable con toggle show/hide via click en el header
+
+### Agregado (Ecosystem Visualizer — 2026-07-27)
+- Se agregaron flechas de REQUEST (consumer → provider) con método/path del `spec_reference` y flechas de RESPONSE (provider → consumer) con entidades retornadas en el Diagrama de Secuencia. Antes solo se mostraba una línea punteada con la palabra "response"
+- Se agregó patrón de flujo conectado en el Diagrama de Proceso: para contratos síncronos muestra Request → Contract → Process → Response con flechas conectoras; para asíncronos muestra Publish → Contract → Consume. Se eliminaron los boxes sueltos sin conexión visual
+- Se agregó modelo `EntityDefinition` (name + category) en `src/models/ecosystem.py` y campo `entities_grouped` en `ContractDefinition` para soportar agrupación jerárquica de entidades por categoría (request, pertinencia, calidad, etc.)
+- Se agregaron funciones `renderEntitiesGrouped()` y `renderEntitiesByCategory()` en el frontend para renderizar entidades agrupadas por categoría en el panel de detalle y en los diagramas
+- Se agregó función `_serialize_entities_grouped()` en el backend para exponer entidades agrupadas en las APIs de detalle de app
+- Se agregó dirección de dependencia en la vista Macro: edges ahora muestran `direction_type` (directional=flecha unidireccional consumer→provider, bidirectional=flechas dobles, cohesive=línea sin flecha para BD compartida, implicit=línea punteada sin flecha). Source/target de edges se calculan según contratos consumer→provider
+- Se actualizaron estilos Cytoscape.js con selectores por `direction_type` para diferenciación visual de la dirección de dependencia
+- Se actualizó el tooltip de edges para mostrar información de dirección (Unidireccional, Bidireccional, Cohesivo, Implícito)
+- Se actualizaron labels de edges en vista Macro para mostrar nombres de contratos en vez de conteos genéricos
+
+### Cambiado (Ecosystem Visualizer — 2026-07-27)
+- `_calculate_coupling_edges` ahora calcula `direction_type` y asigna source/target según la relación consumer→provider en vez de usar orden alfabético de app_ids
+- El campo `entities` en contratos ahora acepta tanto strings planos como objetos `{name, category}` para backward compatibility
+- Se rediseñó la leyenda del ecosistema para que sea menos intrusiva: inicia colapsada por defecto, tamaño reducido, opacidad 50% que sube a 100% solo al hover. Funciona como ayuda contextual sin robar protagonismo al diagrama

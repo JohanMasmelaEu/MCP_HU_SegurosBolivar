@@ -21,6 +21,7 @@ from src.models.ecosystem import (
     AppRegistration,
     ContractDefinition,
     CrossAppConflict,
+    EntityDefinition,
     SharedEntity,
 )
 
@@ -157,6 +158,7 @@ async def route_eco_app_detail(request: Request) -> JSONResponse:
                 "version": c.version,
                 "consumers": c.consumer_apps,
                 "entities": c.entities_involved,
+                "entities_grouped": _serialize_entities_grouped(c),
             }
             for c in contracts_exposed
         ],
@@ -168,6 +170,7 @@ async def route_eco_app_detail(request: Request) -> JSONResponse:
                 "version": c.version,
                 "provider": c.provider_app,
                 "entities": c.entities_involved,
+                "entities_grouped": _serialize_entities_grouped(c),
             }
             for c in contracts_consumed
         ],
@@ -338,8 +341,8 @@ def _calculate_coupling_edges(
 ) -> list[dict]:
     """Calcula la fuerza de acoplamiento entre cada par de apps.
 
-    La fuerza es: num_contratos_entre_ellas + num_entidades_compartidas.
-    Solo genera edges para pares con coupling_strength > 0.
+    Genera edges direccionales cuando hay contratos consumer→provider,
+    y edges bidireccionales para acoplamiento implicito (entidades compartidas).
 
     Args:
         apps: Todas las apps del ecosistema.
@@ -348,10 +351,11 @@ def _calculate_coupling_edges(
 
     Returns:
         Lista de edges con coupling_strength, contracts_count,
-        shared_entities_count, y sync_type.
+        shared_entities_count, sync_type, y direction_type.
     """
     edges: list[dict] = []
     app_ids = [a.app_id for a in apps]
+    app_coupling_map: dict[str, str] = {a.app_id: a.coupling_type for a in apps}
 
     for i, app_a_id in enumerate(app_ids):
         for app_b_id in app_ids[i + 1:]:
@@ -386,18 +390,63 @@ def _calculate_coupling_edges(
             # Determinar si hay divergencias entre las entidades compartidas
             has_divergence = any(not e.is_consistent for e in pair_entities)
 
+            # Determinar direccion de dependencia
+            # Contar contratos donde A es consumer de B vs B es consumer de A
+            a_consumes_b = [c for c in pair_contracts if c.provider_app == app_b_id and app_a_id in c.consumer_apps]
+            b_consumes_a = [c for c in pair_contracts if c.provider_app == app_a_id and app_b_id in c.consumer_apps]
+
+            # Determinar si ambas apps son cohesivas (misma BD)
+            both_cohesive = (
+                app_coupling_map.get(app_a_id) == "cohesive"
+                and app_coupling_map.get(app_b_id) == "cohesive"
+            )
+
+            # Direction type: directional (clear consumer→provider), bidirectional, or cohesive
+            if both_cohesive and not pair_contracts:
+                direction_type = "cohesive"
+                source_id = f"app:{app_a_id}"
+                target_id = f"app:{app_b_id}"
+            elif a_consumes_b and not b_consumes_a:
+                # A consumes B: arrow from A (consumer) → B (provider)
+                direction_type = "directional"
+                source_id = f"app:{app_a_id}"
+                target_id = f"app:{app_b_id}"
+            elif b_consumes_a and not a_consumes_b:
+                # B consumes A: arrow from B (consumer) → A (provider)
+                direction_type = "directional"
+                source_id = f"app:{app_b_id}"
+                target_id = f"app:{app_a_id}"
+            elif a_consumes_b and b_consumes_a:
+                direction_type = "bidirectional"
+                source_id = f"app:{app_a_id}"
+                target_id = f"app:{app_b_id}"
+            else:
+                direction_type = "implicit"
+                source_id = f"app:{app_a_id}"
+                target_id = f"app:{app_b_id}"
+
+            # Build label with contract names for directional edges
+            contract_names = [c.name for c in pair_contracts[:3]]
+            if pair_contracts:
+                edge_label = " · ".join(contract_names)
+                if len(pair_contracts) > 3:
+                    edge_label += f" (+{len(pair_contracts) - 3})"
+            else:
+                edge_label = f"{len(pair_entities)} entidades compartidas"
+
             edges.append({
                 "data": {
                     "id": f"coupling:{app_a_id}--{app_b_id}",
-                    "source": f"app:{app_a_id}",
-                    "target": f"app:{app_b_id}",
+                    "source": source_id,
+                    "target": target_id,
                     "type": "coupling",
                     "coupling_strength": strength,
                     "contracts_count": len(pair_contracts),
                     "shared_entities_count": len(pair_entities),
                     "sync_type": sync_type,
+                    "direction_type": direction_type,
                     "has_divergence": has_divergence,
-                    "label": f"{len(pair_contracts)} contratos · {len(pair_entities)} entidades",
+                    "label": edge_label,
                     "app_a": app_a_id,
                     "app_b": app_b_id,
                 }
@@ -470,6 +519,12 @@ def _build_flows_between_apps(
 
         # Entidades que viajan en este contrato
         entities_in_transit: list[dict] = []
+        # Build a category lookup from entities_grouped
+        category_lookup: dict[str, str] = {}
+        if contract.entities_grouped:
+            for eg in contract.entities_grouped:
+                category_lookup[eg.name.lower()] = eg.category
+
         for entity_name in contract.entities_involved:
             # Verificar si esta entidad es compartida y tiene divergencia
             entity_shared = next(
@@ -479,6 +534,7 @@ def _build_flows_between_apps(
 
             entities_in_transit.append({
                 "name": entity_name,
+                "category": category_lookup.get(entity_name.lower(), "general"),
                 "is_consistent": entity_shared.is_consistent if entity_shared else True,
                 "divergence": entity_shared.divergence_notes if entity_shared and not entity_shared.is_consistent else "",
             })
@@ -629,6 +685,30 @@ def _calculate_health(
 
 
 # ─── HELPERS ─────────────────────────────────────────────────────────────────────
+
+
+def _serialize_entities_grouped(contract: ContractDefinition) -> dict[str, list[str]]:
+    """Serializa las entidades agrupadas de un contrato por categoria.
+
+    Si el contrato tiene entities_grouped definido, agrupa por categoria.
+    Si no, retorna todas las entidades bajo la categoria 'general'.
+
+    Args:
+        contract: Definicion del contrato.
+
+    Returns:
+        Dict con {categoria: [nombres de entidades]}.
+    """
+    if contract.entities_grouped:
+        groups: dict[str, list[str]] = {}
+        for eg in contract.entities_grouped:
+            groups.setdefault(eg.category, []).append(eg.name)
+        return groups
+
+    if contract.entities_involved:
+        return {"general": list(contract.entities_involved)}
+
+    return {}
 
 
 def _get_ecosystem_engine(ecosystem_id: str) -> Optional[EcosystemEngine]:

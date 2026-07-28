@@ -5,7 +5,7 @@ import logging
 from src.engine.ecosystem import get_ecosystem
 from src.engine.ecosystem_manager import get_ecosystem_manager
 from src.engine.memory import get_memory
-from src.models.ecosystem import AppRegistration, ContractDefinition
+from src.models.ecosystem import AppRegistration, ContractDefinition, EntityDefinition
 
 logger = logging.getLogger("mcp_hu.tools.ecosystem")
 
@@ -147,7 +147,64 @@ def handle_register_app(app_dict: dict) -> dict:
                 contract_data["consumer_apps"] = [consumer] if consumer else []
             # Normalizar: aceptar 'entities' como alias de 'entities_involved'
             if "entities" in contract_data and "entities_involved" not in contract_data:
-                contract_data["entities_involved"] = contract_data.pop("entities")
+                raw_entities = contract_data.pop("entities")
+                # Soporte para entidades como objetos con category
+                if raw_entities and isinstance(raw_entities[0], dict):
+                    contract_data["entities_grouped"] = [
+                        EntityDefinition(**e) if isinstance(e, dict) else EntityDefinition(name=e)
+                        for e in raw_entities
+                    ]
+                    contract_data["entities_involved"] = [
+                        e["name"] if isinstance(e, dict) else e for e in raw_entities
+                    ]
+                else:
+                    contract_data["entities_involved"] = raw_entities
+            # Normalizar: soporte directo para entities_grouped como lista de objetos
+            if "entities_grouped" in contract_data and isinstance(contract_data["entities_grouped"], list):
+                grouped = contract_data["entities_grouped"]
+                if grouped and isinstance(grouped[0], dict):
+                    contract_data["entities_grouped"] = [
+                        EntityDefinition(**e) for e in grouped
+                    ]
+
+            # Si el contrato tiene role="consumer", buscar el contrato provider
+            # existente y agregar esta app como consumidor en vez de crear uno nuevo.
+            role = contract_data.pop("role", None)
+            if role == "consumer":
+                provider_app_id = contract_data.get("provider_app", "")
+                contract_id = contract_data.get("contract_id", "")
+                existing_contracts = ecosystem.get_contracts()
+
+                # Buscar contrato provider existente por contract_id o por provider_app
+                target_contract = None
+                if contract_id:
+                    target_contract = next(
+                        (c for c in existing_contracts if c.contract_id == contract_id),
+                        None,
+                    )
+                if not target_contract and provider_app_id:
+                    target_contract = next(
+                        (c for c in existing_contracts if c.provider_app == provider_app_id),
+                        None,
+                    )
+
+                if target_contract:
+                    # Agregar la app actual como consumidor del contrato existente
+                    if app.app_id not in target_contract.consumer_apps:
+                        target_contract.consumer_apps.append(app.app_id)
+                    # Persistir el contrato actualizado
+                    ecosystem.add_contract(target_contract)
+                    # Registrar en la app que consume este contrato
+                    if target_contract.contract_id not in app.consumes_contracts:
+                        app.consumes_contracts.append(target_contract.contract_id)
+                    continue
+
+                # Si no existe contrato provider, crear uno normal con consumer_apps
+                if "consumer_apps" not in contract_data:
+                    contract_data["consumer_apps"] = [app.app_id]
+                elif app.app_id not in contract_data["consumer_apps"]:
+                    contract_data["consumer_apps"].append(app.app_id)
+
             contract = ContractDefinition(**contract_data)
             ecosystem.add_contract(contract)
 

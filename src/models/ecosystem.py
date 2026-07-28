@@ -1,9 +1,22 @@
 """Modelos Pydantic para el registro de ecosistemas multi-app."""
 
 from datetime import datetime
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 from pydantic import BaseModel, Field
+
+
+class EntityDefinition(BaseModel):
+    """Definicion de una entidad con categoria para agrupacion jerarquica.
+
+    Permite agrupar entidades por funcion (request, response, calidad, etc.)
+    en la visualizacion de contratos.
+    """
+
+    name: str = Field(description="Nombre de la entidad (PascalCase)")
+    category: str = Field(
+        default="general", description="Categoria para agrupacion (ej: request, pertinencia, calidad)"
+    )
 
 
 class ContractDefinition(BaseModel):
@@ -27,7 +40,11 @@ class ContractDefinition(BaseModel):
     )
     version: str = Field(default="1.0.0", description="Version del contrato")
     entities_involved: list[str] = Field(
-        default_factory=list, description="Entidades que cruzan por este contrato"
+        default_factory=list, description="Entidades que cruzan por este contrato (nombres planos)"
+    )
+    entities_grouped: list[EntityDefinition] = Field(
+        default_factory=list,
+        description="Entidades con categoria para agrupacion jerarquica en visualizacion"
     )
 
 

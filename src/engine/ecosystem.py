@@ -347,6 +347,13 @@ class EcosystemEngine:
         )
 
         if existing_idx is not None:
+            # Merge consumer_apps: preserve existing consumers when updating
+            existing = self._registry.contracts[existing_idx]
+            merged_consumers = list(existing.consumer_apps)
+            for consumer_id in contract.consumer_apps:
+                if consumer_id not in merged_consumers:
+                    merged_consumers.append(consumer_id)
+            contract.consumer_apps = merged_consumers
             self._registry.contracts[existing_idx] = contract
         else:
             self._registry.contracts.append(contract)

@@ -253,24 +253,40 @@ body::before {
 }
 #tooltip.visible { opacity: 1; }
 #legend {
-  position: fixed; bottom: 20px; left: 20px; z-index: 90;
-  padding: 16px 20px; font-size: 11px; min-width: 240px;
-  background: linear-gradient(145deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%);
-  border: 1px solid rgba(255,255,255,0.1);
-  backdrop-filter: blur(40px) saturate(1.8); -webkit-backdrop-filter: blur(40px) saturate(1.8);
-  border-radius: var(--radius);
-  box-shadow: 0 0 0 0.5px rgba(255,255,255,0.05) inset, 0 8px 32px -8px rgba(0,0,0,0.4);
+  position: fixed; bottom: 16px; left: 16px; z-index: 90;
+  padding: 10px 14px; font-size: 10px; min-width: 180px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(30px) saturate(1.4); -webkit-backdrop-filter: blur(30px) saturate(1.4);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px -4px rgba(0,0,0,0.3);
+  opacity: 0.5;
+  transition: opacity 0.25s ease;
 }
+#legend:hover { opacity: 1; }
 .legend-title {
-  font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.8px; color: var(--text-tertiary); margin-bottom: 10px;
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text-tertiary);
 }
+.legend-header {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; padding-bottom: 0; user-select: none;
+}
+.legend-header.expanded { padding-bottom: 8px; }
+.legend-toggle-btn {
+  background: none; border: none; color: var(--text-tertiary);
+  font-size: 9px; cursor: pointer; transition: transform 0.2s;
+  padding: 2px 4px; line-height: 1;
+}
+.legend-toggle-btn.collapsed { transform: rotate(-90deg); }
+.legend-content { transition: max-height 0.3s ease, opacity 0.2s ease; overflow: hidden; }
+.legend-content.collapsed { max-height: 0 !important; opacity: 0; padding-top: 0; }
 #legend .row {
-  display: flex; align-items: center; gap: 10px;
-  padding: 4px 0; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 8px;
+  padding: 3px 0; color: var(--text-secondary); font-size: 10px;
 }
 .swatch {
-  display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 2px solid;
+  display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 2px solid;
 }
 .swatch.rect.green { border-color: var(--accent-green); background: rgba(48,209,88,0.15); }
 .swatch.rect.yellow { border-color: var(--accent-orange); background: rgba(255,159,10,0.15); }
@@ -645,16 +661,21 @@ body::before {
 <div id="tooltip"></div>
 
 <div id="legend" class="glass-panel">
-  <div class="legend-title">Leyenda</div>
-  <div class="row"><span class="swatch rect green"></span> App saludable</div>
-  <div class="row"><span class="swatch rect yellow"></span> App con warnings</div>
-  <div class="row"><span class="swatch rect red"></span> App con conflictos</div>
-  <div class="row"><span class="line solid blue"></span> Integracion sincrona (REST/GraphQL)</div>
-  <div class="row"><span class="line dotted orange"></span> Integracion asincrona (eventos)</div>
-  <div class="row"><span class="line solid purple"></span> Integracion mixta</div>
-  <div class="row"><span class="line dashed gray"></span> Acoplamiento implicito (entidades)</div>
-  <div class="row"><span class="thickness-demo"></span> Grosor = fuerza de acoplamiento</div>
-  <div class="row"><span class="cluster-demo"></span> Cluster = apps cohesivas</div>
+  <div class="legend-header" onclick="toggleLegend()">
+    <span class="legend-title">Leyenda</span>
+    <button class="legend-toggle-btn collapsed" id="legend-toggle-btn" aria-label="Expandir leyenda">&#9654;</button>
+  </div>
+  <div class="legend-content collapsed" id="legend-content">
+    <div class="row"><span class="swatch rect green"></span> App saludable</div>
+    <div class="row"><span class="swatch rect yellow"></span> App con warnings</div>
+    <div class="row"><span class="swatch rect red"></span> App con conflictos</div>
+    <div class="row"><span class="line solid blue"></span> Integracion sincrona (REST/GraphQL)</div>
+    <div class="row"><span class="line dotted orange"></span> Integracion asincrona (eventos)</div>
+    <div class="row"><span class="line solid purple"></span> Integracion mixta</div>
+    <div class="row"><span class="line dashed gray"></span> Acoplamiento implicito (entidades)</div>
+    <div class="row"><span class="thickness-demo"></span> Grosor = fuerza de acoplamiento</div>
+    <div class="row"><span class="cluster-demo"></span> Cluster = apps cohesivas</div>
+  </div>
 </div>
 
 <script>
@@ -726,6 +747,25 @@ const macroStyles = [
   { selector: 'edge[sync_type="implicit"]', style: {
     'line-color': 'rgba(255,255,255,0.2)', 'line-style': 'dashed',
     'target-arrow-shape': 'none',
+  }},
+  /* Direction-based styles: override arrow shapes */
+  { selector: 'edge[direction_type="directional"]', style: {
+    'target-arrow-shape': 'triangle',
+    'source-arrow-shape': 'none',
+  }},
+  { selector: 'edge[direction_type="bidirectional"]', style: {
+    'target-arrow-shape': 'triangle',
+    'source-arrow-shape': 'triangle',
+  }},
+  { selector: 'edge[direction_type="cohesive"]', style: {
+    'line-color': 'rgba(255,255,255,0.25)', 'line-style': 'solid',
+    'target-arrow-shape': 'none',
+    'source-arrow-shape': 'none',
+    'width': 3,
+  }},
+  { selector: 'edge[direction_type="implicit"]', style: {
+    'target-arrow-shape': 'none',
+    'source-arrow-shape': 'none',
   }},
   { selector: '.highlighted', style: { 'border-width': 3, 'shadow-blur': 40, 'shadow-opacity': 0.8, 'z-index': 999 }},
   { selector: 'node.faded', style: { 'opacity': 0.1 }},
@@ -898,6 +938,7 @@ function renderAppDetailHTML(detail) {
     html += '<div style="margin-top:16px"><span class="detail-label">Contratos Expuestos</span>';
     detail.contracts_exposed.forEach(function(c) {
       html += '<div class="detail-row"><span class="detail-value" style="font-size:12px">' + escapeHtml(c.name) + '</span><span class="detail-label">' + escapeHtml(c.type) + ' v' + escapeHtml(c.version) + '</span></div>';
+      html += renderEntitiesGrouped(c.entities_grouped, c.entities);
     });
     html += '</div>';
   }
@@ -905,6 +946,7 @@ function renderAppDetailHTML(detail) {
     html += '<div style="margin-top:16px"><span class="detail-label">Contratos Consumidos</span>';
     detail.contracts_consumed.forEach(function(c) {
       html += '<div class="detail-row"><span class="detail-value" style="font-size:12px">' + escapeHtml(c.name) + '</span><span class="detail-label">' + escapeHtml(c.type) + ' v' + escapeHtml(c.version) + '</span></div>';
+      html += renderEntitiesGrouped(c.entities_grouped, c.entities);
     });
     html += '</div>';
   }
@@ -932,6 +974,7 @@ var _microAppA = null;
 var _microAppB = null;
 
 async function switchToMicro(appA, appB) {
+  hideTooltip();
   currentView = 'micro';
   updateToggleState();
   document.getElementById('view-macro').style.display = 'none';
@@ -1013,6 +1056,7 @@ function renderMicroView() {
 
 /* Diagram type toggle */
 function switchDiagramType(type, btn) {
+  hideTooltip();
   document.querySelectorAll('.diagram-tab').forEach(function(t) { t.classList.remove('active'); });
   btn.classList.add('active');
   document.getElementById('view-sequence').style.display = type === 'sequence' ? 'block' : 'none';
@@ -1032,9 +1076,14 @@ function renderSequenceDiagram(flows, appAInfo, appBInfo) {
   flows.forEach(function(flow, idx) {
     var isRight = flow.direction !== 'b_to_a';
     var dir = isRight ? 'right' : 'left';
+    var revDir = isRight ? 'left' : 'right';
     var contract = flow.contract || {};
     var isAsync = contract.type === 'async_event';
     var entities = flow.entities_in_transit || [];
+
+    /* Determine participant names for labeling */
+    var consumerName = isRight ? appAInfo.name : appBInfo.name;
+    var providerName = isRight ? appBInfo.name : appAInfo.name;
 
     h += '<div class="seq-int">';
     h += '  <div class="seq-int-label">';
@@ -1043,33 +1092,49 @@ function renderSequenceDiagram(flows, appAInfo, appBInfo) {
     h += '    <span class="seq-int-badge ' + (isAsync ? 'async' : 'sync') + '">' + (isAsync ? 'evento' : escapeHtml(contract.type || 'rest')) + '</span>';
     h += '  </div>';
 
-    /* Request arrow */
+    /* ─── REQUEST arrow: consumer → provider ─── */
     h += '  <div class="seq-arrow ' + dir + (isAsync ? ' async' : '') + '">';
     h += '    <div class="seq-arrow-text">';
+    /* Show HTTP method + path if available, otherwise contract name */
     if (contract.spec_reference) {
+      h += '<span class="seq-msg-type sync">REQUEST</span> ';
       h += '<code>' + escapeHtml(contract.spec_reference) + '</code>';
     } else {
+      h += '<span class="seq-msg-type sync">REQUEST</span> ';
       h += escapeHtml(contract.name || flow.flow_name || '');
     }
     if (contract.version) h += ' <span class="seq-arrow-ver">v' + escapeHtml(contract.version) + '</span>';
     h += '    </div>';
     h += '    <div class="seq-arrow-shaft"><span class="seq-arrow-tip"></span></div>';
+    /* Show entities sent by consumer in the request */
     if (entities.length > 0) {
-      h += '    <div class="seq-arrow-entities">';
-      entities.forEach(function(e) {
-        var cls = e.is_consistent ? 'consistent' : 'divergent';
-        h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + (e.is_consistent ? '' : ' ⚠') + '</span>';
-      });
-      h += '    </div>';
+      h += renderEntitiesByCategory(entities);
     }
     h += '  </div>';
 
-    /* Response arrow (sync) */
+    /* ─── RESPONSE arrow: provider → consumer (only for sync) ─── */
     if (!isAsync) {
-      var revDir = isRight ? 'left' : 'right';
       h += '  <div class="seq-arrow ' + revDir + ' response">';
-      h += '    <div class="seq-arrow-text"><span class="seq-resp-lbl">response</span></div>';
+      h += '    <div class="seq-arrow-text">';
+      h += '      <span class="seq-msg-type response">RESPONSE</span> ';
+      /* Show what the provider returns */
+      if (entities.length > 0) {
+        var entityNames = entities.map(function(e) { return e.name; }).join(', ');
+        h += '<code>{' + escapeHtml(entityNames) + '}</code>';
+      } else {
+        h += '<span class="seq-resp-lbl">200 OK</span>';
+      }
+      h += '    </div>';
       h += '    <div class="seq-arrow-shaft dashed"><span class="seq-arrow-tip"></span></div>';
+      if (entities.length > 0) {
+        h += '    <div class="seq-arrow-entities">';
+        h += '      <span class="payload-label">Retorna:</span> ';
+        entities.forEach(function(e) {
+          var cls = e.is_consistent ? 'consistent' : 'divergent';
+          h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + '</span>';
+        });
+        h += '    </div>';
+      }
       h += '  </div>';
     }
 
@@ -1098,7 +1163,7 @@ function renderProcessDiagram(flows, appAInfo, appBInfo) {
   h += '  <div class="proc-lane-title right">' + escapeHtml(appBInfo.name) + '</div>';
   h += '</div>';
 
-  /* Process steps */
+  /* Process steps — connected flow */
   h += '<div class="proc-steps">';
 
   flows.forEach(function(flow, idx) {
@@ -1106,74 +1171,130 @@ function renderProcessDiagram(flows, appAInfo, appBInfo) {
     var contract = flow.contract || {};
     var isAsync = contract.type === 'async_event';
     var entities = flow.entities_in_transit || [];
-    var originApp = isRight ? appAInfo.name : appBInfo.name;
-    var targetApp = isRight ? appBInfo.name : appAInfo.name;
+
+    /* Determine pattern based on contract type:
+       - rest_api / graphql: request → process → response (3 sub-steps)
+       - async_event: publish → consume (2 sub-steps) */
+    var isSync = !isAsync;
 
     h += '<div class="proc-step">';
 
-    /* Step number + connector */
+    /* Step header with number */
     h += '  <div class="proc-step-connector"><span class="proc-step-num">' + (idx+1) + '</span></div>';
 
-    /* Three columns: initiator | action | receiver */
+    /* === SUB-STEP 1: REQUEST / PUBLISH === */
     h += '  <div class="proc-step-row">';
 
-    /* Initiator column */
-    h += '    <div class="proc-col ' + (isRight ? 'active' : 'passive') + '">';
+    /* Initiator column (consumer sends request) */
+    h += '    <div class="proc-col active">';
     if (isRight) {
       h += '      <div class="proc-action-box initiator">';
-      h += '        <div class="proc-action-title">Inicia</div>';
-      h += '        <div class="proc-action-desc">' + escapeHtml(flow.flow_name || contract.name || '') + '</div>';
+      h += '        <div class="proc-action-title">' + (isSync ? 'Request' : 'Publish') + '</div>';
+      h += '        <div class="proc-action-desc">' + escapeHtml(contract.spec_reference || contract.name || flow.flow_name || '') + '</div>';
       if (entities.length > 0) {
-        h += '        <div class="proc-action-data">Envia: ';
-        entities.forEach(function(e) {
+        h += '        <div class="proc-action-data">';
+        entities.slice(0, 5).forEach(function(e) {
           var cls = e.is_consistent ? 'consistent' : 'divergent';
-          h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + (e.is_consistent ? '' : ' ⚠') + '</span>';
+          h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + '</span>';
         });
+        if (entities.length > 5) h += '<span class="entity-pill consistent">+' + (entities.length - 5) + '</span>';
         h += '</div>';
       }
       h += '      </div>';
     }
     h += '    </div>';
 
-    /* Center column: contract/interaction */
+    /* Center column: arrow → contract */
     h += '    <div class="proc-col-center">';
+    h += '      <div class="proc-flow-arrow ' + (isRight ? 'right' : 'left') + '"></div>';
     h += '      <div class="proc-contract-box ' + (isAsync ? 'async' : 'sync') + '">';
-    h += '        <div class="proc-contract-type">' + (isAsync ? 'Evento Asincrono' : 'API Sincrona') + '</div>';
+    h += '        <div class="proc-contract-type">' + (isAsync ? 'Evento' : (contract.type === 'graphql' ? 'GraphQL' : 'REST API')) + '</div>';
     h += '        <div class="proc-contract-name">' + escapeHtml(contract.name || flow.flow_name || '') + '</div>';
     if (contract.spec_reference) h += '        <div class="proc-contract-spec"><code>' + escapeHtml(contract.spec_reference) + '</code></div>';
-    h += '        <div class="proc-contract-ver">v' + escapeHtml(String(contract.version || '1')) + ' · ' + escapeHtml(contract.type || '') + '</div>';
+    h += '        <div class="proc-contract-ver">v' + escapeHtml(String(contract.version || '1')) + '</div>';
     h += '      </div>';
     h += '      <div class="proc-flow-arrow ' + (isRight ? 'right' : 'left') + '"></div>';
     h += '    </div>';
 
-    /* Receiver column */
-    h += '    <div class="proc-col ' + (isRight ? 'passive' : 'active') + '">';
-    if (!isRight) {
-      h += '      <div class="proc-action-box initiator">';
-      h += '        <div class="proc-action-title">Inicia</div>';
-      h += '        <div class="proc-action-desc">' + escapeHtml(flow.flow_name || contract.name || '') + '</div>';
-      if (entities.length > 0) {
-        h += '        <div class="proc-action-data">Envia: ';
-        entities.forEach(function(e) {
-          var cls = e.is_consistent ? 'consistent' : 'divergent';
-          h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + (e.is_consistent ? '' : ' ⚠') + '</span>';
-        });
-        h += '</div>';
-      }
-      h += '      </div>';
-    } else {
+    /* Receiver column (provider processes) */
+    h += '    <div class="proc-col active">';
+    if (isRight) {
       h += '      <div class="proc-action-box receiver">';
       h += '        <div class="proc-action-title">' + (isAsync ? 'Consume' : 'Procesa') + '</div>';
-      h += '        <div class="proc-action-desc">' + escapeHtml(flow.flow_name || '') + '</div>';
-      if (!isAsync) {
-        h += '        <div class="proc-action-result">&#8592; Retorna respuesta</div>';
+      h += '        <div class="proc-action-desc">' + escapeHtml(flow.flow_name || contract.name || '') + '</div>';
+      h += '      </div>';
+    } else {
+      h += '      <div class="proc-action-box initiator">';
+      h += '        <div class="proc-action-title">' + (isSync ? 'Request' : 'Publish') + '</div>';
+      h += '        <div class="proc-action-desc">' + escapeHtml(contract.spec_reference || contract.name || flow.flow_name || '') + '</div>';
+      if (entities.length > 0) {
+        h += '        <div class="proc-action-data">';
+        entities.slice(0, 5).forEach(function(e) {
+          var cls = e.is_consistent ? 'consistent' : 'divergent';
+          h += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + '</span>';
+        });
+        if (entities.length > 5) h += '<span class="entity-pill consistent">+' + (entities.length - 5) + '</span>';
+        h += '</div>';
       }
       h += '      </div>';
     }
     h += '    </div>';
 
-    h += '  </div>'; /* end proc-step-row */
+    h += '  </div>'; /* end proc-step-row (request) */
+
+    /* === SUB-STEP 2: RESPONSE (only for sync patterns) === */
+    if (isSync) {
+      h += '  <div class="proc-step-row" style="margin-top: 8px;">';
+
+      /* Response: provider returns to consumer */
+      h += '    <div class="proc-col active">';
+      if (isRight) {
+        h += '      <div class="proc-action-box initiator" style="border-color: rgba(48,209,88,0.2); background: rgba(48,209,88,0.04);">';
+        h += '        <div class="proc-action-title" style="color: var(--accent-green);">Recibe respuesta</div>';
+        if (entities.length > 0) {
+          var entityNames = entities.map(function(e) { return e.name; }).join(', ');
+          h += '        <div class="proc-action-desc" style="font-size:11px; color: var(--text-secondary);">{' + escapeHtml(entityNames) + '}</div>';
+        }
+        h += '      </div>';
+      }
+      h += '    </div>';
+
+      /* Center: response arrow (reversed) */
+      h += '    <div class="proc-col-center">';
+      h += '      <div class="proc-flow-arrow ' + (isRight ? 'left' : 'right') + '" style="background: linear-gradient(90deg, rgba(48,209,88,0.3), rgba(48,209,88,0.5));"></div>';
+      h += '      <div style="font-size:9px; color: var(--accent-green); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Response</div>';
+      h += '      <div class="proc-flow-arrow ' + (isRight ? 'left' : 'right') + '" style="background: linear-gradient(90deg, rgba(48,209,88,0.3), rgba(48,209,88,0.5));"></div>';
+      h += '    </div>';
+
+      /* Provider side (sends response) */
+      h += '    <div class="proc-col active">';
+      if (isRight) {
+        h += '      <div class="proc-action-box receiver" style="border-color: rgba(48,209,88,0.2); background: rgba(48,209,88,0.04);">';
+        h += '        <div class="proc-action-title" style="color: var(--accent-green);">Retorna</div>';
+        h += '        <div class="proc-action-desc" style="font-size:11px;">' + escapeHtml(entities.length > 0 ? entities.length + ' entidades' : 'OK') + '</div>';
+        h += '      </div>';
+      } else {
+        h += '      <div class="proc-action-box initiator" style="border-color: rgba(48,209,88,0.2); background: rgba(48,209,88,0.04);">';
+        h += '        <div class="proc-action-title" style="color: var(--accent-green);">Recibe respuesta</div>';
+        if (entities.length > 0) {
+          var entityNames2 = entities.map(function(e) { return e.name; }).join(', ');
+          h += '        <div class="proc-action-desc" style="font-size:11px; color: var(--text-secondary);">{' + escapeHtml(entityNames2) + '}</div>';
+        }
+        h += '      </div>';
+      }
+      h += '    </div>';
+
+      h += '  </div>'; /* end proc-step-row (response) */
+    }
+
     h += '</div>'; /* end proc-step */
+
+    /* Connector between steps */
+    if (idx < flows.length - 1) {
+      h += '<div style="display:flex; justify-content:center; padding: 4px 0;">';
+      h += '  <div style="width:2px; height:20px; background: rgba(255,255,255,0.08); border-radius:1px;"></div>';
+      h += '</div>';
+    }
   });
 
   h += '</div>'; /* end proc-steps */
@@ -1183,6 +1304,7 @@ function renderProcessDiagram(flows, appAInfo, appBInfo) {
 
 /* ===== View Toggle ===== */
 function backToMacro() {
+  hideTooltip();
   currentView = 'macro';
   updateToggleState();
   document.getElementById('view-micro').style.display = 'none';
@@ -1278,7 +1400,10 @@ function switchEcosystem(id) {
   loadMacroGraph();
 }
 /* ===== Tooltip ===== */
+var _tooltipTimer = null;
+
 function showTooltip(x, y, html) {
+  _clearTooltipTimer();
   const tip = document.getElementById('tooltip');
   tip.innerHTML = html;
   tip.style.left = (x + 20) + 'px';
@@ -1288,19 +1413,29 @@ function showTooltip(x, y, html) {
 }
 
 function hideTooltip() {
+  _clearTooltipTimer();
   document.getElementById('tooltip').classList.remove('visible');
 }
 
+function _clearTooltipTimer() {
+  if (_tooltipTimer) {
+    clearTimeout(_tooltipTimer);
+    _tooltipTimer = null;
+  }
+}
+
 function showTooltipMessage(msg) {
+  _clearTooltipTimer();
   const tip = document.getElementById('tooltip');
   tip.innerHTML = '<p>' + escapeHtml(msg) + '</p>';
   tip.style.left = '50%';
   tip.style.top = '50%';
   tip.style.transform = 'translate(-50%, -50%)';
   tip.classList.add('visible');
-  setTimeout(function() {
+  _tooltipTimer = setTimeout(function() {
     tip.classList.remove('visible');
     tip.style.transform = '';
+    _tooltipTimer = null;
   }, 3000);
 }
 
@@ -1321,6 +1456,12 @@ function buildEdgeTooltip(data) {
   if (data.label) html += '<br>' + escapeHtml(data.label);
   if (data.coupling_strength) html += '<br><span style="color:var(--text-secondary)">Fuerza: ' + data.coupling_strength + '/10</span>';
   if (data.sync_type) html += '<br><span style="color:var(--text-secondary)">Tipo: ' + escapeHtml(data.sync_type) + '</span>';
+  if (data.direction_type) {
+    var dirLabel = data.direction_type === 'directional' ? 'Unidireccional (consumer → provider)' :
+                   data.direction_type === 'bidirectional' ? 'Bidireccional' :
+                   data.direction_type === 'cohesive' ? 'Cohesivo (BD compartida)' : 'Implicito';
+    html += '<br><span style="color:var(--text-secondary)">Direccion: ' + dirLabel + '</span>';
+  }
   html += '<br><span style="color:var(--accent-blue);font-size:10px">Click para ver flujos</span>';
   return html;
 }
@@ -1341,6 +1482,89 @@ function showEmptyState(msg) {
 }
 
 /* ===== Utility ===== */
+function toggleLegend() {
+  var content = document.getElementById('legend-content');
+  var btn = document.getElementById('legend-toggle-btn');
+  var header = btn.closest('.legend-header');
+  content.classList.toggle('collapsed');
+  btn.classList.toggle('collapsed');
+  header.classList.toggle('expanded');
+  btn.innerHTML = content.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+}
+
+/* Render entities grouped by category as a hierarchical tree */
+function renderEntitiesGrouped(entitiesGrouped, entitiesFlat) {
+  var html = '';
+  if (entitiesGrouped && Object.keys(entitiesGrouped).length > 0) {
+    var categories = Object.keys(entitiesGrouped);
+    /* If only 'general' category, render flat */
+    if (categories.length === 1 && categories[0] === 'general') {
+      html += '<div style="margin:6px 0 8px 8px;display:flex;flex-wrap:wrap;gap:4px">';
+      entitiesGrouped['general'].forEach(function(name) {
+        html += '<span class="entity-pill consistent">' + escapeHtml(name) + '</span>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div style="margin:6px 0 8px 8px">';
+      categories.forEach(function(cat) {
+        html += '<div style="margin-bottom:6px">';
+        html += '<span style="font-size:10px;font-weight:600;text-transform:capitalize;color:var(--text-tertiary);letter-spacing:0.3px">' + escapeHtml(cat) + ':</span>';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;padding-left:8px">';
+        entitiesGrouped[cat].forEach(function(name) {
+          html += '<span class="entity-pill consistent">' + escapeHtml(name) + '</span>';
+        });
+        html += '</div></div>';
+      });
+      html += '</div>';
+    }
+  } else if (entitiesFlat && entitiesFlat.length > 0) {
+    html += '<div style="margin:6px 0 8px 8px;display:flex;flex-wrap:wrap;gap:4px">';
+    entitiesFlat.forEach(function(name) {
+      html += '<span class="entity-pill consistent">' + escapeHtml(name) + '</span>';
+    });
+    html += '</div>';
+  }
+  return html;
+}
+
+/* Render entities with category grouping in sequence/process diagrams */
+function renderEntitiesByCategory(entities) {
+  if (!entities || entities.length === 0) return '';
+  /* Group by category */
+  var groups = {};
+  var hasCategories = false;
+  entities.forEach(function(e) {
+    var cat = e.category || 'general';
+    if (cat !== 'general') hasCategories = true;
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(e);
+  });
+  var html = '';
+  if (!hasCategories) {
+    /* Flat rendering */
+    html += '<div class="seq-arrow-entities">';
+    entities.forEach(function(e) {
+      var cls = e.is_consistent ? 'consistent' : 'divergent';
+      html += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + (e.is_consistent ? '' : ' ⚠') + '</span>';
+    });
+    html += '</div>';
+  } else {
+    /* Grouped rendering */
+    html += '<div class="seq-arrow-entities" style="flex-direction:column;align-items:flex-start;gap:6px">';
+    Object.keys(groups).forEach(function(cat) {
+      html += '<div style="width:100%">';
+      html += '<span style="font-size:9px;font-weight:600;text-transform:capitalize;color:var(--text-tertiary);letter-spacing:0.3px">' + escapeHtml(cat) + ':</span> ';
+      groups[cat].forEach(function(e) {
+        var cls = e.is_consistent ? 'consistent' : 'divergent';
+        html += '<span class="entity-pill ' + cls + '">' + escapeHtml(e.name) + (e.is_consistent ? '' : ' ⚠') + '</span>';
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+  return html;
+}
+
 function escapeHtml(str) {
   if (!str) return '';
   const div = document.createElement('div');
