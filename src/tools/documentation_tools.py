@@ -31,6 +31,7 @@ Tools de gestión:
 - handle_confirm_action: Ejecuta acción previamente preparada y confirmada
 - handle_reject_action: Rechaza/cancela acción pendiente
 - handle_list_pending_actions: Lista acciones pendientes de confirmación
+- handle_check_credentials_status: Verifica qué credenciales están configuradas
 """
 
 import logging
@@ -631,3 +632,107 @@ def _get_client_by_service(service: str):
     elif service == "clockwork":
         return get_clockwork_client()
     return None
+
+
+# ─── VERIFICACIÓN DE CREDENCIALES ─────────────────────────────────────────────────
+
+
+def handle_check_credentials_status() -> dict:
+    """Verifica el estado de configuración de credenciales para todos los servicios.
+
+    NO expone los valores de los tokens — solo indica si están configurados o no.
+    Proporciona instrucciones de configuración si faltan credenciales.
+
+    Returns:
+        Dict con el estado de cada servicio y guía de configuración.
+    """
+    import os
+
+    atlassian_available, atlassian_missing = check_atlassian_credentials()
+    clockwork_available, clockwork_missing = check_clockwork_credentials()
+
+    # Construir estado detallado sin exponer valores
+    atlassian_status = {
+        "configured": atlassian_available,
+        "services": ["Jira", "Confluence"],
+        "variables": {
+            "ATLASSIAN_EMAIL": bool(os.environ.get("ATLASSIAN_EMAIL")),
+            "ATLASSIAN_API_TOKEN": bool(os.environ.get("ATLASSIAN_API_TOKEN")),
+            "ATLASSIAN_DOMAIN": bool(os.environ.get("ATLASSIAN_DOMAIN")),
+        },
+        "missing": atlassian_missing,
+    }
+
+    clockwork_status = {
+        "configured": clockwork_available,
+        "services": ["Clockwork Pro"],
+        "variables": {
+            "CLOCKWORK_API_TOKEN": bool(os.environ.get("CLOCKWORK_API_TOKEN")),
+        },
+        "missing": clockwork_missing,
+    }
+
+    all_configured = atlassian_available and clockwork_available
+
+    # Instrucciones de configuración
+    setup_instructions = None
+    if not all_configured:
+        setup_instructions = {
+            "atlassian_token": {
+                "step_1": "Ir a https://id.atlassian.com/manage-profile/security/api-tokens",
+                "step_2": "Click en 'Create API token'",
+                "step_3": "Copiar el token (se muestra una vez)",
+                "note": "Un solo token sirve para Jira Y Confluence",
+            },
+            "clockwork_token": {
+                "step_1": "En Jira, ir a Apps > Clockwork",
+                "step_2": "En la barra lateral, click en 'API tokens'",
+                "step_3": "Click en 'Create token' y copiar",
+            },
+            "configuration_options": [
+                {
+                    "method": "MCP config (recomendado para Kiro)",
+                    "file": ".kiro/settings/mcp.json",
+                    "example": {
+                        "mcpServers": {
+                            "mcp-hu": {
+                                "command": "python",
+                                "args": ["-m", "src"],
+                                "env": {
+                                    "ATLASSIAN_EMAIL": "tu.email@segurosbolivar.com",
+                                    "ATLASSIAN_API_TOKEN": "tu-token-aqui",
+                                    "ATLASSIAN_DOMAIN": "jirasegurosbolivar.atlassian.net",
+                                    "CLOCKWORK_API_TOKEN": "tu-token-clockwork-aqui",
+                                },
+                            }
+                        }
+                    },
+                },
+                {
+                    "method": "Docker (producción)",
+                    "example": "docker run -e ATLASSIAN_EMAIL=... -e ATLASSIAN_API_TOKEN=... -e ATLASSIAN_DOMAIN=... -e CLOCKWORK_API_TOKEN=... mcp-hu-server",
+                },
+                {
+                    "method": "PowerShell (sesión temporal)",
+                    "example": '$env:ATLASSIAN_EMAIL = "tu.email@segurosbolivar.com"',
+                },
+            ],
+        }
+
+    return {
+        "status": "success",
+        "all_configured": all_configured,
+        "atlassian": atlassian_status,
+        "clockwork": clockwork_status,
+        "setup_instructions": setup_instructions,
+        "message": (
+            "Todas las credenciales configuradas. Las tools de API están disponibles."
+            if all_configured
+            else (
+                f"Credenciales faltantes. "
+                f"{'Atlassian: ' + ', '.join(atlassian_missing) + '. ' if atlassian_missing else ''}"
+                f"{'Clockwork: ' + ', '.join(clockwork_missing) + '.' if clockwork_missing else ''} "
+                f"Ver setup_instructions para instrucciones de configuración."
+            )
+        ),
+    }

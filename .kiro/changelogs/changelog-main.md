@@ -123,3 +123,8 @@
 
 ### Corregido (Server — 2026-07-28)
 - Se corrigió `FastMCP` init en `src/server.py`: `mcp==1.9.2` no acepta `version`/`description` como kwargs — cambiado a `instructions`
+
+### Corregido (Documentation Integration — 2026-07-28)
+- Se agregó tool `check_credentials_status` que verifica qué credenciales están configuradas sin exponer valores, y proporciona instrucciones paso a paso de configuración (Atlassian token, Clockwork token, opciones de configuración: MCP config, Docker, PowerShell)
+- Se actualizó steering file con sección completa de "Configuración de Credenciales — Guía para el Usuario" para que el agente sepa guiar al usuario cuando pregunte cómo configurar los tokens
+- Se cambió steering de `inclusion: manual` a `inclusion: fileMatch` para activación automática cuando se trabaja con archivos de la integración

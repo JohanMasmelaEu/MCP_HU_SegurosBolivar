@@ -70,6 +70,7 @@ from src.tools.documentation_tools import (
     handle_confirm_action,
     handle_reject_action,
     handle_list_pending_actions,
+    handle_check_credentials_status,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -677,6 +678,17 @@ async def reject_action(action_id: str, service: str) -> str:
 async def list_pending_actions() -> str:
     """Lista todas las acciones pendientes de confirmacion en todos los servicios."""
     result = handle_list_pending_actions()
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def check_credentials_status() -> str:
+    """Verifica que credenciales estan configuradas para Jira, Confluence y Clockwork Pro.
+
+    No expone valores de tokens — solo indica si estan presentes.
+    Si faltan credenciales, muestra instrucciones paso a paso para configurarlas.
+    """
+    result = handle_check_credentials_status()
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 

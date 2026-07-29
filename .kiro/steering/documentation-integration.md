@@ -1,5 +1,6 @@
 ---
-inclusion: manual
+inclusion: fileMatch
+fileMatchPattern: "**/clients/**,**/documentation_tools**,**/bitacora**,**/server.py"
 ---
 
 # Integración Documental — Jira, Confluence y Clockwork Pro
@@ -70,16 +71,104 @@ No existe la capacidad de eliminar páginas. Para borrar algo, el usuario va dir
 7. Mostrar preview completo
 8. Registrar SOLO con confirmación explícita
 
-## Variables de Entorno
+## Configuración de Credenciales — Guía para el Usuario
 
-```
-ATLASSIAN_EMAIL=tu.email@segurosbolivar.com
-ATLASSIAN_API_TOKEN=tu-token-atlassian
-ATLASSIAN_DOMAIN=jirasegurosbolivar.atlassian.net
-CLOCKWORK_API_TOKEN=tu-token-clockwork
+Cuando el usuario pregunte CÓMO configurar los tokens, el agente DEBE responder con estas instrucciones claras. El agente SÍ conoce esta información y DEBE guiar al usuario.
+
+### Paso 1: Obtener los tokens
+
+**Token de Atlassian (sirve para Jira + Confluence):**
+1. Ir a https://id.atlassian.com/manage-profile/security/api-tokens
+2. Click en "Create API token"
+3. Darle un nombre descriptivo (ej: "MCP HU Server")
+4. Copiar el token generado (solo se muestra una vez)
+
+**Token de Clockwork Pro:**
+1. En Jira, ir a Apps > Clockwork (menú principal)
+2. En la barra lateral izquierda, click en "API tokens"
+3. Click en "Create token"
+4. Copiar el token generado
+
+### Paso 2: Configurar las variables de entorno
+
+Las credenciales se configuran como variables de entorno del sistema. Hay DOS formas según cómo uses el MCP:
+
+**Opción A — Si usas Docker (producción):**
+
+En el archivo `docker-compose.yml` o al ejecutar el contenedor:
+```yaml
+environment:
+  - ATLASSIAN_EMAIL=tu.email@segurosbolivar.com
+  - ATLASSIAN_API_TOKEN=tu-token-aqui
+  - ATLASSIAN_DOMAIN=jirasegurosbolivar.atlassian.net
+  - CLOCKWORK_API_TOKEN=tu-token-clockwork-aqui
 ```
 
-Sin estas variables, las tools de API no están disponibles pero las offline sí funcionan.
+O directamente con docker run:
+```bash
+docker run \
+  -e ATLASSIAN_EMAIL=tu.email@segurosbolivar.com \
+  -e ATLASSIAN_API_TOKEN=tu-token-aqui \
+  -e ATLASSIAN_DOMAIN=jirasegurosbolivar.atlassian.net \
+  -e CLOCKWORK_API_TOKEN=tu-token-clockwork-aqui \
+  mcp-hu-server
+```
+
+**Opción B — Si usas el MCP directamente (desarrollo local):**
+
+En el archivo de configuración del MCP client (`.kiro/settings/mcp.json` o el equivalente):
+```json
+{
+  "mcpServers": {
+    "mcp-hu": {
+      "command": "python",
+      "args": ["-m", "src"],
+      "cwd": "C:\\REPOS\\SegurosBolivar\\MCP_HU_SegurosBolivar",
+      "env": {
+        "ATLASSIAN_EMAIL": "tu.email@segurosbolivar.com",
+        "ATLASSIAN_API_TOKEN": "tu-token-aqui",
+        "ATLASSIAN_DOMAIN": "jirasegurosbolivar.atlassian.net",
+        "CLOCKWORK_API_TOKEN": "tu-token-clockwork-aqui"
+      }
+    }
+  }
+}
+```
+
+**Opción C — Variables de entorno del sistema (PowerShell):**
+```powershell
+# Temporal (solo para la sesión actual)
+$env:ATLASSIAN_EMAIL = "tu.email@segurosbolivar.com"
+$env:ATLASSIAN_API_TOKEN = "tu-token-aqui"
+$env:ATLASSIAN_DOMAIN = "jirasegurosbolivar.atlassian.net"
+$env:CLOCKWORK_API_TOKEN = "tu-token-clockwork-aqui"
+
+# Permanente (nivel usuario)
+[System.Environment]::SetEnvironmentVariable("ATLASSIAN_EMAIL", "tu.email@segurosbolivar.com", "User")
+[System.Environment]::SetEnvironmentVariable("ATLASSIAN_API_TOKEN", "tu-token-aqui", "User")
+[System.Environment]::SetEnvironmentVariable("ATLASSIAN_DOMAIN", "jirasegurosbolivar.atlassian.net", "User")
+[System.Environment]::SetEnvironmentVariable("CLOCKWORK_API_TOKEN", "tu-token-clockwork-aqui", "User")
+```
+
+### Paso 3: Verificar la configuración
+
+Usar la tool `check_credentials_status` para verificar qué está configurado.
+
+### Variables requeridas
+
+| Variable | Servicio | Propósito |
+|----------|----------|-----------|
+| `ATLASSIAN_EMAIL` | Jira + Confluence | Tu email corporativo de Atlassian |
+| `ATLASSIAN_API_TOKEN` | Jira + Confluence | Token API (un solo token sirve para ambos) |
+| `ATLASSIAN_DOMAIN` | Jira + Confluence | Dominio: `jirasegurosbolivar.atlassian.net` |
+| `CLOCKWORK_API_TOKEN` | Clockwork Pro | Token independiente de Clockwork |
+
+### Notas importantes
+- El token de Atlassian sirve para AMBOS servicios (Jira y Confluence) porque están en la misma instancia Cloud.
+- El token de Clockwork Pro es INDEPENDIENTE y se crea desde otra interfaz.
+- Sin estas variables configuradas, las tools de API no están disponibles pero las tools offline (`generate_bitacora`) SÍ funcionan.
+- NUNCA compartir los tokens en chat, código o archivos versionados.
+- Si el token expira o se revoca, crear uno nuevo y actualizar la variable de entorno.
 
 ## Tools Disponibles
 
