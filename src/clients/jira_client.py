@@ -96,6 +96,9 @@ class JiraClient(BaseExternalClient):
     def prepare_search_issues(self, jql: str, max_results: int = 50) -> PendingAction:
         """Prepara búsqueda de issues por JQL.
 
+        Usa el endpoint /rest/api/3/search/jql (el anterior /rest/api/3/search
+        fue deprecado por Atlassian y devuelve 410 Gone desde 2024).
+
         Args:
             jql: Query JQL para la búsqueda.
             max_results: Máximo de resultados (default 50).
@@ -108,7 +111,7 @@ class JiraClient(BaseExternalClient):
         return self.prepare_action(
             operation="jira.search_issues",
             method="POST",
-            endpoint=f"{base_url}/search",
+            endpoint=f"{base_url}/search/jql",
             payload={
                 "jql": jql,
                 "maxResults": max_results,
@@ -146,6 +149,9 @@ class JiraClient(BaseExternalClient):
     def prepare_get_subtasks(self, issue_key: str) -> PendingAction:
         """Prepara consulta de subtareas de un issue.
 
+        Usa el endpoint /rest/api/3/search/jql (el anterior /rest/api/3/search
+        fue deprecado por Atlassian y devuelve 410 Gone desde 2024).
+
         Args:
             issue_key: Key del issue padre.
 
@@ -158,7 +164,7 @@ class JiraClient(BaseExternalClient):
         return self.prepare_action(
             operation="jira.get_subtasks",
             method="POST",
-            endpoint=f"{base_url}/search",
+            endpoint=f"{base_url}/search/jql",
             payload={
                 "jql": jql,
                 "maxResults": 100,

@@ -276,7 +276,17 @@ class BaseExternalClient:
         result: dict = {}
         if response.status_code in (200, 201, 204):
             if response.content:
-                result = response.json() if response.headers.get("content-type", "").startswith("application/json") else {"raw": response.text}
+                content_type = response.headers.get("content-type", "")
+                if content_type.startswith("application/json"):
+                    parsed = response.json()
+                    # Algunas APIs (ej. Clockwork) retornan arrays JSON
+                    # en vez de objetos. Envolver en dict para uniformidad.
+                    if isinstance(parsed, list):
+                        result = {"data": parsed}
+                    else:
+                        result = parsed
+                else:
+                    result = {"raw": response.text}
             result["_status_code"] = response.status_code
         else:
             result = {

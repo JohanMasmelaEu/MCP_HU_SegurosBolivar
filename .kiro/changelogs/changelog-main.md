@@ -128,3 +128,7 @@
 - Se agregó tool `check_credentials_status` que verifica qué credenciales están configuradas sin exponer valores, y proporciona instrucciones paso a paso de configuración (Atlassian token, Clockwork token, opciones de configuración: MCP config, Docker, PowerShell)
 - Se actualizó steering file con sección completa de "Configuración de Credenciales — Guía para el Usuario" para que el agente sepa guiar al usuario cuando pregunte cómo configurar los tokens
 - Se cambió steering de `inclusion: manual` a `inclusion: fileMatch` para activación automática cuando se trabaja con archivos de la integración
+
+### Corregido (API Clients — 2026-07-28)
+- Se corrigió error 410 Gone en Jira: se migró endpoint de búsqueda de `POST /rest/api/3/search` (deprecado por Atlassian) a `POST /rest/api/3/search/jql` en `prepare_search_issues` y `prepare_get_subtasks` de `src/clients/jira_client.py`
+- Se corrigió error "list indices must be integers or slices, not str" en Clockwork Pro: `_do_request` en `src/clients/base_client.py` asumía que `response.json()` siempre retornaba un `dict`, pero Clockwork retorna un array JSON. Ahora se detecta si la respuesta es una lista y se envuelve en `{"data": [...]}` para uniformidad
