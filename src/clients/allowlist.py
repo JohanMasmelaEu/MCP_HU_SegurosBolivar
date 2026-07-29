@@ -21,6 +21,7 @@ ALLOWED_OPERATIONS: frozenset = frozenset([
 
     # ─── JIRA (WRITE) ───
     "jira.add_comment",
+    "jira.add_worklog",
     "jira.create_subtask",
     "jira.transition_issue",
 

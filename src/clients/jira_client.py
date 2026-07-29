@@ -273,6 +273,65 @@ class JiraClient(BaseExternalClient):
             reversible=False,
         )
 
+    def prepare_add_worklog(
+        self,
+        issue_key: str,
+        started: str,
+        time_spent_seconds: int,
+        comment: str = "",
+    ) -> PendingAction:
+        """Prepara registrar un worklog retroactivo en un issue de Jira.
+
+        Usa el endpoint nativo de Jira REST API v3 para crear worklogs.
+        Clockwork Pro sincroniza automáticamente los worklogs nativos de Jira.
+
+        Args:
+            issue_key: Key del issue o subtarea (ej: PROJ-456).
+            started: Fecha y hora de inicio en formato ISO 8601
+                     (ej: 2026-07-28T09:00:00.000-0500).
+            time_spent_seconds: Tiempo trabajado en segundos.
+            comment: Comentario descriptivo del trabajo realizado (opcional).
+
+        Returns:
+            PendingAction con preview para confirmación del usuario.
+        """
+        base_url = _get_jira_base_url()
+
+        payload: dict = {
+            "started": started,
+            "timeSpentSeconds": time_spent_seconds,
+        }
+
+        if comment:
+            payload["comment"] = {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [{"type": "text", "text": comment}],
+                    }
+                ],
+            }
+
+        hours = round(time_spent_seconds / 3600, 2)
+        return self.prepare_action(
+            operation="jira.add_worklog",
+            method="POST",
+            endpoint=f"{base_url}/issue/{issue_key}/worklog",
+            payload=payload,
+            description=(
+                f"Registrar {hours}h de trabajo en {issue_key} "
+                f"(inicio: {started})"
+            ),
+            impact=(
+                f"Se creará un worklog de {hours}h en {issue_key}. "
+                f"El registro será visible en Jira y se sincronizará "
+                f"automáticamente con Clockwork Pro."
+            ),
+            reversible=False,
+        )
+
     def prepare_transition_issue(
         self, issue_key: str, transition_id: str, transition_name: str
     ) -> PendingAction:

@@ -58,6 +58,7 @@ from src.tools.documentation_tools import (
     handle_jira_query_issue,
     handle_jira_search,
     handle_jira_add_comment,
+    handle_jira_add_worklog,
     handle_jira_create_subtask,
     handle_jira_transition,
     handle_confluence_read_page,
@@ -520,6 +521,24 @@ async def jira_add_comment(issue_key: str, comment_text: str) -> str:
         comment_text: Texto del comentario a agregar.
     """
     result = handle_jira_add_comment(issue_key, comment_text)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def jira_add_worklog(data: dict) -> str:
+    """Prepara registrar un worklog retroactivo en un issue de Jira. Requiere confirmacion del usuario.
+
+    Permite registrar tiempo trabajado con fecha y hora especificas (retroactivo).
+    Clockwork Pro sincroniza automaticamente los worklogs nativos de Jira,
+    por lo que el registro aparecera en ambos sistemas.
+
+    NO registra el worklog directamente. Muestra preview para confirmacion manual.
+
+    Args:
+        data: Objeto con issue_key, started (ISO 8601, ej: 2026-07-28T09:00:00.000-0500), time_spent_seconds, comment (opcional).
+    """
+    data_dict = _ensure_dict(data)
+    result = handle_jira_add_worklog(data_dict)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 

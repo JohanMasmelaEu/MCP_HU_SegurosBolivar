@@ -213,6 +213,48 @@ def handle_jira_create_subtask(data: dict) -> dict:
     return _action_to_preview(action)
 
 
+def handle_jira_add_worklog(data: dict) -> dict:
+    """Prepara registrar un worklog retroactivo en un issue de Jira.
+
+    Permite registrar tiempo trabajado con fecha y hora específicas.
+    Clockwork Pro sincroniza automáticamente los worklogs nativos de Jira.
+    NO registra el worklog directamente. Retorna preview para confirmación.
+
+    Args:
+        data: Dict con issue_key, started (ISO 8601), time_spent_seconds,
+              comment (opcional).
+
+    Returns:
+        Dict con la acción pendiente (preview).
+    """
+    available, missing = check_atlassian_credentials()
+    if not available:
+        return {
+            "status": "error",
+            "message": f"Credenciales Atlassian no configuradas. Faltan: {', '.join(missing)}",
+        }
+
+    issue_key = data.get("issue_key", "")
+    started = data.get("started", "")
+    time_spent_seconds = data.get("time_spent_seconds")
+
+    if not issue_key:
+        return {"status": "error", "message": "Se requiere issue_key."}
+    if not started:
+        return {"status": "error", "message": "Se requiere started (formato ISO 8601, ej: 2026-07-28T09:00:00.000-0500)."}
+    if not time_spent_seconds or int(time_spent_seconds) <= 0:
+        return {"status": "error", "message": "Se requiere time_spent_seconds > 0."}
+
+    client = get_jira_client()
+    action = client.prepare_add_worklog(
+        issue_key=issue_key,
+        started=started,
+        time_spent_seconds=int(time_spent_seconds),
+        comment=data.get("comment", ""),
+    )
+    return _action_to_preview(action)
+
+
 def handle_jira_transition(data: dict) -> dict:
     """Prepara mover un issue a otra columna del flujo de trabajo.
 

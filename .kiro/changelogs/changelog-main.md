@@ -132,3 +132,10 @@
 ### Corregido (API Clients — 2026-07-28)
 - Se corrigió error 410 Gone en Jira: se migró endpoint de búsqueda de `POST /rest/api/3/search` (deprecado por Atlassian) a `POST /rest/api/3/search/jql` en `prepare_search_issues` y `prepare_get_subtasks` de `src/clients/jira_client.py`
 - Se corrigió error "list indices must be integers or slices, not str" en Clockwork Pro: `_do_request` en `src/clients/base_client.py` asumía que `response.json()` siempre retornaba un `dict`, pero Clockwork retorna un array JSON. Ahora se detecta si la respuesta es una lista y se envuelve en `{"data": [...]}` para uniformidad
+
+### Agregado (Jira Worklog — 2026-07-28)
+- Se agregó tool MCP `jira_add_worklog` para registrar worklogs retroactivos en Jira via REST API v3 (`POST /rest/api/3/issue/{issueKey}/worklog`)
+- Se agregó método `prepare_add_worklog` en `src/clients/jira_client.py` con parámetros: `issue_key`, `started` (ISO 8601), `time_spent_seconds`, `comment` (opcional)
+- Se agregó handler `handle_jira_add_worklog` en `src/tools/documentation_tools.py` con validación de inputs
+- Se agregó operación `jira.add_worklog` a la allowlist en `src/clients/allowlist.py`
+- Clockwork Pro sincroniza automáticamente los worklogs nativos de Jira, por lo que el registro aparece en ambos sistemas sin necesidad de endpoint Clockwork dedicado
