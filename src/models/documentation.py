@@ -34,7 +34,7 @@ class PendingAction(BaseModel):
     cuando el usuario confirma explícitamente.
     """
 
-    action_id: str = Field(default_factory=lambda: str(uuid4())[:8])
+    action_id: str = Field(default_factory=lambda: str(uuid4()).replace("-", ""))
     service: ExternalService
     operation: str = Field(description="Operación allowlisted (ej: jira.get_issue)")
     method: str = Field(description="HTTP method: GET, POST, PUT")

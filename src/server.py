@@ -55,6 +55,8 @@ from src.tools.workspace_tools import (
 from src.tools.documentation_tools import (
     handle_generate_bitacora,
     handle_generate_daily_bitacora,
+    handle_jira_get_worklogs,
+    handle_jira_delete_worklog,
     handle_jira_query_issue,
     handle_jira_search,
     handle_jira_add_comment,
@@ -482,6 +484,40 @@ async def generate_daily_bitacora(data: dict) -> str:
     """
     data_dict = _ensure_dict(data)
     result = handle_generate_daily_bitacora(data_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def jira_get_worklogs(data: dict) -> str:
+    """Prepara consulta de worklogs registrados en un issue de Jira. Requiere confirmacion del usuario.
+
+    Permite consultar todos los worklogs de un issue, opcionalmente filtrados por rango de fechas.
+    Util para verificar worklogs existentes antes de crear nuevos (evitar solapamiento).
+
+    NO ejecuta la consulta directamente. Retorna preview para confirmacion manual.
+
+    Args:
+        data: Objeto con issue_key (requerido), started_after (epoch ms, opcional), started_before (epoch ms, opcional).
+    """
+    data_dict = _ensure_dict(data)
+    result = handle_jira_get_worklogs(data_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def jira_delete_worklog(data: dict) -> str:
+    """Prepara eliminar un worklog propio del usuario en un issue de Jira. Requiere confirmacion del usuario.
+
+    SOLO elimina worklogs del usuario autenticado (Jira valida ownership en el servidor).
+    Util para corregir worklogs duplicados o registrados con datos incorrectos.
+
+    NO elimina directamente. Muestra preview para confirmacion manual.
+
+    Args:
+        data: Objeto con issue_key y worklog_id.
+    """
+    data_dict = _ensure_dict(data)
+    result = handle_jira_delete_worklog(data_dict)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 

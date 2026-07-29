@@ -139,3 +139,17 @@
 - Se agregó handler `handle_jira_add_worklog` en `src/tools/documentation_tools.py` con validación de inputs
 - Se agregó operación `jira.add_worklog` a la allowlist en `src/clients/allowlist.py`
 - Clockwork Pro sincroniza automáticamente los worklogs nativos de Jira, por lo que el registro aparece en ambos sistemas sin necesidad de endpoint Clockwork dedicado
+
+### Agregado (Worklog Improvements — 2026-07-28)
+- Se agregó tool MCP `jira_get_worklogs` para consultar worklogs nativos de un issue en Jira via `GET /rest/api/3/issue/{issueKey}/worklog` con filtros opcionales `started_after`/`started_before` (epoch ms)
+- Se agregó tool MCP `jira_delete_worklog` para eliminar worklogs propios del usuario via `DELETE /rest/api/3/issue/{issueKey}/worklog/{worklogId}` — permite al agente autocorregirse sin intervención manual
+- Se agregó soporte para método HTTP DELETE en `BaseExternalClient._do_request`
+- Se agregaron operaciones `jira.get_worklogs` y `jira.delete_worklog` a la allowlist
+- Se agregó campo `overlap_check_reminder` en la respuesta de `handle_jira_add_worklog` que instruye al agente a verificar worklogs existentes antes de confirmar (previene solapamiento con reuniones/worklogs previos)
+- Se agregó campo `current_datetime_bogota` (ISO 8601, timezone America/Bogota) en la respuesta de `handle_jira_add_worklog` para eliminar ambigüedad de fechas "ayer"/"hoy" cuando la hora del sistema cruza medianoche
+- Se creó utilidad `_get_current_datetime_bogota()` en `documentation_tools.py`
+
+### Seguridad (Worklog Improvements — 2026-07-28)
+- Se reforzó unicidad de `action_id`: ahora usa UUID4 completo (32 hex chars) en vez de 8 chars truncados. Elimina cualquier posibilidad de cruce en ejecuciones paralelas
+- Se agregó validación de unicidad con regeneración defensiva en `BaseExternalClient.prepare_action` si un `action_id` ya existe en `_pending_actions`
+- `jira_delete_worklog` solo permite eliminar worklogs del usuario autenticado (Jira valida ownership en el servidor)

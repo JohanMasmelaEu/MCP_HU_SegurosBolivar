@@ -131,6 +131,13 @@ class BaseExternalClient:
             impact=impact,
             reversible=reversible,
         )
+
+        # Garantizar unicidad: si por alguna condición de carrera el ID ya
+        # existe (estadísticamente imposible con UUID4 completo), regenerar.
+        while action.action_id in self._pending_actions:
+            from uuid import uuid4 as _uuid4
+            action.action_id = str(_uuid4()).replace("-", "")
+
         self._pending_actions[action.action_id] = action
         logger.info(
             "Acción preparada: %s [%s] — esperando confirmación del usuario",
@@ -269,6 +276,8 @@ class BaseExternalClient:
                 response = client.post(action.endpoint, headers=headers, json=action.payload_preview)
             elif action.method == "PUT":
                 response = client.put(action.endpoint, headers=headers, json=action.payload_preview)
+            elif action.method == "DELETE":
+                response = client.delete(action.endpoint, headers=headers)
             else:
                 raise ValueError(f"Método HTTP no soportado: {action.method}")
 

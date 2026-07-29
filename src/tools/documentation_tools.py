@@ -99,6 +99,77 @@ def handle_generate_daily_bitacora(data: dict) -> dict:
 # ─── JIRA TOOLS (requieren confirmación manual) ──────────────────────────────────
 
 
+def handle_jira_get_worklogs(data: dict) -> dict:
+    """Prepara consulta de worklogs registrados en un issue de Jira.
+
+    Permite consultar todos los worklogs de un issue, opcionalmente filtrados
+    por rango de fechas. Útil para verificar worklogs existentes antes de
+    crear nuevos (evitar solapamiento).
+
+    NO ejecuta la consulta. Retorna preview para confirmación del usuario.
+
+    Args:
+        data: Dict con issue_key (requerido), started_after (epoch ms, opcional),
+              started_before (epoch ms, opcional).
+
+    Returns:
+        Dict con la acción pendiente (preview).
+    """
+    available, missing = check_atlassian_credentials()
+    if not available:
+        return {
+            "status": "error",
+            "message": f"Credenciales Atlassian no configuradas. Faltan: {', '.join(missing)}",
+        }
+
+    issue_key = data.get("issue_key", "")
+    if not issue_key:
+        return {"status": "error", "message": "Se requiere issue_key."}
+
+    client = get_jira_client()
+    action = client.prepare_get_worklogs(
+        issue_key=issue_key,
+        started_after=data.get("started_after"),
+        started_before=data.get("started_before"),
+    )
+    return _action_to_preview(action)
+
+
+def handle_jira_delete_worklog(data: dict) -> dict:
+    """Prepara eliminar un worklog propio del usuario en un issue de Jira.
+
+    SOLO elimina worklogs del usuario autenticado. Jira valida ownership.
+    Útil para corregir worklogs duplicados o con datos incorrectos.
+
+    NO elimina directamente. Retorna preview para confirmación del usuario.
+
+    Args:
+        data: Dict con issue_key y worklog_id.
+
+    Returns:
+        Dict con la acción pendiente (preview).
+    """
+    available, missing = check_atlassian_credentials()
+    if not available:
+        return {
+            "status": "error",
+            "message": f"Credenciales Atlassian no configuradas. Faltan: {', '.join(missing)}",
+        }
+
+    issue_key = data.get("issue_key", "")
+    worklog_id = data.get("worklog_id", "")
+
+    if not issue_key or not worklog_id:
+        return {
+            "status": "error",
+            "message": "Se requieren: issue_key y worklog_id.",
+        }
+
+    client = get_jira_client()
+    action = client.prepare_delete_worklog(issue_key=issue_key, worklog_id=str(worklog_id))
+    return _action_to_preview(action)
+
+
 def handle_jira_query_issue(issue_key: str) -> dict:
     """Prepara consulta detallada de un issue en Jira.
 
@@ -220,12 +291,15 @@ def handle_jira_add_worklog(data: dict) -> dict:
     Clockwork Pro sincroniza automáticamente los worklogs nativos de Jira.
     NO registra el worklog directamente. Retorna preview para confirmación.
 
+    Incluye current_datetime_bogota para eliminar ambigüedad de fechas
+    y overlap_check_reminder para recordar al agente verificar solapamiento.
+
     Args:
         data: Dict con issue_key, started (ISO 8601), time_spent_seconds,
               comment (opcional).
 
     Returns:
-        Dict con la acción pendiente (preview).
+        Dict con la acción pendiente (preview), datetime actual y recordatorio.
     """
     available, missing = check_atlassian_credentials()
     if not available:
@@ -252,7 +326,21 @@ def handle_jira_add_worklog(data: dict) -> dict:
         time_spent_seconds=int(time_spent_seconds),
         comment=data.get("comment", ""),
     )
-    return _action_to_preview(action)
+
+    preview = _action_to_preview(action)
+
+    # Inyectar datetime actual (timezone Bogotá) para eliminar ambigüedad
+    preview["current_datetime_bogota"] = _get_current_datetime_bogota()
+
+    # Recordatorio de validación de solapamiento
+    preview["overlap_check_reminder"] = (
+        "IMPORTANTE: Antes de confirmar, verifica que no existan worklogs "
+        "en la misma franja horaria usando jira_get_worklogs con el issue_key "
+        "y filtrando por la fecha del worklog. Si hay solapamiento, ajusta "
+        "las horas o consulta al usuario."
+    )
+
+    return preview
 
 
 def handle_jira_transition(data: dict) -> dict:
@@ -626,6 +714,23 @@ def handle_list_pending_actions() -> dict:
 
 
 # ─── UTILIDADES INTERNAS ──────────────────────────────────────────────────────────
+
+
+def _get_current_datetime_bogota() -> str:
+    """Obtiene la fecha y hora actual en timezone America/Bogota.
+
+    Útil para eliminar ambigüedad de 'ayer'/'hoy' cuando el prompt
+    del sistema tiene una fecha que puede no coincidir con la hora real
+    del usuario (ej: pasada medianoche).
+
+    Returns:
+        String ISO 8601 con timezone Colombia (ej: 2026-07-28T14:30:00-05:00).
+    """
+    from datetime import datetime, timezone, timedelta
+
+    bogota_offset = timezone(timedelta(hours=-5))
+    now_bogota = datetime.now(bogota_offset)
+    return now_bogota.strftime("%Y-%m-%dT%H:%M:%S-05:00")
 
 
 def _action_to_preview(action) -> dict:

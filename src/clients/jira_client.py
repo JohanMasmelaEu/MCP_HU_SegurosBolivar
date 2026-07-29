@@ -174,6 +174,46 @@ class JiraClient(BaseExternalClient):
             impact="Solo lectura. No modifica nada en Jira.",
         )
 
+    def prepare_get_worklogs(
+        self,
+        issue_key: str,
+        started_after: str | None = None,
+        started_before: str | None = None,
+    ) -> PendingAction:
+        """Prepara consulta de worklogs registrados en un issue de Jira.
+
+        Usa el endpoint nativo GET /rest/api/3/issue/{issueKey}/worklog.
+        Permite filtrar por fecha para consultar solo worklogs de un día/rango.
+
+        Args:
+            issue_key: Key del issue (ej: PROJ-456).
+            started_after: Timestamp epoch millis — solo worklogs iniciados después (opcional).
+            started_before: Timestamp epoch millis — solo worklogs iniciados antes (opcional).
+
+        Returns:
+            PendingAction con preview para confirmación del usuario.
+        """
+        base_url = _get_jira_base_url()
+
+        params: dict = {"maxResults": 5000}
+        if started_after:
+            params["startedAfter"] = started_after
+        if started_before:
+            params["startedBefore"] = started_before
+
+        date_desc = ""
+        if started_after or started_before:
+            date_desc = " (filtrado por fecha)"
+
+        return self.prepare_action(
+            operation="jira.get_worklogs",
+            method="GET",
+            endpoint=f"{base_url}/issue/{issue_key}/worklog",
+            payload=params,
+            description=f"Consultar worklogs de {issue_key}{date_desc}",
+            impact="Solo lectura. No modifica nada en Jira.",
+        )
+
     # ─── WRITE OPERATIONS ────────────────────────────────────────────────────────
 
     def prepare_add_comment(self, issue_key: str, comment_text: str) -> PendingAction:
@@ -361,6 +401,36 @@ class JiraClient(BaseExternalClient):
                 f"Este cambio será visible para todo el equipo."
             ),
             reversible=True,
+        )
+
+    def prepare_delete_worklog(self, issue_key: str, worklog_id: str) -> PendingAction:
+        """Prepara eliminar un worklog propio del usuario en un issue de Jira.
+
+        SOLO permite eliminar worklogs del usuario autenticado (Jira valida
+        ownership en el servidor). Útil para corregir worklogs duplicados
+        o registrados con datos incorrectos.
+
+        Args:
+            issue_key: Key del issue (ej: PROJ-456).
+            worklog_id: ID numérico del worklog a eliminar.
+
+        Returns:
+            PendingAction con preview para confirmación del usuario.
+        """
+        base_url = _get_jira_base_url()
+
+        return self.prepare_action(
+            operation="jira.delete_worklog",
+            method="DELETE",
+            endpoint=f"{base_url}/issue/{issue_key}/worklog/{worklog_id}",
+            payload=None,
+            description=f"Eliminar worklog {worklog_id} de {issue_key}",
+            impact=(
+                f"Se eliminará permanentemente el worklog {worklog_id} de {issue_key}. "
+                f"Esta acción NO es reversible. El tiempo registrado dejará de "
+                f"contabilizarse en Jira y Clockwork Pro."
+            ),
+            reversible=False,
         )
 
     # ┌──────────────────────────────────────────────────────────────────────────┐
