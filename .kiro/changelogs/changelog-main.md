@@ -97,3 +97,29 @@
 - Se agregó `max-width: calc(100% - 162px)` a `.proc-pipeline-content` para contener correctamente el ancho relativo al actor lateral
 - Se agregó `overflow: hidden`, `max-width: 100%` y `box-sizing: border-box` a `.proc-pipeline-step`, `.proc-pipeline-stages`, `.proc-pipeline-data` y `.proc-pipeline-stage-entities`
 - Se agregó límite de entidades visibles en el paso del provider (máximo 8 por categoría/stage con indicador "+N") y en el paso del consumer "Envía" (máximo 6 con indicador "+N"), consistente con el patrón ya usado en el paso de "Recibe"
+
+### Agregado (Documentation Integration — 2026-07-28)
+- Se creó integración documental con Jira, Confluence y Clockwork Pro con modelo de seguridad Confirmation Gate
+- Se creó `src/models/documentation.py` con modelos: `PendingAction`, `AuditEntry`, `BitacoraEntry`, `DailyBitacora`, `WorkHoursConfig`
+- Se creó `src/clients/allowlist.py` con `ALLOWED_OPERATIONS` (frozenset inmutable, 15 operaciones) y `FORBIDDEN_OPERATIONS` (9 operaciones explícitamente prohibidas)
+- Se creó `src/clients/base_client.py` con `BaseExternalClient` — Confirmation Gate que separa preparación de ejecución
+- Se creó `src/clients/audit.py` con registro append-only en `.hu-memory/audit-log.jsonl`
+- Se creó `src/clients/jira_client.py` con `JiraClient`: consultar issues, agregar comentarios, crear subtareas, transicionar entre columnas (SIN delete, SIN modificar flujo, SIN issues de primer nivel)
+- Se creó `src/clients/confluence_client.py` con `ConfluenceClient`: leer páginas, crear páginas, actualizar páginas con advertencia enfática si es trabajo ajeno (SIN DELETE — NUNCA existirá)
+- Se creó `src/clients/clockwork_client.py` con `ClockworkClient`: consultar worklogs, obtener activity types dinámicamente, iniciar/detener timer (SIN delete, SIN modificar worklogs ajenos)
+- Se creó `src/engine/bitacora.py` con `BitacoraEngine`: generación offline en Markdown + Confluence Storage Format, compilación diaria, validación regla 8 horas
+- Se creó `src/tools/documentation_tools.py` con 17 handlers para las operaciones documentales
+- Se registraron 17 nuevos tools MCP: `generate_bitacora`, `generate_daily_bitacora`, `jira_query_issue`, `jira_search`, `jira_add_comment`, `jira_create_subtask`, `jira_transition_issue`, `confluence_read_page`, `confluence_create_page`, `confluence_update_page`, `clockwork_get_assignments`, `clockwork_get_activity_types`, `clockwork_start_timer`, `clockwork_stop_timer`, `confirm_action`, `reject_action`, `list_pending_actions`
+- Se creó hook PreToolUse `confirm-external-api` que refuerza confirmación manual antes de ejecutar operaciones contra APIs externas
+- Se creó steering file `.kiro/steering/documentation-integration.md` con reglas de uso para el agente
+- Se agregó `httpx==0.28.1` a `requirements.txt` para requests HTTP
+
+### Seguridad (Documentation Integration — 2026-07-28)
+- Toda operación contra Jira/Confluence/Clockwork requiere confirmación manual explícita del usuario
+- La allowlist de operaciones es inmutable en runtime — no se amplía por prompt ni por sesión
+- No existe path de código que ejecute DELETE contra Confluence (prohibición a prueba de errores de pereza)
+- Los tokens se leen de variables de entorno, nunca se hardcodean ni se loguean
+- Audit log registra toda operación ejecutada contra APIs externas (sin tokens ni datos sensibles)
+
+### Corregido (Server — 2026-07-28)
+- Se corrigió `FastMCP` init en `src/server.py`: `mcp==1.9.2` no acepta `version`/`description` como kwargs — cambiado a `instructions`

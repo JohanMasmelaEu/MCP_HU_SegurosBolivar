@@ -52,6 +52,25 @@ from src.tools.workspace_tools import (
     handle_switch_ecosystem,
     handle_reset_ecosystem,
 )
+from src.tools.documentation_tools import (
+    handle_generate_bitacora,
+    handle_generate_daily_bitacora,
+    handle_jira_query_issue,
+    handle_jira_search,
+    handle_jira_add_comment,
+    handle_jira_create_subtask,
+    handle_jira_transition,
+    handle_confluence_read_page,
+    handle_confluence_create_page,
+    handle_confluence_update_page,
+    handle_clockwork_get_assignments,
+    handle_clockwork_get_activity_types,
+    handle_clockwork_start_timer,
+    handle_clockwork_stop_timer,
+    handle_confirm_action,
+    handle_reject_action,
+    handle_list_pending_actions,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("mcp_hu")
@@ -109,9 +128,8 @@ def _ensure_str(value: Any) -> str:
 
 mcp = FastMCP(
     name="MCP_HU_SegurosBolivar",
-    version="2.0.0",
-    description=(
-        "MCP Server para analisis inteligente de Historias de Usuario. "
+    instructions=(
+        "MCP Server v2.0.0 para analisis inteligente de Historias de Usuario. "
         "Panel de 10 expertos, memoria contextual, segmentacion de contexto, "
         "estimacion adaptativa y visibilidad transversal de ecosistemas. "
         "Soporta multiples workspaces y ecosistemas simultaneos. "
@@ -429,6 +447,236 @@ async def sync_ecosystem(app_id: str = "") -> str:
         app_id: ID de app especifica para sincronizar, o vacio para sincronizar todas.
     """
     result = handle_sync_ecosystem(app_id if app_id else "")
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+# ─── DOCUMENTATION & INTEGRATION ─────────────────────────────────────────────────
+# INVARIANTES DE SEGURIDAD:
+# - TODA operación contra Jira/Confluence/Clockwork requiere confirmación manual.
+# - Las tools de API retornan preview (PendingAction). Solo confirm_action ejecuta.
+# - La allowlist es inmutable en runtime. No se amplía por prompt ni por sesión.
+# - No existe path de código que ejecute DELETE contra Confluence.
+
+
+@mcp.tool()
+async def generate_bitacora() -> str:
+    """Genera bitacora completa del proyecto en formato exportable (Markdown + Confluence HTML).
+
+    No requiere tokens ni conexion. Usa la memoria local del proyecto.
+    El output se guarda como archivo local y se presenta para copiar-pegar.
+    """
+    result = handle_generate_bitacora()
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def generate_daily_bitacora(data: dict) -> str:
+    """Compila bitacora diaria con entradas de trabajo y validacion de 8 horas.
+
+    Aplica la regla de 8 horas normativas. Si el total excede, pregunta al usuario.
+
+    Args:
+        data: Objeto con user_email, entries (lista de subtareas trabajadas), y target_date opcional.
+    """
+    data_dict = _ensure_dict(data)
+    result = handle_generate_daily_bitacora(data_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def jira_query_issue(issue_key: str) -> str:
+    """Prepara consulta detallada de un issue en Jira. Requiere confirmacion del usuario para ejecutar.
+
+    NO ejecuta la consulta directamente. Retorna preview para confirmacion manual.
+
+    Args:
+        issue_key: Key del issue (ej: PROJ-123).
+    """
+    result = handle_jira_query_issue(issue_key)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def jira_search(jql: str, max_results: int = 50) -> str:
+    """Prepara busqueda de issues por JQL. Requiere confirmacion del usuario para ejecutar.
+
+    Args:
+        jql: Query JQL para la busqueda.
+        max_results: Maximo de resultados (default 50).
+    """
+    result = handle_jira_search(jql, max_results)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def jira_add_comment(issue_key: str, comment_text: str) -> str:
+    """Prepara agregar un comentario a un issue en Jira. Requiere confirmacion del usuario.
+
+    NO publica el comentario directamente. Muestra preview para confirmacion manual.
+
+    Args:
+        issue_key: Key del issue.
+        comment_text: Texto del comentario a agregar.
+    """
+    result = handle_jira_add_comment(issue_key, comment_text)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def jira_create_subtask(data: dict) -> str:
+    """Prepara crear una subtarea dentro de un issue existente. Requiere confirmacion del usuario.
+
+    SOLO crea subtareas. NUNCA issues de primer nivel (HU, epicas).
+    NO crea la subtarea directamente. Muestra preview para confirmacion manual.
+
+    Args:
+        data: Objeto con parent_key, project_key, summary, description (opcional), assignee_account_id (opcional).
+    """
+    data_dict = _ensure_dict(data)
+    result = handle_jira_create_subtask(data_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def jira_transition_issue(data: dict) -> str:
+    """Prepara mover un issue a otra columna del flujo. Requiere confirmacion del usuario.
+
+    SOLO mueve entre columnas existentes. JAMAS modifica parametros ni estructura del flujo.
+    Usar jira_query_issue primero para ver transiciones disponibles.
+
+    Args:
+        data: Objeto con issue_key, transition_id, transition_name.
+    """
+    data_dict = _ensure_dict(data)
+    result = handle_jira_transition(data_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def confluence_read_page(page_id: str) -> str:
+    """Prepara lectura completa de una pagina de Confluence. Requiere confirmacion del usuario.
+
+    NO lee la pagina directamente. Retorna preview para confirmacion manual.
+
+    Args:
+        page_id: ID numerico de la pagina Confluence.
+    """
+    result = handle_confluence_read_page(page_id)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def confluence_create_page(data: dict) -> str:
+    """Prepara crear una pagina nueva en Confluence. Requiere confirmacion del usuario.
+
+    NO crea la pagina directamente. Muestra preview para confirmacion manual.
+
+    Args:
+        data: Objeto con space_key, title, body_html (Confluence Storage Format), ancestor_id (pagina padre).
+    """
+    data_dict = _ensure_dict(data)
+    result = handle_confluence_create_page(data_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def confluence_update_page(data: dict) -> str:
+    """Prepara actualizar una pagina existente en Confluence. Requiere confirmacion del usuario.
+
+    Si la pagina es de otro usuario, incluye advertencia enfatica antes de confirmar.
+    NO actualiza directamente. Muestra preview para confirmacion manual.
+
+    Args:
+        data: Objeto con page_id, title, body_html, current_version, is_own_page (bool), author_name.
+    """
+    data_dict = _ensure_dict(data)
+    result = handle_confluence_update_page(data_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def clockwork_get_assignments(data: dict) -> str:
+    """Prepara consulta de asignaciones del usuario en el sprint activo. Requiere confirmacion.
+
+    Solo muestra subtareas del usuario autenticado en la iteracion activa.
+    NO ejecuta la consulta directamente.
+
+    Args:
+        data: Objeto con starting_at (YYYY-MM-DD), ending_at (YYYY-MM-DD), account_id, project_keys (opcional).
+    """
+    data_dict = _ensure_dict(data)
+    result = handle_clockwork_get_assignments(data_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def clockwork_get_activity_types() -> str:
+    """Prepara consulta de tipos de tarea disponibles en Clockwork Pro. Requiere confirmacion.
+
+    Los tipos se obtienen dinamicamente de la API (nunca hardcodeados).
+    El usuario decide cual aplica segun el contexto. El agente NO sugiere.
+    """
+    result = handle_clockwork_get_activity_types()
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def clockwork_start_timer(issue_key: str) -> str:
+    """Prepara inicio de timer en una subtarea de Clockwork Pro. Requiere confirmacion.
+
+    NO inicia el timer directamente. Muestra preview para confirmacion manual.
+
+    Args:
+        issue_key: Key de la subtarea (ej: PROJ-456).
+    """
+    result = handle_clockwork_start_timer(issue_key)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def clockwork_stop_timer(issue_key: str) -> str:
+    """Prepara detener timer en una subtarea de Clockwork Pro. Requiere confirmacion.
+
+    NO detiene el timer directamente. Muestra preview para confirmacion manual.
+
+    Args:
+        issue_key: Key de la subtarea.
+    """
+    result = handle_clockwork_stop_timer(issue_key)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def confirm_action(action_id: str, service: str) -> str:
+    """Ejecuta una accion previamente preparada y CONFIRMADA por el usuario.
+
+    SOLO ejecuta si el usuario ha dado confirmacion explicita en este turno.
+    Verifica que la accion existe, esta en la allowlist, y tiene status confirmado.
+
+    Args:
+        action_id: ID de la accion pendiente (retornado por las tools de preparacion).
+        service: Servicio de la accion (jira, confluence, clockwork).
+    """
+    result = handle_confirm_action(action_id, service)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def reject_action(action_id: str, service: str) -> str:
+    """Rechaza/cancela una accion pendiente sin ejecutarla.
+
+    Args:
+        action_id: ID de la accion a rechazar.
+        service: Servicio de la accion (jira, confluence, clockwork).
+    """
+    result = handle_reject_action(action_id, service)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def list_pending_actions() -> str:
+    """Lista todas las acciones pendientes de confirmacion en todos los servicios."""
+    result = handle_list_pending_actions()
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
