@@ -9,48 +9,172 @@
 <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
 <style>
 :root {
+  /* ─── Superficies ─── */
   --bg: #000000;
-  --surface: rgba(28,28,30,0.92);
-  --surface-border: rgba(255,255,255,0.06);
+  --surface: rgba(28,28,30,0.72);
+  --surface-elevated: rgba(44,44,46,0.65);
+  --surface-border: rgba(255,255,255,0.08);
+  --surface-border-hover: rgba(255,255,255,0.15);
+
+  /* ─── Texto ─── */
   --text-primary: rgba(255,255,255,0.92);
   --text-secondary: rgba(255,255,255,0.55);
   --text-tertiary: rgba(255,255,255,0.35);
+
+  /* ─── Acentos ─── */
   --accent-blue: #0a84ff;
   --accent-purple: #bf5af2;
   --accent-orange: #ff9f0a;
   --accent-green: #30d158;
   --accent-red: #ff453a;
   --accent-teal: #64d2ff;
-  --radius: 16px;
+
+  /* ─── Orgánicos (viridiformismo) ─── */
+  --organic-green: rgba(34,120,80,0.12);
+  --organic-teal: rgba(40,140,130,0.08);
+  --organic-moss: rgba(80,120,60,0.06);
+
+  /* ─── Radios ─── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-organic: 20px 16px 22px 14px;
+
+  /* ─── Blur (Liquid Glass) ─── */
+  --blur-light: blur(20px) saturate(1.4);
+  --blur-medium: blur(40px) saturate(1.8) brightness(1.1);
+  --blur-heavy: blur(60px) saturate(2) brightness(1.05);
+
+  /* ─── Sombras neomórficas ─── */
+  --neo-raised: 4px 4px 8px rgba(0,0,0,0.35), -2px -2px 6px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.06);
+  --neo-pressed: inset 3px 3px 6px rgba(0,0,0,0.35), inset -2px -2px 4px rgba(255,255,255,0.02);
+  --neo-panel: 0 0 0 0.5px rgba(255,255,255,0.06) inset, 0 8px 32px -8px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05) inset, 6px 6px 16px rgba(0,0,0,0.3), -3px -3px 10px rgba(255,255,255,0.02);
+
+  /* ─── Skeuomorfismo ─── */
+  --sku-led-glow: 0 0 6px var(--accent-blue), 0 0 12px rgba(10,132,255,0.3);
+  --sku-metal: linear-gradient(180deg, rgba(60,60,65,0.4) 0%, rgba(40,40,44,0.6) 50%, rgba(35,35,38,0.7) 100%);
+
+  /* ─── Scrollbar ─── */
+  --scrollbar-thumb: rgba(255,255,255,0.1);
+  --scrollbar-thumb-hover: rgba(255,255,255,0.2);
+
+  /* ─── Transiciones ─── */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.25,1,0.5,1);
+  --transition-panel: 0.35s cubic-bezier(0.4,0,0.2,1);
+
+  /* ─── Aliases de legacy ─── */
+  --radius: var(--radius-lg);
+  --blur: var(--blur-medium);
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f5f7;
+    --surface: rgba(255,255,255,0.72);
+    --surface-elevated: rgba(255,255,255,0.85);
+    --surface-border: rgba(0,0,0,0.08);
+    --surface-border-hover: rgba(0,0,0,0.15);
+
+    --text-primary: rgba(0,0,0,0.88);
+    --text-secondary: rgba(0,0,0,0.55);
+    --text-tertiary: rgba(0,0,0,0.35);
+
+    --accent-blue: #007aff;
+    --accent-purple: #af52de;
+    --accent-orange: #ff9500;
+    --accent-green: #28a745;
+    --accent-red: #ff3b30;
+    --accent-teal: #5ac8fa;
+
+    --organic-green: rgba(34,120,80,0.08);
+    --organic-teal: rgba(40,140,130,0.06);
+    --organic-moss: rgba(80,120,60,0.04);
+
+    --blur-light: blur(20px) saturate(1.2);
+    --blur-medium: blur(40px) saturate(1.4) brightness(1.05);
+    --blur-heavy: blur(60px) saturate(1.6) brightness(1.02);
+
+    --neo-raised: 3px 3px 6px rgba(0,0,0,0.06), -2px -2px 4px rgba(255,255,255,0.6), inset 0 1px 0 rgba(255,255,255,0.8);
+    --neo-pressed: inset 2px 2px 4px rgba(0,0,0,0.06), inset -1px -1px 3px rgba(255,255,255,0.3);
+    --neo-panel: 0 0 0 0.5px rgba(0,0,0,0.04) inset, 0 8px 32px -8px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.8) inset, 4px 4px 12px rgba(0,0,0,0.08), -2px -2px 8px rgba(255,255,255,0.5);
+
+    --sku-led-glow: 0 0 4px var(--accent-blue), 0 0 8px rgba(0,122,255,0.2);
+    --sku-metal: linear-gradient(180deg, rgba(240,240,244,0.85) 0%, rgba(230,230,234,0.9) 100%);
+
+    --scrollbar-thumb: rgba(0,0,0,0.12);
+    --scrollbar-thumb-hover: rgba(0,0,0,0.2);
+  }
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
   height: 100vh; display: flex;
-  background: linear-gradient(145deg, #000000 0%, #0a0a0c 50%, #000000 100%);
+  background: var(--bg);
   color: var(--text-primary);
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+body::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, var(--organic-green) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, var(--organic-teal) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 80%, var(--organic-moss) 0%, transparent 45%);
+  z-index: 0;
+  pointer-events: none;
+  animation: meshShift 3s ease-out forwards;
+}
+@keyframes meshShift {
+  0% { opacity: 0; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
 }
 #cy { flex: 1; z-index: 1; position: relative; background: transparent; }
 .glass-panel {
-  background: rgba(28,28,30,0.92);
+  position: relative;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
   border: 1px solid var(--surface-border);
-  border-radius: var(--radius);
-  box-shadow: 0 0 0 0.5px rgba(255,255,255,0.05) inset, 0 20px 60px -10px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.2);
+  backdrop-filter: var(--blur-medium);
+  -webkit-backdrop-filter: var(--blur-medium);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--neo-panel);
+}
+.glass-panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.08) 0%,
+    rgba(255,255,255,0.01) 40%,
+    rgba(255,255,255,0.04) 70%,
+    rgba(255,255,255,0.0) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 #panel {
   width: 380px; z-index: 10;
-  background: rgba(22,22,24,0.96);
-  border-left: 1px solid var(--surface-border);
+  background: linear-gradient(180deg, rgba(36,36,40,0.85) 0%, rgba(22,22,26,0.92) 100%);
+  backdrop-filter: var(--blur-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  border-left: 1px solid transparent;
+  border-image: linear-gradient(180deg,
+    rgba(10,132,255,0.2) 0%,
+    rgba(191,90,242,0.15) 30%,
+    rgba(34,120,80,0.1) 60%,
+    rgba(255,159,10,0.08) 100%
+  ) 1;
   overflow-y: auto; padding: 0;
   display: flex; flex-direction: column; gap: 0;
   position: fixed; top: 36px; right: 0; bottom: 0;
   transform: translateX(100%);
   opacity: 0;
   pointer-events: none;
-  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.25s ease;
+  transition: transform var(--transition-panel), opacity 0.3s ease;
+  box-shadow: -8px 0 40px rgba(0,0,0,0.4), inset 1px 0 0 rgba(255,255,255,0.04);
 }
 #panel.active {
   transform: translateX(0);
@@ -153,17 +277,23 @@ body {
 #toolbar {
   position: absolute; top: 20px; left: 20px; z-index: 20;
   display: flex; gap: 6px; align-items: center;
-  padding: 6px 8px; border-radius: 14px;
-  background: rgba(28,28,30,0.92);
+  padding: 6px 8px; border-radius: var(--radius-lg);
+  flex-wrap: wrap;
+  background: var(--sku-metal);
+  backdrop-filter: var(--blur-medium);
+  -webkit-backdrop-filter: var(--blur-medium);
   border: 1px solid var(--surface-border);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(0,0,0,0.3);
+  box-shadow: var(--neo-panel);
 }
 #toolbar button {
   background: transparent; border: 1px solid transparent;
-  color: var(--text-secondary); padding: 7px 14px; border-radius: 10px;
+  color: var(--text-secondary); padding: 7px 14px; border-radius: var(--radius-md);
   cursor: pointer; font-size: 12px; font-weight: 500;
-  transition: all 0.25s cubic-bezier(0.32,0.72,0,1);
+  transition: all var(--transition-normal);
   letter-spacing: -0.1px;
+  box-shadow: var(--neo-raised);
 }
 #toolbar button:hover {
   background: rgba(255,255,255,0.06); color: var(--text-primary);
@@ -171,7 +301,7 @@ body {
 #toolbar button.active {
   background: rgba(10,132,255,0.15); color: var(--accent-blue);
   border-color: rgba(10,132,255,0.3);
-  box-shadow: 0 0 20px rgba(10,132,255,0.1);
+  box-shadow: var(--neo-pressed), 0 0 12px rgba(10,132,255,0.1);
 }
 #toolbar select {
   background: rgba(255,255,255,0.04); color: var(--text-secondary);
@@ -219,10 +349,12 @@ body {
 #tooltip .tt-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
 #legend {
   position: absolute; bottom: 20px; left: 20px; z-index: 20;
-  padding: 16px 20px; border-radius: 14px; font-size: 11px;
-  background: rgba(28,28,30,0.92);
+  padding: 16px 20px; border-radius: var(--radius-lg); font-size: 11px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
   border: 1px solid var(--surface-border);
-  box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
+  box-shadow: var(--neo-panel);
 }
 #legend .row { display: flex; align-items: center; gap: 10px; margin: 6px 0; color: var(--text-secondary); font-weight: 400; }
 #legend .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
@@ -241,9 +373,10 @@ body {
 }
 .toggle-group {
   display: flex; align-items: center; gap: 6px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(0,0,0,0.3);
   border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 10px; padding: 3px;
+  border-radius: var(--radius-md); padding: 3px;
+  box-shadow: var(--neo-pressed);
 }
 .toggle-group button {
   background: transparent !important; border: none !important;
