@@ -16,6 +16,7 @@ from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 from starlette.routing import Route
+from starlette.staticfiles import StaticFiles
 
 from src.engine.memory import get_memory
 from src.engine.workspace_manager import get_workspace_manager
@@ -27,6 +28,7 @@ from src.engine.ecosystem_visualizer import (
     route_eco_flows,
     route_eco_app_detail,
     route_eco_health,
+    route_eco_status,
     route_constellation_graph,
     route_constellation_spec_detail,
     route_constellation_gaps,
@@ -276,11 +278,17 @@ app = Starlette(routes=[
     Route("/api/eco/flows/{ecosystem_id}/{app_a}/{app_b}", route_eco_flows),
     Route("/api/eco/app/{ecosystem_id}/{app_id}", route_eco_app_detail),
     Route("/api/eco/health/{ecosystem_id}", route_eco_health),
+    Route("/api/eco/status/{ecosystem_id}", route_eco_status),
     # ─── Constellation Visualizer ─────────────────────────────────────────────
     Route("/api/constellation/{ecosystem_id}", route_constellation_graph),
     Route("/api/constellation/{ecosystem_id}/spec/{spec_id}", route_constellation_spec_detail),
     Route("/api/constellation/{ecosystem_id}/gaps", route_constellation_gaps),
 ])
+
+# Montar archivos estáticos (vendor scripts bundleados en Docker)
+_static_path = Path(__file__).parent.parent.parent / "static"
+if _static_path.exists():
+    app.mount("/static", StaticFiles(directory=str(_static_path)), name="static")
 
 
 def start_visualizer() -> None:

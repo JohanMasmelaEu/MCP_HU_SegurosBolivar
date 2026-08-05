@@ -4,6 +4,7 @@ import logging
 
 from src.engine.ecosystem import get_ecosystem
 from src.engine.ecosystem_manager import get_ecosystem_manager
+from src.engine.ecosystem_visualizer import invalidate_graph_cache
 from src.engine.memory import get_memory
 from src.models.ecosystem import AppRegistration, ContractDefinition, EntityDefinition
 
@@ -39,6 +40,7 @@ def handle_init_ecosystem(config_dict: dict) -> dict:
 
     try:
         engine = manager.create_ecosystem(ecosystem_id, name, description)
+        invalidate_graph_cache()
         return {
             "status": "success",
             "ecosystem_id": ecosystem_id,
@@ -186,6 +188,10 @@ def handle_register_app(app_dict: dict) -> dict:
         # Obtener resultado post-registro
         registered = ecosystem.get_app(app.app_id)
         shared = ecosystem.get_shared_entities()
+
+        # Invalidar cache del visualizador para reflejar la nueva app
+        ecosystem_id = ecosystem.registry.ecosystem_id if ecosystem.registry else ""
+        invalidate_graph_cache(ecosystem_id)
 
         return {
             "status": "success",
@@ -385,6 +391,9 @@ def handle_sync_ecosystem(app_id: str = "") -> dict:
                     "status": "error",
                     "message": f"App '{app_id}' no encontrada en el ecosistema.",
                 }
+            # Invalidar cache del visualizador tras sincronización
+            eco_id = ecosystem.registry.ecosystem_id if ecosystem.registry else ""
+            invalidate_graph_cache(eco_id)
             return {
                 "status": "success",
                 "synced_app": app_id,
@@ -401,6 +410,8 @@ def handle_sync_ecosystem(app_id: str = "") -> dict:
         else:
             synced_count = ecosystem.sync_all_apps()
             shared = ecosystem.get_shared_entities()
+            # Invalidar todo el cache tras sincronización completa
+            invalidate_graph_cache()
             return {
                 "status": "success",
                 "apps_synced": synced_count,

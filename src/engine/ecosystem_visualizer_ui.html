@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ecosystem Graph - Topologia de Acoplamiento</title>
-<script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
-<script src="https://unpkg.com/layout-base@2.0.1/layout-base.js"></script>
-<script src="https://unpkg.com/cose-base@2.2.0/cose-base.js"></script>
-<script src="https://unpkg.com/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.js"></script>
+<script src="/static/vendor/cytoscape.min.js"></script>
+<script src="/static/vendor/layout-base.js"></script>
+<script src="/static/vendor/cose-base.js"></script>
+<script src="/static/vendor/cytoscape-cose-bilkent.js"></script>
 <script>
   window.addEventListener('DOMContentLoaded', function() {
     if (typeof cytoscape === 'undefined') {
@@ -20,7 +20,7 @@
   });
 </script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
+/* Inter no se carga externamente — se usa la font-family del sistema definida en body */
 :root {
   --bg: #000000;
   --surface: rgba(28,28,30,0.72);
@@ -719,6 +719,19 @@ body::before {
 }
 /* Diagram view container */
 .diagram-view { min-height: 120px; position: relative; z-index: 1; }
+/* ===== Loading Overlay ===== */
+.loading-overlay {
+  position: absolute; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.3); backdrop-filter: blur(4px);
+  border-radius: 0; pointer-events: none;
+}
+.loading-spinner {
+  width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent-blue, #0a84ff);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -904,9 +917,9 @@ const macroStyles = [
 /* ===== Layout Config ===== */
 const macroLayout = {
   name: 'cose-bilkent',
-  quality: 'proof',
-  animate: true,
-  animationDuration: 800,
+  quality: 'default',
+  animate: 'end',
+  animationDuration: 400,
   nodeDimensionsIncludeLabels: true,
   idealEdgeLength: 250,
   nodeRepulsion: 10000,
@@ -964,9 +977,90 @@ async function loadMacroGraph() {
   }
 }
 
+/* ===== Large Graph Protection ===== */
+var MAX_VISIBLE_NODES = 80;
+
+function collapseSmallNodes(data) {
+  var nodes = data.nodes || [];
+  var edges = data.edges || [];
+  if (nodes.length <= MAX_VISIBLE_NODES) { data.collapsed_count = 0; return data; }
+
+  // Contar conexiones por nodo
+  var connectionCount = {};
+  nodes.forEach(function(n) { connectionCount[n.data.id] = 0; });
+  edges.forEach(function(e) {
+    if (connectionCount[e.data.source] !== undefined) connectionCount[e.data.source]++;
+    if (connectionCount[e.data.target] !== undefined) connectionCount[e.data.target]++;
+  });
+
+  // Ordenar por conexiones, mantener los top MAX_VISIBLE_NODES
+  var sortedNodes = nodes.slice().sort(function(a, b) {
+    return (connectionCount[b.data.id] || 0) - (connectionCount[a.data.id] || 0);
+  });
+
+  var keepNodes = sortedNodes.slice(0, MAX_VISIBLE_NODES);
+  var keepIds = new Set(keepNodes.map(function(n) { return n.data.id; }));
+
+  // Incluir parent nodes (clusters) de los nodos mantenidos
+  keepNodes.forEach(function(n) {
+    if (n.data.parent && !keepIds.has(n.data.parent)) {
+      var parentNode = nodes.find(function(pn) { return pn.data.id === n.data.parent; });
+      if (parentNode) { keepNodes.push(parentNode); keepIds.add(parentNode.data.id); }
+    }
+  });
+
+  var collapsedCount = nodes.length - keepNodes.length;
+
+  // Agregar nodo "Otros" si se colapsaron nodos
+  if (collapsedCount > 0) {
+    keepNodes.push({
+      data: {
+        id: 'collapsed:others',
+        label: '+' + collapsedCount + ' más',
+        type: 'app',
+        health: 'green',
+        coupling_type: 'decoupled',
+        maturity: 'reference',
+        border_style: 'dotted',
+        story_count: 0,
+        entities_count: 0,
+        flows_count: 0,
+      }
+    });
+  }
+
+  // Filtrar edges
+  var keepEdges = edges.filter(function(e) {
+    return keepIds.has(e.data.source) && keepIds.has(e.data.target);
+  });
+
+  data.nodes = keepNodes;
+  data.edges = keepEdges;
+  data.collapsed_count = collapsedCount;
+  return data;
+}
+
+/* ===== Loading Indicator Helpers ===== */
+function showLoading(containerId) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var overlay = document.createElement('div');
+  overlay.className = 'loading-overlay';
+  overlay.id = containerId + '-loading';
+  overlay.innerHTML = '<div class="loading-spinner"></div>';
+  container.style.position = 'relative';
+  container.appendChild(overlay);
+}
+
+function hideLoading(containerId) {
+  var overlay = document.getElementById(containerId + '-loading');
+  if (overlay) overlay.remove();
+}
+
 function buildCytoscape(data) {
   const container = document.getElementById('cy');
   container.innerHTML = '';
+  data = collapseSmallNodes(data);
   var nodes = data.nodes || [];
   var edges = data.edges || [];
   if (nodes.length === 0) {
@@ -974,6 +1068,7 @@ function buildCytoscape(data) {
     return;
   }
   if (cy) { cy.destroy(); cy = null; }
+  showLoading('cy');
   cy = cytoscape({
     container: container,
     elements: { nodes: nodes, edges: edges },
@@ -983,6 +1078,7 @@ function buildCytoscape(data) {
     maxZoom: 3,
     wheelSensitivity: 0.3,
   });
+  cy.on('layoutstop', function() { hideLoading('cy'); });
   bindCyEvents();
 }
 
@@ -1570,9 +1666,15 @@ function resetView() {
 function switchEcosystem(id) {
   if (!id) return;
   currentEcosystemId = id;
+  constellationLoaded = false;
   _updateEcoMeta(null);
   if (currentView === 'micro') { backToMacro(); }
-  loadMacroGraph();
+  if (constellationVisible) {
+    loadConstellation();
+    constellationLoaded = true;
+  } else {
+    loadMacroGraph();
+  }
 }
 /* ===== Ecosystem Meta Display ===== */
 var _ecosystemsList = null;
@@ -1795,6 +1897,7 @@ function escapeAttr(str) {
 
 let constellationCy = null;
 let constellationVisible = false;
+let constellationLoaded = false;
 
 function showConstellation(event) {
   if (event) event.preventDefault();
@@ -1815,7 +1918,10 @@ function showConstellation(event) {
   if (toolbar) toolbar.style.display = 'none';
   
   constellationVisible = true;
-  loadConstellation();
+  if (!constellationLoaded) {
+    loadConstellation();
+    constellationLoaded = true;
+  }
 }
 
 function showEcosystem() {
@@ -1851,6 +1957,8 @@ function renderConstellation(data) {
   if (!container) return;
   
   if (constellationCy) constellationCy.destroy();
+  showLoading('cy-constellation');
+  data = collapseSmallNodes(data);
   
   constellationCy = cytoscape({
     container: container,
@@ -1878,9 +1986,10 @@ function renderConstellation(data) {
       { selector: '.maturity-draft', style: { 'line-style': 'dashed' }},
       { selector: '.maturity-formalized', style: { 'line-style': 'solid' }},
     ],
-    layout: { name: 'cose-bilkent', animate: false, nodeDimensionsIncludeLabels: true, idealEdgeLength: 150 },
+    layout: { name: 'cose-bilkent', quality: 'default', animate: 'end', animationDuration: 400, nodeDimensionsIncludeLabels: true, idealEdgeLength: 150 },
   });
   
+  constellationCy.on('layoutstop', function() { hideLoading('cy-constellation'); });
   constellationCy.on('tap', 'node', function(evt) {
     const node = evt.target.data();
     showConstellationDetail(node);

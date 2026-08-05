@@ -8,7 +8,10 @@ Provee handlers de rutas API para:
 Se integra con el servidor Starlette existente en visualizer.py (puerto 9751).
 """
 
+import asyncio
 import logging
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
 
@@ -28,6 +31,48 @@ from src.models.ecosystem import (
 logger = logging.getLogger("mcp_hu.engine.ecosystem_visualizer")
 
 HTML_PATH = Path(__file__).parent / "ecosystem_visualizer_ui.html"
+
+# ─── CACHE & EXECUTOR ────────────────────────────────────────────────────────────
+
+_graph_cache: dict[str, tuple[dict, float]] = {}
+CACHE_TTL = 300  # 5 minutos como fallback de seguridad
+
+_executor = ThreadPoolExecutor(max_workers=2)
+
+
+def _get_cached_graph(ecosystem_id: str, builder_fn, engine) -> dict:
+    """Retorna resultado del builder desde cache si es valido, o lo recalcula.
+
+    Args:
+        ecosystem_id: ID del ecosistema.
+        builder_fn: Funcion que construye el grafo (e.g. _build_macro_graph).
+        engine: EcosystemEngine a pasar al builder.
+
+    Returns:
+        Dict con datos del grafo.
+    """
+    key = f"{ecosystem_id}:{builder_fn.__name__}"
+    if key in _graph_cache:
+        data, ts = _graph_cache[key]
+        if time.time() - ts < CACHE_TTL:
+            return data
+    result = builder_fn(engine)
+    _graph_cache[key] = (result, time.time())
+    return result
+
+
+def invalidate_graph_cache(ecosystem_id: str = "") -> None:
+    """Invalida el cache de grafos para un ecosistema o todos.
+
+    Args:
+        ecosystem_id: ID del ecosistema a invalidar. Si esta vacio, invalida todo.
+    """
+    if ecosystem_id:
+        keys_to_remove = [k for k in _graph_cache if k.startswith(f"{ecosystem_id}:")]
+    else:
+        keys_to_remove = list(_graph_cache.keys())
+    for k in keys_to_remove:
+        del _graph_cache[k]
 
 
 # ─── ROUTE HANDLERS ─────────────────────────────────────────────────────────────
@@ -80,7 +125,14 @@ async def route_eco_graph(request: Request) -> JSONResponse:
             status_code=404,
         )
 
-    graph_data = _build_macro_graph(engine)
+    loop = asyncio.get_event_loop()
+    graph_data = await loop.run_in_executor(
+        _executor, _get_cached_graph, ecosystem_id, _build_macro_graph, engine
+    )
+
+    # Paginación opcional via query params limit y offset
+    graph_data = _apply_pagination(request, graph_data)
+
     return JSONResponse(graph_data)
 
 
@@ -101,7 +153,10 @@ async def route_eco_flows(request: Request) -> JSONResponse:
             status_code=404,
         )
 
-    flows_data = _build_flows_between_apps(engine, app_a_id, app_b_id)
+    loop = asyncio.get_event_loop()
+    flows_data = await loop.run_in_executor(
+        _executor, _build_flows_between_apps, engine, app_a_id, app_b_id
+    )
     if flows_data is None:
         return JSONResponse(
             {"error": f"Una o ambas apps no encontradas: '{app_a_id}', '{app_b_id}'."},
@@ -130,66 +185,72 @@ async def route_eco_app_detail(request: Request) -> JSONResponse:
             status_code=404,
         )
 
-    deps = engine.get_app_dependencies(app_id)
-    shared = engine.get_shared_entities()
-    app_shared = [s for s in shared if app_id in s.defined_in_apps]
+    def _compute_app_detail():
+        """Computa detalle de app en executor."""
+        deps = engine.get_app_dependencies(app_id)
+        shared = engine.get_shared_entities()
+        app_shared = [s for s in shared if app_id in s.defined_in_apps]
 
-    contracts_exposed = [
-        c for c in engine.get_contracts() if c.provider_app == app_id
-    ]
-    contracts_consumed = [
-        c for c in engine.get_contracts() if app_id in c.consumer_apps
-    ]
+        contracts_exposed = [
+            c for c in engine.get_contracts() if c.provider_app == app_id
+        ]
+        contracts_consumed = [
+            c for c in engine.get_contracts() if app_id in c.consumer_apps
+        ]
 
-    return JSONResponse({
-        "app_id": app.app_id,
-        "name": app.name,
-        "description": app.description,
-        "team": app.team,
-        "coupling_type": app.coupling_type,
-        "maturity": app.maturity,
-        "story_count": app.story_count,
-        "entities": app.entities_snapshot,
-        "flows": app.flows_snapshot,
-        "contracts_exposed": [
-            {
-                "contract_id": c.contract_id,
-                "name": c.name,
-                "type": c.type,
-                "version": c.version,
-                "status": c.status,
-                "consumers": c.consumer_apps,
-                "entities": c.entities_involved,
-                "entities_grouped": _serialize_entities_grouped(c),
-            }
-            for c in contracts_exposed
-        ],
-        "contracts_consumed": [
-            {
-                "contract_id": c.contract_id,
-                "name": c.name,
-                "type": c.type,
-                "version": c.version,
-                "status": c.status,
-                "provider": c.provider_app,
-                "entities": c.entities_involved,
-                "entities_grouped": _serialize_entities_grouped(c),
-            }
-            for c in contracts_consumed
-        ],
-        "depends_on": deps.get("depends_on", []),
-        "depended_by": deps.get("depended_by", []),
-        "shared_entities": [
-            {
-                "entity": s.entity_name,
-                "apps": s.defined_in_apps,
-                "is_consistent": s.is_consistent,
-                "divergence": s.divergence_notes,
-                "fields_by_app": s.fields_by_app,
-            }
-            for s in app_shared
-        ],
-    })
+        return {
+            "app_id": app.app_id,
+            "name": app.name,
+            "description": app.description,
+            "team": app.team,
+            "coupling_type": app.coupling_type,
+            "maturity": app.maturity,
+            "story_count": app.story_count,
+            "entities": app.entities_snapshot,
+            "flows": app.flows_snapshot,
+            "contracts_exposed": [
+                {
+                    "contract_id": c.contract_id,
+                    "name": c.name,
+                    "type": c.type,
+                    "version": c.version,
+                    "status": c.status,
+                    "consumers": c.consumer_apps,
+                    "entities": c.entities_involved,
+                    "entities_grouped": _serialize_entities_grouped(c),
+                }
+                for c in contracts_exposed
+            ],
+            "contracts_consumed": [
+                {
+                    "contract_id": c.contract_id,
+                    "name": c.name,
+                    "type": c.type,
+                    "version": c.version,
+                    "status": c.status,
+                    "provider": c.provider_app,
+                    "entities": c.entities_involved,
+                    "entities_grouped": _serialize_entities_grouped(c),
+                }
+                for c in contracts_consumed
+            ],
+            "depends_on": deps.get("depends_on", []),
+            "depended_by": deps.get("depended_by", []),
+            "shared_entities": [
+                {
+                    "entity": s.entity_name,
+                    "apps": s.defined_in_apps,
+                    "is_consistent": s.is_consistent,
+                    "divergence": s.divergence_notes,
+                    "fields_by_app": s.fields_by_app,
+                }
+                for s in app_shared
+            ],
+        }
+
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(_executor, _compute_app_detail)
+    return JSONResponse(result)
 
 
 async def route_eco_health(request: Request) -> JSONResponse:
@@ -203,16 +264,20 @@ async def route_eco_health(request: Request) -> JSONResponse:
             status_code=404,
         )
 
-    conflicts = engine.detect_cross_app_conflicts()
-    shared = engine.get_shared_entities()
-    apps = engine.get_all_apps()
+    def _compute_health():
+        """Calcula salud en executor para no bloquear el event loop."""
+        conflicts = engine.detect_cross_app_conflicts()
+        shared = engine.get_shared_entities()
+        apps = engine.get_all_apps()
+        health_map: dict[str, dict] = {}
+        for app in apps:
+            health_info = _calculate_health(app.app_id, conflicts, shared)
+            health_map[app.app_id] = health_info
+        return {"apps": health_map}
 
-    health_map: dict[str, dict] = {}
-    for app in apps:
-        health_info = _calculate_health(app.app_id, conflicts, shared)
-        health_map[app.app_id] = health_info
-
-    return JSONResponse({"apps": health_map})
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(_executor, _compute_health)
+    return JSONResponse(result)
 
 
 # ─── GRAPH BUILDERS ──────────────────────────────────────────────────────────────
@@ -749,6 +814,45 @@ def _calculate_health(
 # ─── HELPERS ─────────────────────────────────────────────────────────────────────
 
 
+def _apply_pagination(request: Request, graph_data: dict) -> dict:
+    """Aplica paginacion a nodos del grafo si se reciben limit y offset.
+
+    Filtra edges para solo incluir los que conectan nodos visibles,
+    incluyendo parent IDs (clusters).
+
+    Args:
+        request: Request de Starlette con query params.
+        graph_data: Dict con 'nodes' y 'edges'.
+
+    Returns:
+        graph_data modificado con paginacion si limit > 0.
+    """
+    limit = int(request.query_params.get("limit", 0))
+    offset = int(request.query_params.get("offset", 0))
+
+    if limit > 0 and "nodes" in graph_data:
+        all_nodes = graph_data["nodes"]
+        graph_data["total_nodes"] = len(all_nodes)
+        graph_data["nodes"] = all_nodes[offset:offset + limit]
+
+        # Filtrar edges para solo incluir los que conectan nodos visibles
+        visible_ids = {n["data"]["id"] for n in graph_data["nodes"]}
+        # Incluir parent IDs (clusters)
+        for n in graph_data["nodes"]:
+            parent = n["data"].get("parent")
+            if parent:
+                visible_ids.add(parent)
+        graph_data["edges"] = [
+            e for e in graph_data.get("edges", [])
+            if e["data"]["source"] in visible_ids and e["data"]["target"] in visible_ids
+        ]
+        graph_data["paginated"] = True
+    else:
+        graph_data["paginated"] = False
+
+    return graph_data
+
+
 def _maturity_border_style(maturity: str) -> str:
     """Devuelve el estilo de borde para un nodo segun su madurez.
 
@@ -827,6 +931,28 @@ def _get_ecosystem_engine(ecosystem_id: str) -> Optional[EcosystemEngine]:
     return engine
 
 
+# ─── STATUS ENDPOINT (lightweight polling) ────────────────────────────────────────
+
+
+async def route_eco_status(request: Request) -> JSONResponse:
+    """API: metadata ligera del ecosistema para polling sin computar grafo.
+
+    GET /api/eco/status/{ecosystem_id}
+    Retorna informacion basica sin calculos pesados.
+    """
+    ecosystem_id = request.path_params.get("ecosystem_id", "")
+    engine = _get_ecosystem_engine(ecosystem_id)
+    if not engine:
+        return JSONResponse({"error": "No encontrado"}, status_code=404)
+    registry = engine.registry
+    return JSONResponse({
+        "ecosystem_id": registry.ecosystem_id if registry else "",
+        "apps_count": len(engine.get_all_apps()) if registry else 0,
+        "updated_at": registry.updated_at if registry and hasattr(registry, "updated_at") else None,
+        "cache_valid": f"{ecosystem_id}:_build_macro_graph" in _graph_cache,
+    })
+
+
 # ─── CONSTELLATION ROUTES ────────────────────────────────────────────────────────
 
 
@@ -856,15 +982,26 @@ async def route_constellation_graph(request: Request) -> JSONResponse:
         )
 
     constellation = ConstellationEngine(engine, spec_engine)
-    graph = constellation.build_constellation()
 
-    return JSONResponse({
+    def _build_constellation():
+        """Construye grafo de constelacion en executor."""
+        return constellation.build_constellation()
+
+    loop = asyncio.get_event_loop()
+    graph = await loop.run_in_executor(_executor, _build_constellation)
+
+    constellation_data = {
         "ecosystem_id": ecosystem_id,
         "total_nodes": len(graph["nodes"]),
         "total_edges": len(graph["edges"]),
         "nodes": graph["nodes"],
         "edges": graph["edges"],
-    })
+    }
+
+    # Paginación opcional via query params limit y offset
+    constellation_data = _apply_pagination(request, constellation_data)
+
+    return JSONResponse(constellation_data)
 
 
 async def route_constellation_spec_detail(request: Request) -> JSONResponse:
@@ -925,7 +1062,9 @@ async def route_constellation_gaps(request: Request) -> JSONResponse:
         return JSONResponse({"error": "SpecEngine no disponible."}, status_code=500)
 
     constellation = ConstellationEngine(engine, spec_engine)
-    gaps = constellation.detect_gaps()
+
+    loop = asyncio.get_event_loop()
+    gaps = await loop.run_in_executor(_executor, constellation.detect_gaps)
 
     return JSONResponse({
         "ecosystem_id": ecosystem_id,
