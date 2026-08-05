@@ -37,7 +37,6 @@ class EcosystemManager:
         self._active_ecosystem: Optional[EcosystemEngine] = None
 
         self._ecosystems_path.mkdir(parents=True, exist_ok=True)
-        self._migrate_legacy()
 
     def restore_active(self, ecosystem_id: Optional[str]) -> None:
         """Restaura el ecosistema activo desde el ID indicado.
@@ -233,58 +232,6 @@ class EcosystemManager:
             EcosystemEngine activo o None si no hay ecosistema seleccionado.
         """
         return self._active_ecosystem
-
-    # ─── PRIVATE METHODS ─────────────────────────────────────────────────────────
-
-    def _migrate_legacy(self) -> None:
-        """Migra estructura legacy (.hu-ecosystem/ en raiz) al formato multi-ecosistema.
-
-        Si existe /workspace/.hu-ecosystem/ (formato v1), lee su ecosystem_id
-        y lo mueve a /workspace/ecosystems/<ecosystem_id>/.hu-ecosystem/.
-
-        Returns:
-            ecosystem_id migrado o None si no hubo migracion.
-        """
-        legacy_ecosystem_path = self._base_path / ".hu-ecosystem"
-
-        if not legacy_ecosystem_path.exists() or not legacy_ecosystem_path.is_dir():
-            return
-
-        # Leer el ecosystem_id del registro legacy
-        registry_path = legacy_ecosystem_path / "ecosystem.json"
-        ecosystem_id = "default"
-
-        if registry_path.exists():
-            try:
-                data = json.loads(registry_path.read_text(encoding="utf-8"))
-                ecosystem_id = data.get("ecosystem_id", "default")
-            except (json.JSONDecodeError, KeyError):
-                pass
-
-        target_path = self._ecosystems_path / ecosystem_id
-
-        if target_path.exists():
-            logger.info(
-                "Legacy .hu-ecosystem/ encontrado pero ecosistema '%s' ya existe. Omitiendo migracion.",
-                ecosystem_id,
-            )
-            return
-
-        target_path.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(legacy_ecosystem_path), str(target_path / ".hu-ecosystem"))
-
-        # Activar el ecosistema migrado
-        engine = EcosystemEngine(base_path=target_path)
-        if engine.is_initialized:
-            self._active_ecosystem = engine
-
-        self._migrated_ecosystem_id = ecosystem_id
-        logger.info("Legacy .hu-ecosystem/ migrado a ecosistema '%s'", ecosystem_id)
-
-    @property
-    def migrated_ecosystem_id(self) -> Optional[str]:
-        """ID del ecosistema migrado desde legacy (None si no hubo migracion)."""
-        return getattr(self, "_migrated_ecosystem_id", None)
 
 
 # ─── SINGLETON MANAGER ───────────────────────────────────────────────────────────

@@ -4,7 +4,6 @@ import logging
 import re
 from pathlib import Path
 
-from src.engine.ecosystem import get_ecosystem
 from src.engine.memory import get_memory
 from src.engine.workspace_manager import get_workspace_manager
 from src.engine.ecosystem_manager import get_ecosystem_manager
@@ -46,8 +45,7 @@ def handle_init_project(config_dict: dict) -> dict:
     manager = get_workspace_manager()
 
     if manager is None:
-        # Fallback legacy (no deberia ocurrir si el server inicializa correctamente)
-        return _legacy_init_project(config_dict)
+        return {"status": "error", "message": "WorkspaceManager no disponible. El servidor no se inicializó correctamente."}
 
     # Determinar workspace_id
     workspace_id = config_dict.pop("workspace_id", None)
@@ -112,47 +110,6 @@ def handle_init_project(config_dict: dict) -> dict:
             )
 
     return result
-
-
-def _legacy_init_project(config_dict: dict) -> dict:
-    """Fallback: inicializacion legacy sin WorkspaceManager.
-
-    Args:
-        config_dict: Configuracion del proyecto.
-
-    Returns:
-        Status de la operacion.
-    """
-    memory = get_memory()
-
-    if memory.is_initialized:
-        return {
-            "status": "error",
-            "message": "El proyecto ya esta inicializado. Directorio .hu-memory/ ya existe.",
-            "path": str(memory.memory_path),
-        }
-
-    try:
-        config = ProjectConfig(**config_dict)
-    except Exception as e:
-        return {"status": "error", "message": f"Configuracion invalida: {e}"}
-
-    try:
-        memory.init_project(config)
-        return {
-            "status": "success",
-            "project_name": config.project_name,
-            "domain": config.domain,
-            "stakeholders": config.stakeholders,
-            "memory_path": str(memory.memory_path),
-            "message": (
-                f"Proyecto '{config.project_name}' inicializado (modo legacy). "
-                f"Memoria local creada en .hu-memory/."
-            ),
-        }
-    except Exception as e:
-        logger.exception("Error inicializando proyecto")
-        return {"status": "error", "message": f"Error: {e}"}
 
 
 def handle_get_project_summary() -> dict:

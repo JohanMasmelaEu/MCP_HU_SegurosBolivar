@@ -27,6 +27,9 @@ from src.engine.ecosystem_visualizer import (
     route_eco_flows,
     route_eco_app_detail,
     route_eco_health,
+    route_constellation_graph,
+    route_constellation_spec_detail,
+    route_constellation_gaps,
 )
 
 logger = logging.getLogger("mcp_hu.engine.visualizer")
@@ -273,6 +276,10 @@ app = Starlette(routes=[
     Route("/api/eco/flows/{ecosystem_id}/{app_a}/{app_b}", route_eco_flows),
     Route("/api/eco/app/{ecosystem_id}/{app_id}", route_eco_app_detail),
     Route("/api/eco/health/{ecosystem_id}", route_eco_health),
+    # ─── Constellation Visualizer ─────────────────────────────────────────────
+    Route("/api/constellation/{ecosystem_id}", route_constellation_graph),
+    Route("/api/constellation/{ecosystem_id}/spec/{spec_id}", route_constellation_spec_detail),
+    Route("/api/constellation/{ecosystem_id}/gaps", route_constellation_gaps),
 ])
 
 

@@ -110,6 +110,33 @@ def handle_analyze_story(story_text: str) -> dict:
     except (RuntimeError, Exception):
         pass
 
+    # Obtener spec context si hay SpecEngine disponible
+    spec_context: dict = {"available": False}
+    try:
+        from src.engine.spec_engine import get_spec_engine
+
+        spec_engine = get_spec_engine()
+        if spec_engine:
+            current_app_id = None
+            if memory.index and memory.index.config.app_id:
+                current_app_id = memory.index.config.app_id
+            if current_app_id:
+                specs = spec_engine.list_specs()
+                linked_spec = next((s for s in specs if s.get("app_id") == current_app_id), None)
+                if linked_spec:
+                    spec_data = spec_engine.get_spec(linked_spec["spec_id"])
+                    if spec_data:
+                        spec_context = {
+                            "available": True,
+                            "spec_id": spec_data.spec_id,
+                            "status": spec_data.status,
+                            "layers_with_content": [l for l, c in spec_data.layers.items() if c.summary],
+                            "constraints": {l: c.constraints for l, c in spec_data.layers.items() if c.constraints},
+                            "rules_applied_count": len(spec_data.rules_applied),
+                        }
+    except Exception:
+        pass
+
     return {
         "status": "success",
         "suggested_id": next_id,
@@ -118,6 +145,7 @@ def handle_analyze_story(story_text: str) -> dict:
         "expert_contexts": expert_contexts,
         "relevant_stories": relevant_context,
         "cross_app_context": cross_app_context,
+        "spec_context": spec_context,
         "known_entities": [e.name for e in memory.get_entities()],
         "known_flows": [f.name for f in memory.get_flows()],
         "instructions_for_llm": (
@@ -129,7 +157,8 @@ def handle_analyze_story(story_text: str) -> dict:
             "Asigna complexity_tags y dependencies basado en relevant_stories. "
             "Respeta las entidades y flujos ya existentes en el proyecto (known_entities, known_flows). "
             "Si cross_app_context esta disponible, considera entidades compartidas, contratos "
-            "y otras apps que tocan las mismas entidades para detectar riesgos de integracion."
+            "y otras apps que tocan las mismas entidades para detectar riesgos de integracion. "
+            "Si spec_context está disponible, valida que la HU no viole constraints definidos en las capas del spec."
         ),
         "output_schema": {
             "id": next_id,
@@ -310,6 +339,9 @@ def handle_get_expert_analysis(story_id: str, expert: str) -> dict:
 def handle_explain_for_stakeholder(story_id: str, role: str) -> dict:
     """Reformula una HU para un stakeholder especifico.
 
+    Si hay una spec vinculada al proyecto actual, filtra la explicación
+    según la RoleDepthMatrix para mostrar solo capas relevantes al rol.
+
     Args:
         story_id: ID de la HU.
         role: Rol del stakeholder.
@@ -405,7 +437,28 @@ def handle_explain_for_stakeholder(story_id: str, role: str) -> dict:
 
     role_info = role_focus[role]
 
-    return {
+    # Enriquecer con spec context si hay spec vinculada
+    spec_layers_for_role: dict = {}
+    try:
+        from src.engine.spec_engine import get_spec_engine
+        from src.models.sdd import DEFAULT_ROLE_DEPTH
+
+        spec_engine = get_spec_engine()
+        if spec_engine:
+            current_app_id = None
+            if memory.index and memory.index.config.app_id:
+                current_app_id = memory.index.config.app_id
+            if current_app_id:
+                specs = spec_engine.list_specs()
+                linked_spec = next((s for s in specs if s.get("app_id") == current_app_id), None)
+                if linked_spec:
+                    filtered = spec_engine.get_spec_for_role(linked_spec["spec_id"], role)
+                    if filtered:
+                        spec_layers_for_role = filtered.get("layers", {})
+    except Exception:
+        pass
+
+    result = {
         "status": "success",
         "story_id": story_id,
         "story_title": story.title,
@@ -422,6 +475,15 @@ def handle_explain_for_stakeholder(story_id: str, role: str) -> dict:
             f"Estructura: resumen, que construir/validar, contratos relevantes, edge cases para ese rol."
         ),
     }
+
+    if spec_layers_for_role:
+        result["spec_context_for_role"] = spec_layers_for_role
+        result["instructions_for_llm"] += (
+            " Si spec_context_for_role está disponible, incluye constraints y decisiones "
+            "relevantes de las capas visibles para este rol."
+        )
+
+    return result
 
 
 def _extract_keywords_from_text(text: str) -> list[str]:

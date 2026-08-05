@@ -825,3 +825,110 @@ def _get_ecosystem_engine(ecosystem_id: str) -> Optional[EcosystemEngine]:
         return None
 
     return engine
+
+
+# ─── CONSTELLATION ROUTES ────────────────────────────────────────────────────────
+
+
+async def route_constellation_graph(request: Request) -> JSONResponse:
+    """API: grafo de constelación de specs.
+
+    GET /api/constellation/{ecosystem_id}
+    Retorna nodos (specs) y edges (dependencias) en formato Cytoscape.js.
+    """
+    ecosystem_id = request.path_params.get("ecosystem_id", "")
+    engine = _get_ecosystem_engine(ecosystem_id)
+
+    if not engine:
+        return JSONResponse(
+            {"error": f"Ecosistema '{ecosystem_id}' no encontrado."},
+            status_code=404,
+        )
+
+    from src.engine.constellation import ConstellationEngine
+    from src.engine.spec_engine import get_spec_engine
+
+    spec_engine = get_spec_engine()
+    if not spec_engine:
+        return JSONResponse(
+            {"error": "SpecEngine no disponible."},
+            status_code=500,
+        )
+
+    constellation = ConstellationEngine(engine, spec_engine)
+    graph = constellation.build_constellation()
+
+    return JSONResponse({
+        "ecosystem_id": ecosystem_id,
+        "total_nodes": len(graph["nodes"]),
+        "total_edges": len(graph["edges"]),
+        "nodes": graph["nodes"],
+        "edges": graph["edges"],
+    })
+
+
+async def route_constellation_spec_detail(request: Request) -> JSONResponse:
+    """API: detalle de una spec en la constelación.
+
+    GET /api/constellation/{ecosystem_id}/spec/{spec_id}?role=optional
+    Si role viene como query param, filtra por profundidad usando RoleDepthMatrix.
+    """
+    ecosystem_id = request.path_params.get("ecosystem_id", "")
+    spec_id = request.path_params.get("spec_id", "")
+    role = request.query_params.get("role", "")
+
+    engine = _get_ecosystem_engine(ecosystem_id)
+    if not engine:
+        return JSONResponse(
+            {"error": f"Ecosistema '{ecosystem_id}' no encontrado."},
+            status_code=404,
+        )
+
+    from src.engine.spec_engine import get_spec_engine
+
+    spec_engine = get_spec_engine()
+    if not spec_engine:
+        return JSONResponse({"error": "SpecEngine no disponible."}, status_code=500)
+
+    if role:
+        result = spec_engine.get_spec_for_role(spec_id, role)
+        if not result:
+            return JSONResponse({"error": f"Spec '{spec_id}' no encontrada."}, status_code=404)
+        return JSONResponse(result)
+
+    spec = spec_engine.get_spec(spec_id)
+    if not spec:
+        return JSONResponse({"error": f"Spec '{spec_id}' no encontrada."}, status_code=404)
+
+    return JSONResponse(spec.model_dump(mode="json"))
+
+
+async def route_constellation_gaps(request: Request) -> JSONResponse:
+    """API: gaps detectados en la constelación.
+
+    GET /api/constellation/{ecosystem_id}/gaps
+    """
+    ecosystem_id = request.path_params.get("ecosystem_id", "")
+    engine = _get_ecosystem_engine(ecosystem_id)
+
+    if not engine:
+        return JSONResponse(
+            {"error": f"Ecosistema '{ecosystem_id}' no encontrado."},
+            status_code=404,
+        )
+
+    from src.engine.constellation import ConstellationEngine
+    from src.engine.spec_engine import get_spec_engine
+
+    spec_engine = get_spec_engine()
+    if not spec_engine:
+        return JSONResponse({"error": "SpecEngine no disponible."}, status_code=500)
+
+    constellation = ConstellationEngine(engine, spec_engine)
+    gaps = constellation.detect_gaps()
+
+    return JSONResponse({
+        "ecosystem_id": ecosystem_id,
+        "total_gaps": len(gaps),
+        "gaps": gaps,
+    })

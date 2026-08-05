@@ -724,7 +724,8 @@ body::before {
 <body>
 <nav class="view-selector">
   <a href="/" class="view-tab">Red Neuronal</a>
-  <a href="/ecosystem" class="view-tab active">Ecosistema</a>
+  <a href="/ecosystem" class="view-tab active" onclick="showEcosystem(); return false;">Ecosistema</a>
+  <a href="/ecosystem#constellation" class="view-tab" id="tab-constellation" onclick="showConstellation(event)">Constelación</a>
 </nav>
 
 <div id="toolbar" class="glass-panel">
@@ -1789,6 +1790,131 @@ function escapeHtml(str) {
 function escapeAttr(str) {
   return String(str).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+// ─── CONSTELLATION VIEW ─────────────────────────────────────────────────────────
+
+let constellationCy = null;
+let constellationVisible = false;
+
+function showConstellation(event) {
+  if (event) event.preventDefault();
+  
+  // Toggle visibility
+  const ecoContainer = document.getElementById('cy');
+  const conContainer = document.getElementById('cy-constellation');
+  const toolbar = document.getElementById('toolbar');
+  
+  if (!conContainer) return;
+  
+  // Update tab states
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-constellation').classList.add('active');
+  
+  if (ecoContainer) ecoContainer.style.display = 'none';
+  conContainer.style.display = 'block';
+  if (toolbar) toolbar.style.display = 'none';
+  
+  constellationVisible = true;
+  loadConstellation();
+}
+
+function showEcosystem() {
+  const ecoContainer = document.getElementById('cy');
+  const conContainer = document.getElementById('cy-constellation');
+  const toolbar = document.getElementById('toolbar');
+  
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.view-tab')[1].classList.add('active');
+  
+  if (ecoContainer) ecoContainer.style.display = 'block';
+  if (conContainer) conContainer.style.display = 'none';
+  if (toolbar) toolbar.style.display = 'flex';
+  
+  constellationVisible = false;
+}
+
+async function loadConstellation() {
+  const sel = document.getElementById('selectorEcosystem');
+  const ecosystemId = sel ? sel.value : '';
+  if (!ecosystemId) return;
+  
+  try {
+    const res = await fetch('/api/constellation/' + encodeURIComponent(ecosystemId));
+    const data = await res.json();
+    if (data.error) { console.error(data.error); return; }
+    renderConstellation(data);
+  } catch (e) { console.error('Error loading constellation:', e); }
+}
+
+function renderConstellation(data) {
+  const container = document.getElementById('cy-constellation');
+  if (!container) return;
+  
+  if (constellationCy) constellationCy.destroy();
+  
+  constellationCy = cytoscape({
+    container: container,
+    elements: { nodes: data.nodes || [], edges: data.edges || [] },
+    style: [
+      { selector: 'node', style: {
+        'label': 'data(label)', 'text-valign': 'center', 'text-halign': 'center',
+        'font-size': '11px', 'font-weight': '500', 'color': '#fff',
+        'width': 60, 'height': 60, 'text-wrap': 'wrap', 'text-max-width': '80px',
+        'background-color': '#1c1c1e', 'border-width': 2, 'border-color': '#0a84ff',
+      }},
+      { selector: 'node[?has_strategic]', style: { 'background-color': '#0a3d7a' }},
+      { selector: '.spec-approved', style: { 'border-style': 'solid', 'border-color': '#30d158' }},
+      { selector: '.spec-draft', style: { 'border-style': 'dashed', 'border-color': '#ff9f0a' }},
+      { selector: '.spec-superseded', style: { 'border-style': 'dotted', 'border-color': '#ff453a' }},
+      { selector: 'edge', style: {
+        'width': 2, 'curve-style': 'bezier', 'target-arrow-shape': 'triangle',
+        'target-arrow-color': '#555', 'line-color': '#555', 'opacity': 0.8,
+        'font-size': '9px', 'color': 'rgba(255,255,255,0.5)',
+      }},
+      { selector: '.dep-process', style: { 'line-color': '#0a84ff', 'target-arrow-color': '#0a84ff' }},
+      { selector: '.dep-data', style: { 'line-color': '#30d158', 'target-arrow-color': '#30d158' }},
+      { selector: '.dep-functional', style: { 'line-color': '#bf5af2', 'target-arrow-color': '#bf5af2' }},
+      { selector: '.maturity-reference', style: { 'line-style': 'dotted' }},
+      { selector: '.maturity-draft', style: { 'line-style': 'dashed' }},
+      { selector: '.maturity-formalized', style: { 'line-style': 'solid' }},
+    ],
+    layout: { name: 'cose-bilkent', animate: false, nodeDimensionsIncludeLabels: true, idealEdgeLength: 150 },
+  });
+  
+  constellationCy.on('tap', 'node', function(evt) {
+    const node = evt.target.data();
+    showConstellationDetail(node);
+  });
+}
+
+function showConstellationDetail(nodeData) {
+  let panel = document.getElementById('constellation-detail');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'constellation-detail';
+    panel.className = 'glass-panel';
+    panel.style.cssText = 'position:fixed;top:48px;right:16px;width:320px;max-height:calc(100vh - 80px);overflow-y:auto;z-index:95;padding:20px;font-size:12px;';
+    document.body.appendChild(panel);
+  }
+  
+  const layers = nodeData.layers_count || 0;
+  const rules = nodeData.rules_applied || 0;
+  const approvers = (nodeData.approved_by || []).join(', ') || 'Pendiente';
+  
+  panel.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+    + '<strong style="font-size:14px;">' + escapeHtml(nodeData.label) + '</strong>'
+    + '<span onclick="document.getElementById(\'constellation-detail\').remove()" style="cursor:pointer;opacity:0.5;">✕</span></div>'
+    + '<div style="color:var(--text-secondary);margin-bottom:8px;">ID: ' + escapeHtml(nodeData.id) + '</div>'
+    + '<div style="margin-bottom:4px;">Status: <span style="color:' + (nodeData.status === 'approved' ? 'var(--accent-green)' : 'var(--accent-orange)') + ';">' + escapeHtml(nodeData.status) + '</span></div>'
+    + '<div style="margin-bottom:4px;">Version: ' + escapeHtml(nodeData.version || '') + '</div>'
+    + '<div style="margin-bottom:4px;">Capas con contenido: ' + layers + '</div>'
+    + '<div style="margin-bottom:4px;">Reglas aplicadas: ' + rules + '</div>'
+    + '<div style="margin-bottom:4px;">Aprobado por: ' + escapeHtml(approvers) + '</div>'
+    + (nodeData.app_id ? '<div style="margin-bottom:4px;">App vinculada: ' + escapeHtml(nodeData.app_id) + '</div>' : '');
+}
 </script>
+
+<div id="cy-constellation" style="position:fixed;top:40px;left:0;right:0;bottom:0;display:none;z-index:1;"></div>
+
 </body>
 </html>

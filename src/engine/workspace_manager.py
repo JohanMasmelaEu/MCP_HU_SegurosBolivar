@@ -61,7 +61,6 @@ class WorkspaceManager:
         self._state: ServerState = self._load_state()
 
         self._workspaces_path.mkdir(parents=True, exist_ok=True)
-        self._migrate_legacy()
         self._restore_active()
 
     @property
@@ -268,31 +267,6 @@ class WorkspaceManager:
             json.dumps(self._state.model_dump(mode="json"), ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-
-    def _migrate_legacy(self) -> None:
-        """Migra estructura legacy (.hu-memory/ en raiz) al formato multi-workspace.
-
-        Si existe /workspace/.hu-memory/ (formato v1), lo mueve a
-        /workspace/workspaces/default/.hu-memory/.
-        """
-        legacy_memory_path = self._base_path / ".hu-memory"
-
-        if legacy_memory_path.exists() and legacy_memory_path.is_dir():
-            default_workspace = self._workspaces_path / "default"
-
-            if default_workspace.exists():
-                logger.info("Legacy .hu-memory/ encontrado pero workspace 'default' ya existe. Omitiendo migracion.")
-                return
-
-            default_workspace.mkdir(parents=True, exist_ok=True)
-            shutil.move(str(legacy_memory_path), str(default_workspace / ".hu-memory"))
-
-            # Activar el workspace migrado si no hay uno activo
-            if not self._state.active_workspace:
-                self._state.active_workspace = "default"
-                self._save_state()
-
-            logger.info("Legacy .hu-memory/ migrado a workspace 'default'")
 
     def _restore_active(self) -> None:
         """Restaura el workspace activo desde el estado persistido."""

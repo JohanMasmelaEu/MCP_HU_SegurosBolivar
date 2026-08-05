@@ -70,6 +70,9 @@ class AppRegistration(BaseModel):
         default="draft",
         description="Estado de madurez: formalized (completa), draft (en progreso), reference (solo referenciada)"
     )
+    spec_id: Optional[str] = Field(
+        default=None, description="ID del ProjectSpec vinculado a esta app"
+    )
     description: str = Field(default="", description="Descripcion de la app")
     team: str = Field(default="", description="Equipo responsable de la app")
     exposes_contracts: list[str] = Field(
@@ -128,6 +131,7 @@ class EcosystemRegistry(BaseModel):
     apps: list[AppRegistration] = Field(default_factory=list)
     contracts: list[ContractDefinition] = Field(default_factory=list)
     shared_entities: list[SharedEntity] = Field(default_factory=list)
+    specs: list[str] = Field(default_factory=list, description="spec_ids registrados en este ecosistema")
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
     updated_at: Optional[str] = None
 

@@ -14,6 +14,8 @@ from mcp.server.fastmcp import FastMCP
 
 from src.engine.workspace_manager import init_workspace_manager
 from src.engine.ecosystem_manager import init_ecosystem_manager
+from src.engine.rules_catalog import init_rules_catalog
+from src.engine.spec_engine import init_spec_engine
 from src.tools.project_tools import (
     handle_init_project,
     handle_get_project_summary,
@@ -52,6 +54,19 @@ from src.tools.workspace_tools import (
     handle_switch_ecosystem,
     handle_reset_ecosystem,
 )
+from src.tools.sdd_tools import (
+    handle_manage_rules_catalog,
+    handle_create_spec,
+    handle_update_spec_layer,
+    handle_approve_spec,
+    handle_get_spec,
+    handle_list_specs,
+    handle_get_constellation,
+    handle_add_spec_dependency,
+    handle_detect_constellation_gaps,
+    handle_export_spec_markdown,
+    handle_import_spec,
+)
 from src.tools.documentation_tools import (
     handle_generate_bitacora,
     handle_generate_daily_bitacora,
@@ -85,12 +100,13 @@ logger = logging.getLogger("mcp_hu")
 
 _ws_manager = init_workspace_manager()
 _eco_manager = init_ecosystem_manager()
+_rules_catalog = init_rules_catalog()
+_spec_engine = init_spec_engine()
 
-# Restaurar ecosistema activo: primero intenta desde state, luego desde migracion legacy
-_active_eco_id = _ws_manager.active_ecosystem_id or _eco_manager.migrated_ecosystem_id
+# Restaurar ecosistema activo desde state persistido
+_active_eco_id = _ws_manager.active_ecosystem_id
 if _active_eco_id:
     _eco_manager.restore_active(_active_eco_id)
-    _ws_manager.set_active_ecosystem(_active_eco_id)
 
 
 def _ensure_dict(value: Any) -> dict:
@@ -451,6 +467,159 @@ async def sync_ecosystem(app_id: str = "") -> str:
         app_id: ID de app especifica para sincronizar, o vacio para sincronizar todas.
     """
     result = handle_sync_ecosystem(app_id if app_id else "")
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+# ─── SDD: RULES & SPECS ──────────────────────────────────────────────────────────
+
+
+@mcp.tool()
+async def manage_rules_catalog(action: str, rule_data: dict = {}) -> str:
+    """Gestiona el catálogo de reglas transversales corporativas.
+
+    Permite agregar, listar, actualizar, eliminar y consultar reglas que aplican a capas SDD.
+
+    Args:
+        action: Acción: add, list, update, remove, get.
+        rule_data: Datos de la regla. Para 'list' puede incluir {category}. Para 'get'/'remove' requiere {rule_id}.
+    """
+    data = _ensure_dict(rule_data) if rule_data else None
+    result = handle_manage_rules_catalog(action, data)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def create_spec(spec_config: dict) -> str:
+    """Crea una nueva especificación de proyecto (ProjectSpec) bajo el modelo SDD.
+
+    Inicializa todas las capas SDD vacías y opcionalmente aplica reglas del catálogo.
+
+    Args:
+        spec_config: Objeto con spec_id, project_name, app_id (opcional), apply_rules (bool, default true).
+    """
+    config_dict = _ensure_dict(spec_config)
+    result = handle_create_spec(config_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def update_spec_layer(spec_id: str, layer: str, content: dict) -> str:
+    """Actualiza el contenido de una capa SDD en una spec.
+
+    Args:
+        spec_id: ID de la spec.
+        layer: Capa SDD (negocio, arquitectura, seguridad, gobierno_info, acceso_datos, datos, desarrollo, qa).
+        content: Objeto con summary, decisions (lista), constraints (lista), artifacts (lista).
+    """
+    content_dict = _ensure_dict(content)
+    result = handle_update_spec_layer(spec_id, layer, content_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def approve_spec(spec_id: str, approver: str) -> str:
+    """Aprueba una spec cambiando su status a 'approved'.
+
+    Args:
+        spec_id: ID de la spec a aprobar.
+        approver: Nombre o ID del aprobador.
+    """
+    result = handle_approve_spec(spec_id, approver)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def get_spec(spec_id: str, role: str = "") -> str:
+    """Obtiene una spec completa o filtrada por rol (profundidad según RoleDepthMatrix).
+
+    Si se proporciona role, solo muestra capas visibles para ese rol con el nivel de detalle correspondiente.
+
+    Args:
+        spec_id: ID de la spec.
+        role: Rol del stakeholder (opcional). Si vacío, retorna spec completa.
+    """
+    result = handle_get_spec(spec_id, role if role else None)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def list_specs() -> str:
+    """Lista resúmenes de todas las specs disponibles (id, nombre, status, versión)."""
+    result = handle_list_specs()
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def get_constellation(ecosystem_id: str = "", filter_type: str = "", filter_maturity: str = "") -> str:
+    """Obtiene el grafo de specs (constelación) con sus dependencias tipificadas.
+
+    Retorna nodos (specs) y edges (dependencias) en formato Cytoscape.js.
+
+    Args:
+        ecosystem_id: ID del ecosistema (opcional, usa activo si vacío).
+        filter_type: Filtrar edges por tipo de relación (process, data, functional). Vacío = todos.
+        filter_maturity: Filtrar edges por maturity (formalized, draft, reference). Vacío = todos.
+    """
+    result = handle_get_constellation(
+        ecosystem_id if ecosystem_id else None,
+        filter_type if filter_type else None,
+        filter_maturity if filter_maturity else None,
+    )
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def add_spec_dependency(spec_id: str, target_spec_id: str, dependency_type: str, description: str = "") -> str:
+    """Agrega una dependencia entre dos specs en la constelación.
+
+    Args:
+        spec_id: ID de la spec que depende.
+        target_spec_id: ID de la spec de la que se depende.
+        dependency_type: Tipo de relación: process, data, o functional.
+        description: Descripción opcional de la dependencia.
+    """
+    result = handle_add_spec_dependency(spec_id, target_spec_id, dependency_type, description)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def detect_constellation_gaps(ecosystem_id: str = "") -> str:
+    """Detecta gaps en la constelación de specs: huérfanas, referencias rotas, ciclos, apps sin spec.
+
+    Args:
+        ecosystem_id: ID del ecosistema (opcional, usa activo si vacío).
+    """
+    result = handle_detect_constellation_gaps(ecosystem_id if ecosystem_id else None)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def export_spec_markdown(spec_id: str, output_path: str = "") -> str:
+    """Exporta una spec como archivo Markdown estructurado.
+
+    Genera un documento con capas, decisiones, constraints, reglas y dependencias.
+    Si output_path se proporciona, guarda el archivo ahí. Si no, retorna el markdown.
+
+    Args:
+        spec_id: ID de la spec a exportar.
+        output_path: Ruta de salida (opcional). Vacío = retornar como string.
+    """
+    result = handle_export_spec_markdown(spec_id, output_path if output_path else None)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def import_spec(source_path: str, as_reference: bool = True) -> str:
+    """Importa specs desde un archivo Markdown o directorio de Markdowns.
+
+    Las specs importadas entran como draft/reference por defecto.
+    Detecta dependencias entre specs basado en el formato del markdown.
+
+    Args:
+        source_path: Ruta al archivo .md o directorio con archivos .md.
+        as_reference: Si true, specs importadas entran con maturity reference (default true).
+    """
+    result = handle_import_spec(source_path, as_reference)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 

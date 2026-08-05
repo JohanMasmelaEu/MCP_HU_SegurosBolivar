@@ -416,27 +416,27 @@ class MemoryEngine:
         return [w for w in words if len(w) > 2 and w not in stopwords]
 
 
-# ─── SINGLETON (LEGACY) ──────────────────────────────────────────────────────────
-# Se mantiene por backward-compatibility pero el WorkspaceManager es la interfaz preferida.
-
-_memory_instance: Optional[MemoryEngine] = None
+# ─── ACCESO VIA WORKSPACE MANAGER ────────────────────────────────────────────────
 
 
 def get_memory() -> MemoryEngine:
-    """Obtiene la instancia activa del MemoryEngine.
+    """Obtiene la instancia activa del MemoryEngine via WorkspaceManager.
 
-    Si hay un WorkspaceManager inicializado, delega a el.
-    De lo contrario, usa el patron singleton legacy.
+    Raises:
+        RuntimeError: Si el WorkspaceManager no esta inicializado o no hay workspace activo.
     """
     from src.engine.workspace_manager import get_workspace_manager
 
     manager = get_workspace_manager()
-    if manager is not None:
-        active = manager.get_active()
-        if active is not None:
-            return active
+    if manager is None:
+        raise RuntimeError(
+            "WorkspaceManager no disponible. El servidor no se inicializó correctamente."
+        )
 
-    global _memory_instance
-    if _memory_instance is None:
-        _memory_instance = MemoryEngine()
-    return _memory_instance
+    active = manager.get_active()
+    if active is None:
+        raise RuntimeError(
+            "No hay workspace activo. Usar init_project o switch_workspace primero."
+        )
+
+    return active

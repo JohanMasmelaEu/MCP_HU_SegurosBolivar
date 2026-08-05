@@ -34,58 +34,31 @@ def handle_init_ecosystem(config_dict: dict) -> dict:
 
     manager = get_ecosystem_manager()
 
-    if manager is not None:
-        # Nuevo flujo: usar EcosystemManager para multi-ecosistema
-        try:
-            engine = manager.create_ecosystem(ecosystem_id, name, description)
-            return {
-                "status": "success",
-                "ecosystem_id": ecosystem_id,
-                "name": name,
-                "path": str(engine.ecosystem_path),
-                "message": (
-                    f"Ecosistema '{name}' inicializado y activado. "
-                    f"Registra apps con register_app para comenzar a mapear dependencias."
-                ),
-            }
-        except ValueError as e:
-            # Ecosistema ya existe — ofrecer alternativas
-            return {
-                "status": "error",
-                "message": str(e),
-                "hint": (
-                    "Opciones disponibles:\n"
-                    "- switch_ecosystem: Activar el ecosistema existente.\n"
-                    "- reset_ecosystem: Eliminar y volver a crear.\n"
-                    "- list_ecosystems: Ver todos los ecosistemas disponibles."
-                ),
-            }
-        except Exception as e:
-            logger.exception("Error inicializando ecosistema")
-            return {"status": "error", "message": f"Error: {e}"}
-
-    # Fallback legacy: sin manager
-    ecosystem = get_ecosystem()
-
-    if ecosystem.is_initialized:
-        return {
-            "status": "error",
-            "message": (
-                "El ecosistema ya esta inicializado. "
-                f"Directorio: {ecosystem.ecosystem_path}"
-            ),
-        }
+    if not manager:
+        return {"status": "error", "message": "EcosystemManager no disponible. El servidor no se inicializó correctamente."}
 
     try:
-        ecosystem.init_ecosystem(ecosystem_id, name, description)
+        engine = manager.create_ecosystem(ecosystem_id, name, description)
         return {
             "status": "success",
             "ecosystem_id": ecosystem_id,
             "name": name,
-            "path": str(ecosystem.ecosystem_path),
+            "path": str(engine.ecosystem_path),
             "message": (
-                f"Ecosistema '{name}' inicializado. "
+                f"Ecosistema '{name}' inicializado y activado. "
                 f"Registra apps con register_app para comenzar a mapear dependencias."
+            ),
+        }
+    except ValueError as e:
+        # Ecosistema ya existe — ofrecer alternativas
+        return {
+            "status": "error",
+            "message": str(e),
+            "hint": (
+                "Opciones disponibles:\n"
+                "- switch_ecosystem: Activar el ecosistema existente.\n"
+                "- reset_ecosystem: Eliminar y volver a crear.\n"
+                "- list_ecosystems: Ver todos los ecosistemas disponibles."
             ),
         }
     except Exception as e:

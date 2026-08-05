@@ -329,6 +329,43 @@ class EcosystemEngine:
 
     # ─── CONTRACTS ───────────────────────────────────────────────────────────────
 
+    def link_app_to_spec(self, app_id: str, spec_id: str) -> bool:
+        """Vincula una app registrada a un ProjectSpec.
+
+        Actualiza el campo spec_id de la app y agrega el spec_id
+        a la lista de specs del registry.
+
+        Args:
+            app_id: ID de la app.
+            spec_id: ID del ProjectSpec.
+
+        Returns:
+            True si se vinculó exitosamente.
+        """
+        if not self._registry:
+            return False
+
+        app = self.get_app(app_id)
+        if not app:
+            return False
+
+        app.spec_id = spec_id
+
+        # Actualizar en la lista
+        for i, a in enumerate(self._registry.apps):
+            if a.app_id == app_id:
+                self._registry.apps[i] = app
+                break
+
+        if spec_id not in self._registry.specs:
+            self._registry.specs.append(spec_id)
+
+        self._save_app_snapshot(app)
+        self._registry.updated_at = datetime.now().isoformat()
+        self._save_registry()
+        logger.info("App '%s' vinculada a spec '%s'", app_id, spec_id)
+        return True
+
     def add_contract(self, contract: ContractDefinition) -> None:
         """Agrega o actualiza un contrato en el ecosistema.
 
