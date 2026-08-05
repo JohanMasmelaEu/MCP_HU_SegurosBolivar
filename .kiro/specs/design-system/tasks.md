@@ -254,6 +254,121 @@
 
 ---
 
+---
+
+## Fase 5 — Árbol Radial SVG para Constelación (referente SkillTree)
+
+> **Referencia obligatoria:** `design.md` secciones 10, 11
+> **Referente visual:** [SkillTree Map](https://skilltree.altari.ai/) — sección Audit Engine
+
+### T5.1 HTML: estructura del contenedor SVG + KPI + scan status
+- **Archivo:** `src/engine/ecosystem_visualizer_ui.html`
+- **Dónde:** Reemplazar `<div id="cy-constellation" ...>` (línea ~2339)
+- **Qué hacer:**
+  1. Eliminar `<div id="cy-constellation" style="position:fixed;top:40px;left:0;right:0;bottom:0;display:none;z-index:1;"></div>`
+  2. En su lugar, insertar la estructura HTML completa de `design.md` sección 10.2:
+     - `<div id="constellation-tree" class="constellation-tree-container">`
+     - Dentro: KPI counter (`constellation-kpi`), SVG (`constellation-svg` con viewBox 700×500), scan status (`scan-status`)
+  3. Mantener `<div id="constellation-detail">` tal cual (el panel de detalle sigue funcionando igual)
+- **Dependencia:** T0.1 (necesita variables CSS)
+
+### T5.2 CSS: estilos del árbol radial, KPI, scanning
+- **Archivo:** `src/engine/ecosystem_visualizer_ui.html`
+- **Dónde:** En el bloque `<style>`, después de los estilos de `.constellation-detail`
+- **Qué hacer:** Agregar TODOS los bloques CSS de `design.md` secciones 10.3, 10.5, 10.6, 10.7:
+  - `.constellation-tree-container` y `.constellation-tree-container.active`
+  - `#constellation-svg`
+  - `.tree-link` y `.tree-link.visible`
+  - `.tree-node`, `.tree-node.loaded`, `.tree-node:hover`
+  - `.tree-node-root`, `.tree-node-branch`, `.tree-node-leaf[data-status="..."]`
+  - `.tree-node-leaf.has-gaps` con `@keyframes pulseGlow` (3 repeticiones, NO infinite)
+  - `.tree-label`, `.tree-label-branch`, `.tree-label-root`
+  - `.constellation-kpi`, `.kpi-count`, `.kpi-total`, `.kpi-label`
+  - `.constellation-scan-status`, `.scan-dot`, `@keyframes blink` (6 repeticiones, NO infinite)
+  - `.tree-node-tooltip`
+- **Performance:** Verificar que `pulseGlow` y `blink` tienen repeticiones finitas (3 y 6 respectivamente). NO usar `infinite`.
+- **Light theme:** Agregar overrides en `@media (prefers-color-scheme: light)`:
+  - `.tree-node { fill: var(--surface); }`
+  - `.tree-label { fill: var(--text-secondary); }`
+  - `.constellation-kpi, .constellation-scan-status { background: var(--surface); }`
+- **Dependencia:** T5.1
+
+### T5.3 JS: función `renderConstellationTree(data)`
+- **Archivo:** `src/engine/ecosystem_visualizer_ui.html`
+- **Dónde:** Reemplazar la función `renderConstellation(data)` actual (~líneas 2250-2300)
+- **Qué hacer:**
+  1. Renombrar `renderConstellation` → `renderConstellationTree`
+  2. Implementar la lógica completa de `design.md` sección 10.4:
+     - Agrupar specs por `status` (approved, draft, superseded)
+     - Calcular posiciones radiales: centro (350,250), branchRadius=120, leafRadius=80
+     - Generar SVG: links (lines), nodes (circles), labels (text)
+     - Activar scanning animation con `requestAnimationFrame` + `classList.add`
+     - Actualizar KPI counter (`kpi-approved`, `kpi-total`)
+     - Event listeners: click en hojas → `showConstellationDetail()`, click en fondo → `hideConstellationDetail()`
+  3. Eliminar toda referencia a `constellationCy` (la variable Cytoscape):
+     - Eliminar `let constellationCy = null;`
+     - Eliminar `if (constellationCy) constellationCy.destroy();`
+  4. Actualizar `loadConstellation()` para llamar a `renderConstellationTree(data)` en vez de `renderConstellation(data)`
+- **Riesgos:**
+  - La función `escapeHtml()` ya existe — reutilizarla para los labels
+  - La función `showConstellationDetail(nodeData)` ya existe y acepta el mismo shape de datos — reutilizarla sin cambios
+  - La función `collapseSmallNodes(data)` NO aplica al SVG tree (es para Cytoscape) — eliminar su llamada en este contexto
+- **Dependencia:** T5.1, T5.2
+
+### T5.4 JS: actualizar `showConstellation()` y `hideConstellation()` para usar el nuevo contenedor
+- **Archivo:** `src/engine/ecosystem_visualizer_ui.html`
+- **Dónde:** Funciones `showConstellation()` (~línea 2193) y `hideConstellation()` (~línea 2220)
+- **Qué hacer:**
+  1. En `showConstellation()`:
+     - Cambiar `getElementById('cy-constellation')` → `getElementById('constellation-tree')`
+     - Cambiar `container.style.display = 'block'` → `container.classList.add('active')`
+  2. En `hideConstellation()`:
+     - Cambiar `getElementById('cy-constellation')` → `getElementById('constellation-tree')`
+     - Cambiar `container.style.display = 'none'` → `container.classList.remove('active')`
+  3. Eliminar la llamada a `showLoading('cy-constellation')` y `hideLoading('cy-constellation')` — el SVG tree tiene su propia animación de scanning
+- **Dependencia:** T5.1
+
+### T5.5 JS: hover tooltip en nodos hoja del árbol
+- **Archivo:** `src/engine/ecosystem_visualizer_ui.html`
+- **Dónde:** Dentro de `renderConstellationTree()`, después de los event listeners de click
+- **Qué hacer:**
+  1. Agregar un `<div id="tree-tooltip" class="tree-node-tooltip"></div>` al HTML (dentro de `.constellation-tree-container`)
+  2. En `renderConstellationTree()`, agregar `mouseenter`/`mouseleave` en `.tree-node-leaf`:
+     ```javascript
+     node.addEventListener('mouseenter', function(evt) {
+       var specId = this.getAttribute('data-spec-id');
+       var spec = nodes.find(function(n) { return n.id === specId; });
+       if (!spec) return;
+       var tooltip = document.getElementById('tree-tooltip');
+       var statusLabel = UI_LABELS.health[spec.status] || spec.status;
+       tooltip.innerHTML = '<strong>' + escapeHtml(spec.label) + '</strong><br>'
+         + 'Estado: ' + statusLabel + ' · Capas: ' + spec.layers_count;
+       tooltip.style.left = (evt.clientX + 12) + 'px';
+       tooltip.style.top = (evt.clientY - 8) + 'px';
+       tooltip.classList.add('visible');
+     });
+     node.addEventListener('mouseleave', function() {
+       document.getElementById('tree-tooltip').classList.remove('visible');
+     });
+     ```
+  3. Usar `UI_LABELS` para traducir el status al español
+- **Dependencia:** T5.3, T0.3 (necesita UI_LABELS)
+
+### T5.6 Limpieza: eliminar código Cytoscape de constelación
+- **Archivo:** `src/engine/ecosystem_visualizer_ui.html`
+- **Qué hacer:** Una vez verificado que el árbol SVG funciona correctamente:
+  1. Eliminar la variable `let constellationCy = null;`
+  2. Eliminar la función `renderConstellation(data)` original (si no fue reemplazada en T5.3)
+  3. Eliminar los estilos Cytoscape de constelación del array `NLVS_NODE_BASE` usage (solo los de constelación, mantener los de ecosistema)
+  4. Verificar que el import de Cytoscape NO se removió — sigue siendo necesario para la vista Ecosistema (macro/micro)
+- **IMPORTANTE:** NO eliminar:
+  - `cytoscape.min.js` y plugins — los usa la vista Ecosistema
+  - `NLVS_NODE_BASE`, `NLVS_EDGE_BASE`, `NLVS_HEALTH_COLORS` — los usa la vista Ecosistema
+  - `macroStyles`, `macroLayout` — son de la vista Ecosistema
+- **Dependencia:** T5.3, T5.4, T5.5 (todas las tareas de SVG completadas y verificadas)
+
+---
+
 ## Orden de ejecución
 
 ```
@@ -266,9 +381,11 @@ Fase 2: T2.1 → T2.2 → T2.3 → T2.4 → T2.5 → T2.6
 Fase 3: T3.1 → T3.2 → T3.3 → T3.4 → T3.5
          ↓
 Fase 4: T4.1 → T4.2
+         ↓
+Fase 5: T5.1 → T5.2 → T5.3 → T5.4 → T5.5 → T5.6
 ```
 
-**Fase 0 es prerequisito de todo.** Las Fases 1-3 pueden ejecutarse en paralelo si se desea, pero el orden recomendado es secuencial para evitar conflictos de merge en el mismo archivo.
+**Fase 0 es prerequisito de todo.** Las Fases 1-3 pueden ejecutarse en paralelo si se desea, pero el orden recomendado es secuencial para evitar conflictos de merge en el mismo archivo. **Fase 5 depende de Fase 0 (tokens CSS) y T0.3 (UI_LABELS) pero puede ejecutarse en paralelo con Fases 2-4** si se desea priorizar el árbol SVG.
 
 ## Resumen de impacto
 
@@ -278,4 +395,5 @@ Fase 4: T4.1 → T4.2
 | 1 | 4 | Toolbar wrap + español + accesibilidad + panel constellation | Medio — toca HTML y JS |
 | 2 | 6 | Componentes NLVS: glass, botones, panel, cards, toolbar, fondo | Medio — cambios CSS significativos |
 | 3 | 5 | Skeleton, toast, cursor, leyenda, padding | Bajo — polish puntual |
-| 4 | 2 | Cytoscape unificado | Bajo — solo estilos JS |
+| 4 | 2 | Cytoscape unificado (solo vista Ecosistema) | Bajo — solo estilos JS |
+| 5 | 6 | **SVG radial tree para constelación** + KPI + scanning + cleanup | **Alto — reemplaza motor de rendering** |

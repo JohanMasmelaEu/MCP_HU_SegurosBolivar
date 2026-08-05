@@ -476,8 +476,14 @@ const NLVS_HEALTH_COLORS = {
 }}
 ```
 
-### Constelación
+### Constelación (DEPRECADO — migrar a SVG radial)
+
+> **⚠️ A partir de v1.1.0, la constelación usa SVG radial tree (sección 10), NO Cytoscape.**
+> Los estilos Cytoscape de abajo se mantienen solo como referencia durante la migración.
+> Una vez completada la migración (Fase 5 en tasks.md), eliminar esta sección.
+
 ```javascript
+/* DEPRECADO — usar renderConstellationTree() de sección 10.4 en su lugar */
 /* Nodos: 140×70, misma paleta, misma forma */
 { selector: 'node', style: {
   ...NLVS_NODE_BASE,
@@ -728,8 +734,486 @@ static/vendor/                     ← Dependencias JS bundleadas (NO CDN)
 
 ---
 
-## 10. Versionado del design system
+## 10. Referente Visual — Árbol Radial SVG (SkillTree)
+
+> Referente: [SkillTree Map](https://skilltree.altari.ai/) — sección "Audit Engine" (árbol radial SVG)
+>
+> La constelación de specs DEBE renderizarse como SVG radial tree en vez de Cytoscape.
+> Cytoscape permanece solo para la vista Ecosistema (macro/micro graph).
+
+### 10.1 Arquitectura del árbol
+
+El árbol radial tiene 3 niveles jerárquicos:
+
+| Nivel | Qué representa | Radio SVG | Color base |
+|-------|----------------|-----------|------------|
+| **Raíz** (1 nodo central) | El ecosistema | `r=10` | `var(--accent-blue)` |
+| **Ramas** (agrupadores) | Categorías de specs (por status o por capa SDD) | `r=6` | `var(--text-tertiary)` surface |
+| **Hojas** (N nodos) | Cada ProjectSpec individual | `r=4` | Por status: approved=green, draft=orange, superseded=red |
+
+**Agrupación de specs en ramas:** Agrupar por `status` del spec:
+- Rama "Aprobados" → specs con `status: 'approved'`
+- Rama "Borradores" → specs con `status: 'draft'`
+- Rama "Supersedidos" → specs con `status: 'superseded'`
+
+Si una rama tiene 0 specs, no se renderiza. Si hay más de 8 hojas en una rama, distribuir en sub-ramas de máximo 8.
+
+### 10.2 Estructura SVG
+
+```html
+<div id="constellation-tree" class="constellation-tree-container">
+  <!-- KPI Counter (P5) -->
+  <div class="constellation-kpi">
+    <span class="kpi-count" id="kpi-approved">0</span>
+    <span class="kpi-label">de</span>
+    <span class="kpi-total" id="kpi-total">0</span>
+    <span class="kpi-label">specs aprobadas</span>
+  </div>
+
+  <svg id="constellation-svg" viewBox="0 0 700 500" preserveAspectRatio="xMidYMid meet">
+    <g class="tree-links"><!-- líneas conectoras --></g>
+    <g class="tree-nodes"><!-- círculos: raíz, ramas, hojas --></g>
+    <g class="tree-labels"><!-- texto de cada spec --></g>
+  </svg>
+
+  <!-- Scanning status (P4) -->
+  <div class="constellation-scan-status" id="scan-status">
+    <span class="scan-dot"></span>
+    <span class="scan-text">Analizando ecosistema…</span>
+  </div>
+</div>
+```
+
+### 10.3 CSS del árbol radial
+
+```css
+/* ─── Contenedor del árbol ─── */
+.constellation-tree-container {
+  position: fixed; top: 40px; left: 0; right: 0; bottom: 0;
+  display: none; z-index: 1;
+  background: var(--bg);
+  overflow: hidden;
+}
+.constellation-tree-container.active { display: block; }
+
+/* ─── SVG Tree ─── */
+#constellation-svg {
+  width: 100%; height: 100%;
+}
+
+/* ─── Links (líneas conectoras) ─── */
+.tree-link {
+  stroke: var(--surface-border);
+  stroke-width: 1;
+  fill: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.tree-link.visible { opacity: 1; }
+
+/* ─── Nodos ─── */
+.tree-node {
+  fill: var(--surface);
+  stroke: var(--surface-border);
+  stroke-width: 1;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.6);
+  transform-origin: center;
+  transition: opacity 0.4s ease, transform 0.4s ease, fill 0.3s ease, filter 0.3s ease;
+}
+.tree-node.loaded {
+  opacity: 1;
+  transform: scale(1);
+}
+.tree-node:hover {
+  stroke-width: 1.5;
+  filter: brightness(1.2);
+}
+
+/* ─── Nodo raíz (ecosistema) ─── */
+.tree-node-root {
+  fill: var(--accent-blue);
+  stroke: rgba(10,132,255,0.5);
+  stroke-width: 1.5;
+}
+
+/* ─── Nodos rama (agrupadores) ─── */
+.tree-node-branch {
+  fill: var(--surface-elevated);
+  stroke: var(--surface-border-hover);
+}
+
+/* ─── Nodos hoja (specs) — color por status ─── */
+.tree-node-leaf[data-status="approved"] {
+  fill: var(--accent-green);
+  stroke: rgba(48,209,88,0.5);
+}
+.tree-node-leaf[data-status="draft"] {
+  fill: var(--accent-orange);
+  stroke: rgba(255,159,10,0.5);
+}
+.tree-node-leaf[data-status="superseded"] {
+  fill: var(--accent-red);
+  stroke: rgba(255,69,58,0.5);
+}
+
+/* ─── P3: Glow semántico — solo en specs con gaps/alertas ─── */
+.tree-node-leaf.has-gaps {
+  filter: drop-shadow(0 0 6px var(--accent-orange));
+  animation: pulseGlow 2s ease-in-out 3; /* 3 repeticiones, NO infinite */
+}
+@keyframes pulseGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px var(--accent-orange)); }
+  50% { filter: drop-shadow(0 0 12px var(--accent-orange)); }
+}
+
+/* ─── Labels ─── */
+.tree-label {
+  font-family: system-ui, -apple-system, sans-serif; /* NO serif como SkillTree */
+  font-size: 9px;
+  fill: var(--text-secondary);
+  text-anchor: middle;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.tree-label.visible { opacity: 1; }
+.tree-label-branch {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  fill: var(--text-tertiary);
+}
+.tree-label-root {
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--text-primary);
+}
+```
+
+### 10.4 JS del árbol radial — Lógica de renderizado
+
+```javascript
+/**
+ * Renderiza la constelación como SVG radial tree.
+ * Reemplaza completamente el renderizado con Cytoscape para esta vista.
+ *
+ * @param {Object} data - Respuesta de /api/constellation/{id}
+ *   data.nodes: [{data: {id, label, status, layers_count, has_strategic, approved_by, app_id}}]
+ *   data.edges: [{data: {source, target, dependency_type, maturity}}]
+ */
+function renderConstellationTree(data) {
+  const svg = document.getElementById('constellation-svg');
+  if (!svg) return;
+
+  // Limpiar SVG previo
+  svg.querySelector('.tree-links').innerHTML = '';
+  svg.querySelector('.tree-nodes').innerHTML = '';
+  svg.querySelector('.tree-labels').innerHTML = '';
+
+  const nodes = (data.nodes || []).map(n => n.data);
+  const totalSpecs = nodes.length;
+  const approved = nodes.filter(n => n.status === 'approved').length;
+
+  // Actualizar KPI (P5)
+  document.getElementById('kpi-approved').textContent = approved;
+  document.getElementById('kpi-total').textContent = totalSpecs;
+
+  // Agrupar specs por status → ramas
+  const groups = {};
+  const groupLabels = { approved: 'Aprobados', draft: 'Borradores', superseded: 'Supersedidos' };
+  nodes.forEach(function(n) {
+    const key = n.status || 'draft';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(n);
+  });
+
+  const branchKeys = Object.keys(groups).filter(k => groups[k].length > 0);
+  const cx = 350, cy = 250; // Centro del SVG (viewBox 700×500)
+  const branchRadius = 120;  // Distancia raíz → rama
+  const leafRadius = 80;     // Distancia rama → hoja
+
+  // Calcular posiciones radiales de las ramas
+  const branches = branchKeys.map(function(key, i) {
+    const angle = (2 * Math.PI * i / branchKeys.length) - Math.PI / 2;
+    return {
+      key: key,
+      label: groupLabels[key] || key,
+      x: cx + branchRadius * Math.cos(angle),
+      y: cy + branchRadius * Math.sin(angle),
+      angle: angle,
+      specs: groups[key],
+    };
+  });
+
+  // Generar SVG elements
+  var linksHtml = '';
+  var nodesHtml = '';
+  var labelsHtml = '';
+  var animIndex = 0;
+
+  // Raíz → Ramas (links)
+  branches.forEach(function(b) {
+    linksHtml += '<line class="tree-link" x1="' + cx + '" y1="' + cy
+      + '" x2="' + b.x + '" y2="' + b.y + '" style="transition-delay:'
+      + (animIndex * 30) + 'ms" />';
+  });
+
+  // Rama → Hojas (links + positions)
+  branches.forEach(function(b) {
+    var leafCount = b.specs.length;
+    var spreadAngle = Math.min(Math.PI * 0.6, leafCount * 0.25); // Ángulo de apertura
+
+    b.specs.forEach(function(spec, j) {
+      var leafAngle = b.angle - spreadAngle / 2 + (spreadAngle * j / Math.max(1, leafCount - 1));
+      if (leafCount === 1) leafAngle = b.angle;
+      spec._x = b.x + leafRadius * Math.cos(leafAngle);
+      spec._y = b.y + leafRadius * Math.sin(leafAngle);
+      spec._animDelay = (animIndex + j + 1) * 30;
+
+      linksHtml += '<line class="tree-link" x1="' + b.x + '" y1="' + b.y
+        + '" x2="' + spec._x + '" y2="' + spec._y + '" style="transition-delay:'
+        + spec._animDelay + 'ms" />';
+    });
+    animIndex += leafCount + 1;
+  });
+
+  // Nodo raíz
+  nodesHtml += '<circle class="tree-node tree-node-root" cx="' + cx + '" cy="' + cy
+    + '" r="10" style="transition-delay:0ms" />';
+  labelsHtml += '<text class="tree-label tree-label-root" x="' + cx + '" y="' + (cy + 24)
+    + '" style="transition-delay:50ms">Ecosistema</text>';
+
+  // Nodos rama + labels
+  branches.forEach(function(b, i) {
+    var delay = (i + 1) * 60;
+    nodesHtml += '<circle class="tree-node tree-node-branch" cx="' + b.x + '" cy="' + b.y
+      + '" r="6" style="transition-delay:' + delay + 'ms" />';
+
+    // Label posicionado fuera del radio
+    var labelX = cx + (branchRadius + 20) * Math.cos(b.angle);
+    var labelY = cy + (branchRadius + 20) * Math.sin(b.angle);
+    labelsHtml += '<text class="tree-label tree-label-branch" x="' + labelX + '" y="' + labelY
+      + '" style="transition-delay:' + (delay + 30) + 'ms">'
+      + b.label + ' (' + b.specs.length + ')</text>';
+  });
+
+  // Nodos hoja + labels
+  branches.forEach(function(b) {
+    b.specs.forEach(function(spec) {
+      var gapClass = spec.layers_count === 0 ? ' has-gaps' : '';
+      nodesHtml += '<circle class="tree-node tree-node-leaf' + gapClass
+        + '" cx="' + spec._x + '" cy="' + spec._y + '" r="4" data-status="'
+        + spec.status + '" data-spec-id="' + spec.id
+        + '" style="transition-delay:' + spec._animDelay + 'ms" />';
+
+      labelsHtml += '<text class="tree-label" x="' + spec._x + '" y="' + (spec._y + 14)
+        + '" style="transition-delay:' + (spec._animDelay + 20) + 'ms">'
+        + escapeHtml(spec.label.substring(0, 18)) + '</text>';
+    });
+  });
+
+  // Insertar en SVG
+  svg.querySelector('.tree-links').innerHTML = linksHtml;
+  svg.querySelector('.tree-nodes').innerHTML = nodesHtml;
+  svg.querySelector('.tree-labels').innerHTML = labelsHtml;
+
+  // P4: Scanning animation — activar secuencialmente
+  requestAnimationFrame(function() {
+    // Mostrar scan status
+    var scanEl = document.getElementById('scan-status');
+    if (scanEl) scanEl.classList.add('active');
+
+    // Activar todos los elementos con su delay de transición
+    svg.querySelectorAll('.tree-link').forEach(function(el) { el.classList.add('visible'); });
+    svg.querySelectorAll('.tree-node').forEach(function(el) { el.classList.add('loaded'); });
+    svg.querySelectorAll('.tree-label').forEach(function(el) { el.classList.add('visible'); });
+
+    // Ocultar scan status después de la última animación
+    var maxDelay = animIndex * 30 + 400;
+    setTimeout(function() {
+      if (scanEl) scanEl.classList.remove('active');
+    }, maxDelay);
+  });
+
+  // Click handler en hojas → detalle
+  svg.querySelectorAll('.tree-node-leaf').forEach(function(node) {
+    node.addEventListener('click', function() {
+      var specId = this.getAttribute('data-spec-id');
+      var specData = nodes.find(function(n) { return n.id === specId; });
+      if (specData) showConstellationDetail(specData);
+    });
+  });
+
+  // Click en fondo → cerrar detalle
+  svg.addEventListener('click', function(evt) {
+    if (evt.target === svg || evt.target.tagName === 'svg') {
+      hideConstellationDetail();
+    }
+  });
+}
+```
+
+### 10.5 KPI Counter (P5)
+
+```css
+.constellation-kpi {
+  position: absolute;
+  top: 16px; left: 24px;
+  z-index: 10;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  box-shadow: var(--neo-raised);
+}
+.kpi-count {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+.kpi-total {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.kpi-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+```
+
+### 10.6 Scanning Status (P4)
+
+```css
+.constellation-scan-status {
+  position: absolute;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  box-shadow: var(--neo-raised);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+.constellation-scan-status.active {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.scan-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: var(--sku-led-glow);
+  animation: blink 0.8s ease-in-out 6; /* 6 repeticiones, NO infinite */
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+```
+
+### 10.7 Hover tooltip en nodos del árbol
+
+```css
+.tree-node-tooltip {
+  position: absolute;
+  padding: 8px 12px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--text-primary);
+  box-shadow: var(--neo-raised);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 20;
+  max-width: 200px;
+  white-space: nowrap;
+}
+.tree-node-tooltip.visible { opacity: 1; }
+```
+
+**Hover en nodos hoja:** Mostrar tooltip con nombre completo del spec, status traducido, y cantidad de capas. Implementar con `mouseenter`/`mouseleave` sobre los `<circle>` del SVG. Posicionar el tooltip relativo al contenedor, no al SVG (para no perder fidelidad con el zoom).
+
+### 10.8 Beneficios del SVG vs Cytoscape para constelación
+
+| Aspecto | Cytoscape (antes) | SVG Radial (ahora) |
+|---------|-------------------|---------------------|
+| Peso librería | ~300KB (cytoscape + layout plugin) | 0KB (SVG nativo) |
+| Layout computation | cose-bilkent en cada render | Cálculo trigonométrico simple |
+| Animación | `animate: 'end'` (recalcula posiciones) | CSS transitions con delay (GPU compositing) |
+| Customización visual | Limitada a API de Cytoscape | CSS completo (gradients, filters, animations) |
+| Interactividad | Event system propio | DOM events nativos |
+| Accesibilidad | Nula (canvas interno) | `<title>`, `aria-label`, `tabindex` en SVG |
+| Consistencia NLVS | Difícil (API propia de estilos) | Natural (mismas CSS variables) |
+
+---
+
+## 11. Patrones de diseño importados del referente
+
+### 11.1 P3 — Glow semántico
+
+El glow (resplandor) NUNCA es decorativo. Solo se aplica a elementos que requieren atención:
+
+| Contexto | Cuándo aplicar glow | CSS |
+|----------|---------------------|-----|
+| Spec sin capas | `layers_count === 0` | `.has-gaps { filter: drop-shadow(...) }` |
+| App con conflictos | `health === 'red'` | `.health-red { box-shadow: 0 0 8px rgba(255,69,58,0.3) }` |
+| Dependencia rota | Edge a spec inexistente | `.broken-dep { stroke: var(--accent-red); stroke-dasharray: 4 4 }` |
+
+**NUNCA** aplicar glow a nodos saludables o para decorar.
+
+### 11.2 P4 — Scanning animation (entrada secuencial)
+
+Cuando la constelación carga, los nodos NO aparecen todos de golpe. Se activan secuencialmente:
+
+1. Nodo raíz aparece primero (delay: 0ms)
+2. Líneas raíz→ramas (delay: 60ms por rama)
+3. Nodos rama (delay: siguiendo las líneas)
+4. Líneas rama→hojas (delay: 30ms por hoja)
+5. Nodos hoja (delay: siguiendo las líneas)
+6. Labels (delay: +20ms después de su nodo)
+
+Implementación: CSS `transition-delay` calculado en JS, NO `setTimeout` loops ni `animation-delay` infinito.
+
+**Performance:** La animación total no debe exceder 2 segundos. Si hay más de 30 specs, reducir el delay por nodo para mantener el límite.
+
+### 11.3 P5 — Contador KPI
+
+Un badge siempre visible que muestra el estado resumido del ecosistema:
+
+```
+[3 de 8 specs aprobadas]
+```
+
+El contador se actualiza en cada render de la constelación. Si todas están aprobadas, cambiar color a `var(--accent-green)` completo. Si hay specs con gaps, mostrar un segundo badge:
+
+```
+[2 gaps detectados]
+```
+
+---
+
+## 12. Versionado del design system
 
 | Versión | Fecha | Cambios |
 |---------|-------|---------|
 | 1.0.0 | 2026-08-05 | Versión inicial: NLVS tokens, catálogo de componentes, performance budget, accesibilidad |
+| 1.1.0 | 2026-08-05 | Referente SkillTree: árbol radial SVG para constelación, glow semántico, scanning animation, KPI counter |

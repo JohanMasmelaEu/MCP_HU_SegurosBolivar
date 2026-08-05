@@ -60,6 +60,16 @@ Crear un **Design System como especificación** (NLVS) que:
 - Misma paleta, misma forma de nodo, mismas sombras
 - Diferencias permitidas: tamaño de nodo, idealEdgeLength
 
+### RD-08: Constelación como SVG radial tree
+- La vista Constelación DEBE renderizarse como SVG radial tree, NO con Cytoscape
+- Cada nodo hoja del árbol = 1 ProjectSpec del ecosistema
+- El árbol DEBE agrupar specs por status (approved/draft/superseded) como ramas
+- DEBE incluir animación de scanning secuencial al cargar (entrada progresiva con CSS transition-delay)
+- DEBE mostrar un KPI counter visible ("X de Y specs aprobadas")
+- DEBE aplicar glow semántico SOLO en specs con gaps (layers_count === 0)
+- El glow NUNCA es decorativo — solo comunica alertas
+- Referente visual: SkillTree Audit Engine (árbol radial SVG)
+
 ## Criterios de aceptación
 
 1. El archivo `design.md` existe y cubre tokens, componentes, rendimiento, accesibilidad
@@ -68,3 +78,5 @@ Crear un **Design System como especificación** (NLVS) que:
 4. La UI funciona en dark Y light theme
 5. Un agente sin contexto previo puede generar un componente nuevo consistente leyendo solo la spec
 6. El rendimiento no se degrada: ≤3 backdrop-filters, 0 animaciones infinitas decorativas, layout Cytoscape < 2s
+7. La constelación renderiza como SVG radial con scanning animation y KPI counter
+8. Cytoscape NO se usa para la vista Constelación (solo para Ecosistema)

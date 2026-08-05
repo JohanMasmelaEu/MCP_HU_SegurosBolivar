@@ -28,3 +28,19 @@
 - Se cambió padding de `#view-micro` de `100px 48px 48px` a `88px 32px 32px`
 - Se cambiaron estilos de constelación: nodos `round-rectangle` 140×70, colores rgba con opacidad, sombras suaves, `idealEdgeLength: 220`
 - Se refactorizaron `macroStyles` y estilos de constelación para usar `Object.assign` con constantes compartidas
+
+### Agregado (Fase 5 — Árbol Radial SVG)
+- Se implementó árbol radial SVG para la vista Constelación, reemplazando completamente Cytoscape en esa vista
+- Se agregó contenedor `#constellation-tree` con SVG (`viewBox 700×500`), KPI counter, scan-status y tooltip
+- Se agregó CSS completo del árbol radial: `.tree-node` (root/branch/leaf), `.tree-link`, `.tree-label`, `.constellation-kpi`, `.constellation-scan-status`, `.tree-node-tooltip`
+- Se agregó animación de scanning secuencial con `transition-delay` calculado por nodo (P4)
+- Se agregó KPI counter que muestra specs aprobadas vs total (P5)
+- Se agregó glow semántico (`.has-gaps`) con `pulseGlow` limitado a 3 repeticiones (P3)
+- Se agregó hover tooltip en nodos hoja del SVG con nombre, estado y capas
+- Se agregaron overrides light theme para `.tree-node`, `.tree-label`, `.constellation-kpi`, `.constellation-scan-status`
+
+### Eliminado (Fase 5 — Cleanup Cytoscape constelación)
+- Se eliminó variable `constellationCy` (ya no se usa Cytoscape para constelación)
+- Se eliminó función `renderConstellation` con lógica Cytoscape (reemplazada por `renderConstellationTree`)
+- Se eliminó div `#cy-constellation` (reemplazado por `#constellation-tree` con SVG nativo)
+- Se eliminaron llamadas a `showLoading`/`hideLoading` para constelación (el SVG tree tiene su propia animación de scanning)

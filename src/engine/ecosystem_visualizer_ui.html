@@ -157,6 +157,9 @@
   }
   ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); }
   ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+  .tree-node { fill: var(--surface); }
+  .tree-label { fill: var(--text-secondary); }
+  .constellation-kpi, .constellation-scan-status { background: var(--surface); }
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -979,6 +982,194 @@ body::before {
   border-radius: 50%; animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* ===== Constellation SVG Radial Tree ===== */
+.constellation-tree-container {
+  position: fixed; top: 40px; left: 0; right: 0; bottom: 0;
+  display: none; z-index: 1;
+  background: var(--bg);
+  overflow: hidden;
+}
+.constellation-tree-container.active { display: block; }
+
+#constellation-svg {
+  width: 100%; height: 100%;
+}
+
+/* ─── Links (líneas conectoras) ─── */
+.tree-link {
+  stroke: var(--surface-border);
+  stroke-width: 1;
+  fill: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.tree-link.visible { opacity: 1; }
+
+/* ─── Nodos ─── */
+.tree-node {
+  fill: var(--surface);
+  stroke: var(--surface-border);
+  stroke-width: 1;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.6);
+  transform-origin: center;
+  transition: opacity 0.4s ease, transform 0.4s ease, fill 0.3s ease, filter 0.3s ease;
+}
+.tree-node.loaded {
+  opacity: 1;
+  transform: scale(1);
+}
+.tree-node:hover {
+  stroke-width: 1.5;
+  filter: brightness(1.2);
+}
+
+/* ─── Nodo raíz (ecosistema) ─── */
+.tree-node-root {
+  fill: var(--accent-blue);
+  stroke: rgba(10,132,255,0.5);
+  stroke-width: 1.5;
+}
+
+/* ─── Nodos rama (agrupadores) ─── */
+.tree-node-branch {
+  fill: var(--surface-elevated);
+  stroke: var(--surface-border-hover);
+}
+
+/* ─── Nodos hoja (specs) — color por status ─── */
+.tree-node-leaf[data-status="approved"] {
+  fill: var(--accent-green);
+  stroke: rgba(48,209,88,0.5);
+}
+.tree-node-leaf[data-status="draft"] {
+  fill: var(--accent-orange);
+  stroke: rgba(255,159,10,0.5);
+}
+.tree-node-leaf[data-status="superseded"] {
+  fill: var(--accent-red);
+  stroke: rgba(255,69,58,0.5);
+}
+
+/* ─── Glow semántico — solo en specs con gaps/alertas ─── */
+.tree-node-leaf.has-gaps {
+  filter: drop-shadow(0 0 6px var(--accent-orange));
+  animation: pulseGlow 2s ease-in-out 3;
+}
+@keyframes pulseGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px var(--accent-orange)); }
+  50% { filter: drop-shadow(0 0 12px var(--accent-orange)); }
+}
+
+/* ─── Labels ─── */
+.tree-label {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 9px;
+  fill: var(--text-secondary);
+  text-anchor: middle;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.tree-label.visible { opacity: 1; }
+.tree-label-branch {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  fill: var(--text-tertiary);
+}
+.tree-label-root {
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--text-primary);
+}
+
+/* ─── KPI Counter ─── */
+.constellation-kpi {
+  position: absolute;
+  top: 16px; left: 24px;
+  z-index: 10;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  box-shadow: var(--neo-raised);
+}
+.kpi-count {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+.kpi-total {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.kpi-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ─── Scanning Status ─── */
+.constellation-scan-status {
+  position: absolute;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  box-shadow: var(--neo-raised);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+.constellation-scan-status.active {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.scan-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: var(--sku-led-glow);
+  animation: blink 0.8s ease-in-out 6;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ─── Hover tooltip en nodos del árbol ─── */
+.tree-node-tooltip {
+  position: absolute;
+  padding: 8px 12px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--text-primary);
+  box-shadow: var(--neo-raised);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 20;
+  max-width: 200px;
+  white-space: nowrap;
+}
+.tree-node-tooltip.visible { opacity: 1; }
 </style>
 </head>
 <body>
@@ -2186,7 +2377,6 @@ function escapeAttr(str) {
 
 // ─── CONSTELLATION VIEW ─────────────────────────────────────────────────────────
 
-let constellationCy = null;
 let constellationVisible = false;
 let constellationLoaded = false;
 
@@ -2195,7 +2385,7 @@ function showConstellation(event) {
   
   // Toggle visibility
   const ecoContainer = document.getElementById('cy');
-  const conContainer = document.getElementById('cy-constellation');
+  const conContainer = document.getElementById('constellation-tree');
   const toolbar = document.getElementById('toolbar');
   
   if (!conContainer) return;
@@ -2207,7 +2397,7 @@ function showConstellation(event) {
   conTab.setAttribute('aria-selected', 'true');
   
   if (ecoContainer) ecoContainer.style.display = 'none';
-  conContainer.style.display = 'block';
+  conContainer.classList.add('active');
   if (toolbar) toolbar.style.display = 'none';
   
   constellationVisible = true;
@@ -2219,7 +2409,7 @@ function showConstellation(event) {
 
 function showEcosystem() {
   const ecoContainer = document.getElementById('cy');
-  const conContainer = document.getElementById('cy-constellation');
+  const conContainer = document.getElementById('constellation-tree');
   const toolbar = document.getElementById('toolbar');
   
   document.querySelectorAll('.view-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
@@ -2228,7 +2418,7 @@ function showEcosystem() {
   ecoTab.setAttribute('aria-selected', 'true');
   
   if (ecoContainer) ecoContainer.style.display = 'block';
-  if (conContainer) conContainer.style.display = 'none';
+  if (conContainer) conContainer.classList.remove('active');
   if (toolbar) toolbar.style.display = 'flex';
   
   constellationVisible = false;
@@ -2243,59 +2433,177 @@ async function loadConstellation() {
     const res = await fetch('/api/constellation/' + encodeURIComponent(ecosystemId));
     const data = await res.json();
     if (data.error) { console.error(data.error); return; }
-    renderConstellation(data);
+    renderConstellationTree(data);
   } catch (e) { console.error('Error loading constellation:', e); }
 }
 
-function renderConstellation(data) {
-  const container = document.getElementById('cy-constellation');
-  if (!container) return;
-  
-  if (constellationCy) constellationCy.destroy();
-  showLoading('cy-constellation');
-  data = collapseSmallNodes(data);
-  
-  constellationCy = cytoscape({
-    container: container,
-    elements: { nodes: data.nodes || [], edges: data.edges || [] },
-    style: [
-      { selector: 'node', style: Object.assign({}, NLVS_NODE_BASE, {
-        'width': 140, 'height': 70,
-        'background-color': 'rgba(10,132,255,0.05)',
-        'border-color': 'rgba(10,132,255,0.35)',
-        'font-size': 11,
-        'text-max-width': 120,
-        'label': 'data(label)',
-        'shadow-blur': 20, 'shadow-color': 'rgba(10,132,255,0.12)', 'shadow-opacity': 0.5,
-        'shadow-offset-x': 0, 'shadow-offset-y': 3,
-      })},
-      { selector: 'node[?has_strategic]', style: { 'background-color': 'rgba(10,61,122,0.4)' }},
-      { selector: '.spec-approved', style: { 'border-style': 'solid', 'border-color': 'rgba(48,209,88,0.5)' }},
-      { selector: '.spec-draft', style: { 'border-style': 'dashed', 'border-color': 'rgba(255,159,10,0.5)' }},
-      { selector: '.spec-superseded', style: { 'border-style': 'dotted', 'border-color': 'rgba(255,69,58,0.5)' }},
-      { selector: 'edge', style: Object.assign({}, NLVS_EDGE_BASE, {
-        'width': 2, 'target-arrow-shape': 'triangle',
-        'target-arrow-color': 'rgba(255,255,255,0.3)', 'line-color': 'rgba(255,255,255,0.2)', 'opacity': 0.8,
-      })},
-      { selector: '.dep-process', style: { 'line-color': 'rgba(10,132,255,0.6)', 'target-arrow-color': 'rgba(10,132,255,0.8)' }},
-      { selector: '.dep-data', style: { 'line-color': 'rgba(48,209,88,0.6)', 'target-arrow-color': 'rgba(48,209,88,0.8)' }},
-      { selector: '.dep-functional', style: { 'line-color': 'rgba(191,90,242,0.6)', 'target-arrow-color': 'rgba(191,90,242,0.8)' }},
-      { selector: '.maturity-reference', style: { 'line-style': 'dotted' }},
-      { selector: '.maturity-draft', style: { 'line-style': 'dashed' }},
-      { selector: '.maturity-formalized', style: { 'line-style': 'solid' }},
-    ],
-    layout: { name: 'cose-bilkent', quality: 'default', animate: 'end', animationDuration: 400, nodeDimensionsIncludeLabels: true, idealEdgeLength: 220 },
+function renderConstellationTree(data) {
+  var svg = document.getElementById('constellation-svg');
+  if (!svg) return;
+
+  // Limpiar SVG previo
+  svg.querySelector('.tree-links').innerHTML = '';
+  svg.querySelector('.tree-nodes').innerHTML = '';
+  svg.querySelector('.tree-labels').innerHTML = '';
+
+  var nodes = (data.nodes || []).map(function(n) { return n.data; });
+  var totalSpecs = nodes.length;
+  var approved = nodes.filter(function(n) { return n.status === 'approved'; }).length;
+
+  // Actualizar KPI (P5)
+  document.getElementById('kpi-approved').textContent = approved;
+  document.getElementById('kpi-total').textContent = totalSpecs;
+
+  // Agrupar specs por status → ramas
+  var groups = {};
+  var groupLabels = { approved: 'Aprobados', draft: 'Borradores', superseded: 'Supersedidos' };
+  nodes.forEach(function(n) {
+    var key = n.status || 'draft';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(n);
   });
-  
-  constellationCy.on('layoutstop', function() { hideLoading('cy-constellation'); });
-  constellationCy.on('tap', 'node', function(evt) {
-    const node = evt.target.data();
-    showConstellationDetail(node);
+
+  var branchKeys = Object.keys(groups).filter(function(k) { return groups[k].length > 0; });
+  var cx = 350, cy = 250; // Centro del SVG (viewBox 700×500)
+  var branchRadius = 120;  // Distancia raíz → rama
+  var leafRadius = 80;     // Distancia rama → hoja
+
+  // Calcular posiciones radiales de las ramas
+  var branches = branchKeys.map(function(key, i) {
+    var angle = (2 * Math.PI * i / branchKeys.length) - Math.PI / 2;
+    return {
+      key: key,
+      label: groupLabels[key] || key,
+      x: cx + branchRadius * Math.cos(angle),
+      y: cy + branchRadius * Math.sin(angle),
+      angle: angle,
+      specs: groups[key],
+    };
   });
-  constellationCy.on('tap', function(evt) {
-    if (evt.target === constellationCy) {
+
+  // Generar SVG elements
+  var linksHtml = '';
+  var nodesHtml = '';
+  var labelsHtml = '';
+  var animIndex = 0;
+
+  // Raíz → Ramas (links)
+  branches.forEach(function(b) {
+    linksHtml += '<line class="tree-link" x1="' + cx + '" y1="' + cy
+      + '" x2="' + b.x + '" y2="' + b.y + '" style="transition-delay:'
+      + (animIndex * 30) + 'ms" />';
+  });
+
+  // Rama → Hojas (links + positions)
+  branches.forEach(function(b) {
+    var leafCount = b.specs.length;
+    var spreadAngle = Math.min(Math.PI * 0.6, leafCount * 0.25);
+
+    b.specs.forEach(function(spec, j) {
+      var leafAngle = b.angle - spreadAngle / 2 + (spreadAngle * j / Math.max(1, leafCount - 1));
+      if (leafCount === 1) leafAngle = b.angle;
+      spec._x = b.x + leafRadius * Math.cos(leafAngle);
+      spec._y = b.y + leafRadius * Math.sin(leafAngle);
+      spec._animDelay = (animIndex + j + 1) * 30;
+
+      linksHtml += '<line class="tree-link" x1="' + b.x + '" y1="' + b.y
+        + '" x2="' + spec._x + '" y2="' + spec._y + '" style="transition-delay:'
+        + spec._animDelay + 'ms" />';
+    });
+    animIndex += leafCount + 1;
+  });
+
+  // Nodo raíz
+  nodesHtml += '<circle class="tree-node tree-node-root" cx="' + cx + '" cy="' + cy
+    + '" r="10" style="transition-delay:0ms" />';
+  labelsHtml += '<text class="tree-label tree-label-root" x="' + cx + '" y="' + (cy + 24)
+    + '" style="transition-delay:50ms">Ecosistema</text>';
+
+  // Nodos rama + labels
+  branches.forEach(function(b, i) {
+    var delay = (i + 1) * 60;
+    nodesHtml += '<circle class="tree-node tree-node-branch" cx="' + b.x + '" cy="' + b.y
+      + '" r="6" style="transition-delay:' + delay + 'ms" />';
+
+    // Label posicionado fuera del radio
+    var labelX = cx + (branchRadius + 20) * Math.cos(b.angle);
+    var labelY = cy + (branchRadius + 20) * Math.sin(b.angle);
+    labelsHtml += '<text class="tree-label tree-label-branch" x="' + labelX + '" y="' + labelY
+      + '" style="transition-delay:' + (delay + 30) + 'ms">'
+      + b.label + ' (' + b.specs.length + ')</text>';
+  });
+
+  // Nodos hoja + labels
+  branches.forEach(function(b) {
+    b.specs.forEach(function(spec) {
+      var gapClass = spec.layers_count === 0 ? ' has-gaps' : '';
+      nodesHtml += '<circle class="tree-node tree-node-leaf' + gapClass
+        + '" cx="' + spec._x + '" cy="' + spec._y + '" r="4" data-status="'
+        + spec.status + '" data-spec-id="' + spec.id
+        + '" style="transition-delay:' + spec._animDelay + 'ms" />';
+
+      labelsHtml += '<text class="tree-label" x="' + spec._x + '" y="' + (spec._y + 14)
+        + '" style="transition-delay:' + (spec._animDelay + 20) + 'ms">'
+        + escapeHtml(spec.label.substring(0, 18)) + '</text>';
+    });
+  });
+
+  // Insertar en SVG
+  svg.querySelector('.tree-links').innerHTML = linksHtml;
+  svg.querySelector('.tree-nodes').innerHTML = nodesHtml;
+  svg.querySelector('.tree-labels').innerHTML = labelsHtml;
+
+  // P4: Scanning animation — activar secuencialmente
+  requestAnimationFrame(function() {
+    // Mostrar scan status
+    var scanEl = document.getElementById('scan-status');
+    if (scanEl) scanEl.classList.add('active');
+
+    // Activar todos los elementos con su delay de transición
+    svg.querySelectorAll('.tree-link').forEach(function(el) { el.classList.add('visible'); });
+    svg.querySelectorAll('.tree-node').forEach(function(el) { el.classList.add('loaded'); });
+    svg.querySelectorAll('.tree-label').forEach(function(el) { el.classList.add('visible'); });
+
+    // Ocultar scan status después de la última animación
+    var maxDelay = animIndex * 30 + 400;
+    setTimeout(function() {
+      if (scanEl) scanEl.classList.remove('active');
+    }, maxDelay);
+  });
+
+  // Click handler en hojas → detalle
+  svg.querySelectorAll('.tree-node-leaf').forEach(function(node) {
+    node.addEventListener('click', function() {
+      var specId = this.getAttribute('data-spec-id');
+      var specData = nodes.find(function(n) { return n.id === specId; });
+      if (specData) showConstellationDetail(specData);
+    });
+  });
+
+  // Click en fondo → cerrar detalle
+  svg.addEventListener('click', function(evt) {
+    if (evt.target === svg || evt.target.tagName === 'svg') {
       hideConstellationDetail();
     }
+  });
+
+  // Hover tooltip en hojas
+  svg.querySelectorAll('.tree-node-leaf').forEach(function(node) {
+    node.addEventListener('mouseenter', function(evt) {
+      var specId = this.getAttribute('data-spec-id');
+      var spec = nodes.find(function(n) { return n.id === specId; });
+      if (!spec) return;
+      var tooltip = document.getElementById('tree-tooltip');
+      var statusLabel = UI_LABELS.health[spec.status] || spec.status;
+      tooltip.innerHTML = '<strong>' + escapeHtml(spec.label) + '</strong><br>'
+        + 'Estado: ' + statusLabel + ' · Capas: ' + spec.layers_count;
+      tooltip.style.left = (evt.clientX + 12) + 'px';
+      tooltip.style.top = (evt.clientY - 8) + 'px';
+      tooltip.classList.add('visible');
+    });
+    node.addEventListener('mouseleave', function() {
+      document.getElementById('tree-tooltip').classList.remove('visible');
+    });
   });
 }
 
@@ -2336,7 +2644,30 @@ function hideConstellationDetail() {
   <div id="constellation-detail-content"></div>
 </div>
 
-<div id="cy-constellation" style="position:fixed;top:40px;left:0;right:0;bottom:0;display:none;z-index:1;"></div>
+<div id="constellation-tree" class="constellation-tree-container">
+  <!-- KPI Counter (P5) -->
+  <div class="constellation-kpi">
+    <span class="kpi-count" id="kpi-approved">0</span>
+    <span class="kpi-label">de</span>
+    <span class="kpi-total" id="kpi-total">0</span>
+    <span class="kpi-label">specs aprobadas</span>
+  </div>
+
+  <svg id="constellation-svg" viewBox="0 0 700 500" preserveAspectRatio="xMidYMid meet">
+    <g class="tree-links"><!-- líneas conectoras --></g>
+    <g class="tree-nodes"><!-- círculos: raíz, ramas, hojas --></g>
+    <g class="tree-labels"><!-- texto de cada spec --></g>
+  </svg>
+
+  <!-- Scanning status (P4) -->
+  <div class="constellation-scan-status" id="scan-status">
+    <span class="scan-dot"></span>
+    <span class="scan-text">Analizando ecosistema…</span>
+  </div>
+
+  <!-- Hover tooltip -->
+  <div id="tree-tooltip" class="tree-node-tooltip"></div>
+</div>
 
 </body>
 </html>

@@ -74,14 +74,19 @@ TODA la UI está en **español**. Los data attributes y valores del API permanec
 
 NUNCA crear paneles con `document.createElement`. Definir el HTML en el body con `display:none` o `transform:translateX(100%)` y mostrarlos con clase `.open` + transición CSS. Esto aplica a paneles de detalle, modales, y cualquier overlay.
 
-## Regla 8 — Consistencia visual entre vistas
+## Regla 8 — Consistencia visual entre vistas + Motor de renderizado
 
-Los estilos de Cytoscape de TODAS las vistas (Ecosistema, Constelación, y cualquier vista futura) DEBEN usar:
-- Misma forma de nodo (`round-rectangle`)
-- Mismo rango de tamaño (proporcional, no idéntico)
+**Vista Ecosistema (macro/micro):** usa Cytoscape.js con `NLVS_NODE_BASE`, `NLVS_EDGE_BASE`, `NLVS_HEALTH_COLORS`.
+
+**Vista Constelación:** usa **SVG radial tree** (NO Cytoscape). Ver `design.md` sección 10. El árbol tiene 3 niveles: raíz (ecosistema) → ramas (por status) → hojas (cada spec). Los estilos son CSS puro con variables de `:root`.
+
+Todas las vistas DEBEN compartir:
 - Misma paleta de colores (las variables de `:root`)
-- Mismas sombras suaves (no bordes duros sin sombra)
-- Mismo `idealEdgeLength` base (±30%)
+- Mismas sombras suaves
+- Mismas transiciones (`var(--transition-normal)`)
+- Glow solo semántico (alertas/gaps), NUNCA decorativo
+
+NUNCA crear una nueva instancia de Cytoscape para la constelación — usar `renderConstellationTree(data)` con SVG.
 
 ## Regla 9 — Scrollbar
 
