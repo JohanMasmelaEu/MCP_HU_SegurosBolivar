@@ -445,27 +445,40 @@ class EcosystemEngine:
                     ),
                 ))
 
-        # 4. Flujos cross-app con gaps (flujo en app A que referencia entidad de app B sin contrato)
-        for app in self._registry.apps:
-            app_entities_lower = {e.lower() for e in app.entities_snapshot}
-            # Ver si la app tiene entidades que son de otra app pero no hay contrato que las conecte
-            for shared in self._registry.shared_entities:
-                if app.app_id in shared.defined_in_apps and len(shared.defined_in_apps) > 1:
-                    # Verificar que exista un contrato que conecte estas apps para esa entidad
-                    other_apps = [a for a in shared.defined_in_apps if a != app.app_id]
-                    entity_in_contracts = any(
+        # 4. Flujos cross-app con gaps (entidad compartida entre apps sin contrato que las conecte)
+        seen_gaps: set[frozenset[str]] = set()
+        for shared in self._registry.shared_entities:
+            if len(shared.defined_in_apps) <= 1:
+                continue
+
+            # Verificar par a par si existe contrato que cubra la entidad entre ese par
+            apps_in_shared = shared.defined_in_apps
+            for i in range(len(apps_in_shared)):
+                for j in range(i + 1, len(apps_in_shared)):
+                    app_x = apps_in_shared[i]
+                    app_y = apps_in_shared[j]
+                    pair_key = frozenset([app_x, app_y, shared.entity_name])
+
+                    if pair_key in seen_gaps:
+                        continue
+
+                    # Buscar contrato que conecte específicamente este par para esta entidad
+                    entity_covered = any(
                         shared.entity_name.lower() in [e.lower() for e in c.entities_involved]
                         for c in self._registry.contracts
-                        if c.provider_app in other_apps or app.app_id in c.consumer_apps
+                        if (c.provider_app == app_x and app_y in c.consumer_apps)
+                        or (c.provider_app == app_y and app_x in c.consumer_apps)
                     )
-                    if not entity_in_contracts:
+
+                    if not entity_covered:
+                        seen_gaps.add(pair_key)
                         conflicts.append(CrossAppConflict(
                             conflict_type="cross_app_flow_gap",
                             severity="medium",
-                            apps_involved=[app.app_id] + other_apps,
+                            apps_involved=sorted([app_x, app_y]),
                             description=(
                                 f"Entidad '{shared.entity_name}' es compartida entre "
-                                f"{app.app_id} y {', '.join(other_apps)} pero no hay "
+                                f"{app_x} y {app_y} pero no hay "
                                 f"contrato registrado que defina como se intercambia."
                             ),
                             suggestion=(
@@ -513,6 +526,7 @@ class EcosystemEngine:
         """Lee el .hu-memory/index.json de una app para actualizar su snapshot.
 
         Opera en modo read-only sobre la memoria de la app.
+        Valida que la ruta resuelta este dentro del volumen permitido (BASE_PATH).
 
         Args:
             app: App a sincronizar.
@@ -523,6 +537,16 @@ class EcosystemEngine:
         memory_path = Path(app.memory_path)
         if not memory_path.is_absolute():
             memory_path = BASE_PATH / memory_path
+
+        # Validar path traversal: la ruta resuelta debe estar dentro de BASE_PATH
+        resolved_memory_path = memory_path.resolve()
+        resolved_base_path = BASE_PATH.resolve()
+        if not str(resolved_memory_path).startswith(str(resolved_base_path)):
+            logger.warning(
+                "Path traversal detectado para app '%s': %s esta fuera de %s",
+                app.app_id, resolved_memory_path, resolved_base_path,
+            )
+            return app
 
         index_path = memory_path / "index.json"
         if not index_path.exists():
@@ -632,26 +656,31 @@ class EcosystemEngine:
     def _check_entity_consistency(fields_by_app: dict[str, list[str]]) -> bool:
         """Verifica si los campos de una entidad son consistentes entre apps.
 
+        Usa Jaccard similarity entre cada par de apps con campos no-vacios.
+        Si algún par tiene Jaccard < 0.6, se considera inconsistente.
+
         Args:
             fields_by_app: Campos por app.
 
         Returns:
-            True si son consistentes (iguales o subconjuntos).
+            True si son consistentes (Jaccard >= 0.6 entre todos los pares con datos).
         """
         non_empty = [set(f) for f in fields_by_app.values() if f]
         if len(non_empty) <= 1:
             return True
 
-        # Consistente si uno es subconjunto del otro (permite extension)
-        all_fields = set()
-        for field_set in non_empty:
-            all_fields.update(field_set)
-
-        # Si todos son subconjuntos del union, es consistente
-        # Inconsistente si hay campos contradictorios (heuristica: >30% diferente)
-        for field_set in non_empty:
-            if len(field_set) > 0 and len(field_set & all_fields) / len(all_fields) < 0.5:
-                return False
+        # Comparar par a par con Jaccard simétrico
+        for i in range(len(non_empty)):
+            for j in range(i + 1, len(non_empty)):
+                set_a = non_empty[i]
+                set_b = non_empty[j]
+                intersection = len(set_a & set_b)
+                union = len(set_a | set_b)
+                if union == 0:
+                    continue
+                jaccard = intersection / union
+                if jaccard < 0.6:
+                    return False
 
         return True
 
@@ -682,8 +711,9 @@ _ecosystem_instance: Optional[EcosystemEngine] = None
 def get_ecosystem() -> EcosystemEngine:
     """Obtiene la instancia activa del EcosystemEngine.
 
-    Si hay un EcosystemManager inicializado, delega a el.
-    De lo contrario, usa el patron singleton legacy.
+    Si hay un EcosystemManager inicializado, delega a el exclusivamente.
+    Si el Manager existe pero no tiene ecosistema activo, lanza error.
+    Solo usa el singleton legacy si no hay Manager.
     """
     from src.engine.ecosystem_manager import get_ecosystem_manager
 
@@ -692,6 +722,10 @@ def get_ecosystem() -> EcosystemEngine:
         active = manager.get_active()
         if active is not None:
             return active
+        raise RuntimeError(
+            "EcosystemManager activo pero no hay ecosistema seleccionado. "
+            "Usar init_ecosystem o switch_ecosystem para activar uno."
+        )
 
     global _ecosystem_instance
     if _ecosystem_instance is None:

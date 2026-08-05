@@ -8,6 +8,17 @@
 <script src="https://unpkg.com/layout-base@2.0.1/layout-base.js"></script>
 <script src="https://unpkg.com/cose-base@2.2.0/cose-base.js"></script>
 <script src="https://unpkg.com/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', function() {
+    if (typeof cytoscape === 'undefined') {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;color:rgba(255,255,255,0.7);font-family:sans-serif;background:#000">'
+        + '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>'
+        + '<h2 style="margin:0;font-size:18px">Cytoscape no disponible</h2>'
+        + '<p style="margin:0;max-width:400px;text-align:center;font-size:13px;color:rgba(255,255,255,0.5)">No se pudieron cargar las dependencias externas (unpkg.com). Verifica tu conexion a internet o configura las dependencias localmente.</p>'
+        + '</div>';
+    }
+  });
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
 :root {
@@ -721,6 +732,8 @@ body::before {
   <select id="selectorEcosystem" onchange="switchEcosystem(this.value)">
     <option value="">Cargando...</option>
   </select>
+  <span id="eco-version" style="font-size:11px;color:var(--accent-teal);font-weight:600"></span>
+  <span id="eco-approval" style="font-size:10px;padding:2px 8px;border-radius:6px"></span>
   <span class="toolbar-divider"></span>
   <span class="toolbar-label">Vista</span>
   <div class="toggle-group">
@@ -734,6 +747,11 @@ body::before {
   <button class="filter-btn active" data-filter="mixed" onclick="toggleFilter('mixed')">Mixta</button>
   <span class="toolbar-divider"></span>
   <button class="filter-btn" id="btn-conflicts-only" onclick="toggleConflictsOnly()">Solo conflictos</button>
+  <span class="toolbar-divider"></span>
+  <span class="toolbar-label">Madurez</span>
+  <button class="filter-btn active" data-maturity="formalized" onclick="toggleMaturityFilter('formalized')">Formalized</button>
+  <button class="filter-btn active" data-maturity="draft" onclick="toggleMaturityFilter('draft')">Draft</button>
+  <button class="filter-btn active" data-maturity="reference" onclick="toggleMaturityFilter('reference')">Reference</button>
   <span class="toolbar-divider"></span>
   <button onclick="resetView()">Reset</button>
 </div>
@@ -771,6 +789,9 @@ body::before {
     <div class="row"><span class="line dashed gray"></span> Acoplamiento implicito (entidades)</div>
     <div class="row"><span class="thickness-demo"></span> Grosor = fuerza de acoplamiento</div>
     <div class="row"><span class="cluster-demo"></span> Cluster = apps cohesivas</div>
+    <div class="row"><span class="swatch rect" style="border-style:solid;border-color:var(--text-secondary);background:transparent"></span> Formalized</div>
+    <div class="row"><span class="swatch rect" style="border-style:dashed;border-color:var(--text-secondary);background:transparent"></span> Draft</div>
+    <div class="row"><span class="swatch rect" style="border-style:dotted;border-color:var(--text-secondary);background:transparent"></span> Reference</div>
   </div>
 </div>
 
@@ -781,6 +802,7 @@ let currentEcosystemId = null;
 let macroData = null;
 let currentView = 'macro';
 let activeFilters = { sync: true, async: true, mixed: true };
+let maturityFilters = { formalized: true, draft: true, reference: true };
 let conflictsOnly = false;
 /* ===== Cytoscape Styles ===== */
 const macroStyles = [
@@ -817,6 +839,10 @@ const macroStyles = [
   { selector: 'node[health="green"]', style: { 'border-color': 'rgba(48,209,88,0.4)', 'shadow-color': 'rgba(48,209,88,0.15)' }},
   { selector: 'node[health="yellow"]', style: { 'border-color': 'rgba(255,159,10,0.4)', 'shadow-color': 'rgba(255,159,10,0.15)' }},
   { selector: 'node[health="red"]', style: { 'border-color': 'rgba(255,69,58,0.5)', 'shadow-color': 'rgba(255,69,58,0.2)' }},
+  /* Maturity border styles */
+  { selector: 'node[border_style="solid"]', style: { 'border-style': 'solid' }},
+  { selector: 'node[border_style="dashed"]', style: { 'border-style': 'dashed', 'border-width': 2 }},
+  { selector: 'node[border_style="dotted"]', style: { 'border-style': 'dotted', 'border-opacity': 0.5 }},
   { selector: 'edge[type="coupling"]', style: {
     'width': 'mapData(coupling_strength, 1, 10, 2, 8)',
     'curve-style': 'bezier',
@@ -919,6 +945,7 @@ async function init() {
     });
     currentEcosystemId = activeId || ecosystems[0].ecosystem_id;
     selector.value = currentEcosystemId;
+    _updateEcoMeta(ecosystems);
     loadMacroGraph();
   } catch (err) {
     showEmptyState('Error al conectar con el servidor: ' + err.message);
@@ -1015,6 +1042,10 @@ function renderAppDetailHTML(detail) {
   html += '<div class="detail-row"><span class="detail-label">App ID</span><span class="detail-value">' + escapeHtml(detail.app_id || '') + '</span></div>';
   html += '<div class="detail-row"><span class="detail-label">Equipo</span><span class="detail-value">' + escapeHtml(detail.team || 'Sin equipo') + '</span></div>';
   html += '<div class="detail-row"><span class="detail-label">Acoplamiento</span><span class="detail-value">' + escapeHtml(detail.coupling_type || '') + '</span></div>';
+  if (detail.maturity) {
+    var matColor = detail.maturity === 'formalized' ? 'var(--accent-green)' : detail.maturity === 'draft' ? 'var(--accent-orange)' : 'var(--text-tertiary)';
+    html += '<div class="detail-row"><span class="detail-label">Madurez</span><span class="detail-value" style="color:' + matColor + '">' + escapeHtml(detail.maturity) + '</span></div>';
+  }
   html += '<div class="detail-row"><span class="detail-label">Historias</span><span class="detail-value">' + (detail.story_count || 0) + '</span></div>';
   if (detail.entities && detail.entities.length > 0) {
     html += '<div style="margin-top:16px"><span class="detail-label">Entidades (' + detail.entities.length + ')</span><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">';
@@ -1033,7 +1064,8 @@ function renderAppDetailHTML(detail) {
   if (detail.contracts_exposed && detail.contracts_exposed.length > 0) {
     html += '<div style="margin-top:16px"><span class="detail-label">Contratos Expuestos</span>';
     detail.contracts_exposed.forEach(function(c) {
-      html += '<div class="detail-row"><span class="detail-value" style="font-size:12px">' + escapeHtml(c.name) + '</span><span class="detail-label">' + escapeHtml(c.type) + ' v' + escapeHtml(c.version) + '</span></div>';
+      var statusColor = c.status === 'active' ? 'var(--accent-green)' : c.status === 'deprecated' ? 'var(--accent-red)' : 'var(--accent-orange)';
+      html += '<div class="detail-row"><span class="detail-value" style="font-size:12px">' + escapeHtml(c.name) + ' <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.04);color:' + statusColor + '">' + escapeHtml(c.status || 'active') + '</span></span><span class="detail-label">' + escapeHtml(c.type) + ' v' + escapeHtml(c.version) + '</span></div>';
       html += renderEntitiesGrouped(c.entities_grouped, c.entities);
     });
     html += '</div>';
@@ -1041,7 +1073,8 @@ function renderAppDetailHTML(detail) {
   if (detail.contracts_consumed && detail.contracts_consumed.length > 0) {
     html += '<div style="margin-top:16px"><span class="detail-label">Contratos Consumidos</span>';
     detail.contracts_consumed.forEach(function(c) {
-      html += '<div class="detail-row"><span class="detail-value" style="font-size:12px">' + escapeHtml(c.name) + '</span><span class="detail-label">' + escapeHtml(c.type) + ' v' + escapeHtml(c.version) + '</span></div>';
+      var statusColor = c.status === 'active' ? 'var(--accent-green)' : c.status === 'deprecated' ? 'var(--accent-red)' : 'var(--accent-orange)';
+      html += '<div class="detail-row"><span class="detail-value" style="font-size:12px">' + escapeHtml(c.name) + ' <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.04);color:' + statusColor + '">' + escapeHtml(c.status || 'active') + '</span></span><span class="detail-label">' + escapeHtml(c.type) + ' v' + escapeHtml(c.version) + '</span></div>';
       html += renderEntitiesGrouped(c.entities_grouped, c.entities);
     });
     html += '</div>';
@@ -1068,6 +1101,7 @@ function renderAppDetailHTML(detail) {
 var _microFlowsData = null;
 var _microAppA = null;
 var _microAppB = null;
+var _microHealthData = null;
 
 async function switchToMicro(appA, appB) {
   hideTooltip();
@@ -1081,9 +1115,11 @@ async function switchToMicro(appA, appB) {
   _microAppB = appB.replace('app:', '');
   try {
     var url = '/api/eco/flows/' + encodeURIComponent(currentEcosystemId) + '/' + encodeURIComponent(_microAppA) + '/' + encodeURIComponent(_microAppB);
-    var res = await fetch(url);
+    var healthUrl = '/api/eco/health/' + encodeURIComponent(currentEcosystemId);
+    var [res, healthRes] = await Promise.all([fetch(url), fetch(healthUrl)]);
     if (!res.ok) throw new Error('Error al cargar flujos');
     _microFlowsData = await res.json();
+    _microHealthData = healthRes.ok ? await healthRes.json() : null;
     renderMicroView();
   } catch (err) {
     microEl.innerHTML = '<div class="empty-state"><p style="color:var(--accent-red)">' + escapeHtml(err.message) + '</p></div>';
@@ -1102,9 +1138,13 @@ function renderMicroView() {
   /* Filter flows */
   var flows = allFlows.filter(function(f) {
     var ct = f.contract ? f.contract.type : '';
-    var cat = (ct === 'async_event') ? 'async' : (ct === 'rest_api' || ct === 'graphql') ? 'sync' : 'mixed';
+    var cat = (ct === 'async_event') ? 'async' : (ct === 'rest_api' || ct === 'graphql' || ct === 'shared_lib') ? 'sync' : 'mixed';
     if (activeFilters[cat] === false) return false;
-    if (conflictsOnly && !(f.entities_in_transit || []).some(function(e) { return !e.is_consistent; })) return false;
+    if (conflictsOnly) {
+      var hasEntityDivergence = (f.entities_in_transit || []).some(function(e) { return !e.is_consistent; });
+      var hasHealthConflict = _flowHasHealthConflict(f, _microAppA, _microAppB);
+      if (!hasEntityDivergence && !hasHealthConflict) return false;
+    }
     return true;
   });
 
@@ -1463,6 +1503,13 @@ function toggleConflictsOnly() {
   applyFilters();
 }
 
+function toggleMaturityFilter(maturity) {
+  maturityFilters[maturity] = !maturityFilters[maturity];
+  var btn = document.querySelector('.filter-btn[data-maturity="' + maturity + '"]');
+  if (btn) btn.classList.toggle('active', maturityFilters[maturity]);
+  applyFilters();
+}
+
 function applyFilters() {
   if (!cy) return;
   /* Show/hide edges based on sync_type filter */
@@ -1476,20 +1523,25 @@ function applyFilters() {
       edge.show();
     }
   });
+  /* Maturity filter: fade nodes whose maturity is deselected */
+  cy.nodes('[type="app"]').forEach(function(node) {
+    var maturity = node.data('maturity') || 'draft';
+    if (maturityFilters[maturity] === false) {
+      node.addClass('faded');
+      node.connectedEdges().addClass('faded');
+    } else {
+      node.removeClass('faded');
+      node.connectedEdges().removeClass('faded');
+    }
+  });
   /* Conflicts only: fade healthy apps AND hide their edges */
   if (conflictsOnly) {
     cy.nodes('[type="app"]').forEach(function(node) {
       if (node.data('health') === 'green') {
         node.addClass('faded');
         node.connectedEdges().addClass('faded');
-      } else {
-        node.removeClass('faded');
-        node.connectedEdges().removeClass('faded');
       }
     });
-  } else {
-    cy.nodes().removeClass('faded');
-    cy.edges().removeClass('faded');
   }
   /* If micro view is active, re-render the flow selector with updated filters */
   if (currentView === 'micro' && _microFlowsData) {
@@ -1499,9 +1551,10 @@ function applyFilters() {
 
 function resetView() {
   activeFilters = { sync: true, async: true, mixed: true };
+  maturityFilters = { formalized: true, draft: true, reference: true };
   conflictsOnly = false;
   document.querySelectorAll('.filter-btn').forEach(function(btn) {
-    if (btn.dataset.filter) btn.classList.add('active');
+    if (btn.dataset.filter || btn.dataset.maturity) btn.classList.add('active');
   });
   document.getElementById('btn-conflicts-only').classList.remove('active');
   if (cy) {
@@ -1516,9 +1569,32 @@ function resetView() {
 function switchEcosystem(id) {
   if (!id) return;
   currentEcosystemId = id;
+  _updateEcoMeta(null);
   if (currentView === 'micro') { backToMacro(); }
   loadMacroGraph();
 }
+/* ===== Ecosystem Meta Display ===== */
+var _ecosystemsList = null;
+
+function _updateEcoMeta(ecosystems) {
+  if (ecosystems) _ecosystemsList = ecosystems;
+  var list = _ecosystemsList || [];
+  var eco = list.find(function(e) { return e.ecosystem_id === currentEcosystemId; });
+  var versionEl = document.getElementById('eco-version');
+  var approvalEl = document.getElementById('eco-approval');
+  if (!eco) { versionEl.textContent = ''; approvalEl.textContent = ''; approvalEl.style.background = ''; return; }
+  versionEl.textContent = eco.version ? 'v' + eco.version : '';
+  if (eco.approved_by && eco.approved_by.length > 0) {
+    approvalEl.textContent = 'Aprobado';
+    approvalEl.style.background = 'rgba(48,209,88,0.15)';
+    approvalEl.style.color = 'var(--accent-green)';
+  } else {
+    approvalEl.textContent = 'Sin aprobar';
+    approvalEl.style.background = 'rgba(255,159,10,0.15)';
+    approvalEl.style.color = 'var(--accent-orange)';
+  }
+}
+
 /* ===== Tooltip ===== */
 var _tooltipTimer = null;
 
@@ -1530,6 +1606,14 @@ function showTooltip(x, y, html) {
   tip.style.top = (y + 60) + 'px';
   tip.style.transform = '';
   tip.classList.add('visible');
+  /* Reposition if overflowing viewport */
+  var rect = tip.getBoundingClientRect();
+  if (rect.right > window.innerWidth) {
+    tip.style.left = (x - tip.offsetWidth - 10) + 'px';
+  }
+  if (rect.bottom > window.innerHeight) {
+    tip.style.top = (y - tip.offsetHeight - 10) + 'px';
+  }
 }
 
 function hideTooltip() {
@@ -1574,7 +1658,7 @@ function buildNodeTooltip(data) {
 function buildEdgeTooltip(data) {
   let html = '<strong>Acoplamiento</strong>';
   if (data.label) html += '<br>' + escapeHtml(data.label);
-  if (data.coupling_strength) html += '<br><span style="color:var(--text-secondary)">Fuerza: ' + data.coupling_strength + '/10</span>';
+  if (data.coupling_strength) html += '<br><span style="color:var(--text-secondary)">Fuerza: ' + data.coupling_strength + '</span>';
   if (data.sync_type) html += '<br><span style="color:var(--text-secondary)">Tipo: ' + escapeHtml(data.sync_type) + '</span>';
   if (data.direction_type) {
     var dirLabel = data.direction_type === 'directional' ? 'Unidireccional (consumer → provider)' :
@@ -1683,6 +1767,16 @@ function renderEntitiesByCategory(entities) {
     html += '</div>';
   }
   return html;
+}
+
+function _flowHasHealthConflict(flow, appAId, appBId) {
+  if (!_microHealthData || !_microHealthData.apps) return false;
+  var appAHealth = _microHealthData.apps[appAId];
+  var appBHealth = _microHealthData.apps[appBId];
+  if (!appAHealth && !appBHealth) return false;
+  var aConflicts = (appAHealth && appAHealth.conflicts > 0) || (appAHealth && appAHealth.dead_contracts > 0);
+  var bConflicts = (appBHealth && appBHealth.conflicts > 0) || (appBHealth && appBHealth.dead_contracts > 0);
+  return aConflicts || bConflicts;
 }
 
 function escapeHtml(str) {

@@ -197,6 +197,8 @@ def handle_register_app(app_dict: dict) -> dict:
                     # Registrar en la app que consume este contrato
                     if target_contract.contract_id not in app.consumes_contracts:
                         app.consumes_contracts.append(target_contract.contract_id)
+                    # Persistir la app actualizada con consumes_contracts
+                    ecosystem.register_app(app)
                     continue
 
                 # Si no existe contrato provider, crear uno normal con consumer_apps

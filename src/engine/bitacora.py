@@ -16,6 +16,12 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
+from src.engine.jira_markdown_formatter import (
+    build_jira_code_block,
+    build_jira_heading,
+    build_jira_table,
+    format_for_jira_cloud,
+)
 from src.engine.memory import get_memory
 from src.models.documentation import (
     BitacoraEntry,

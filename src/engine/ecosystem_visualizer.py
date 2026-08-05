@@ -147,6 +147,7 @@ async def route_eco_app_detail(request: Request) -> JSONResponse:
         "description": app.description,
         "team": app.team,
         "coupling_type": app.coupling_type,
+        "maturity": app.maturity,
         "story_count": app.story_count,
         "entities": app.entities_snapshot,
         "flows": app.flows_snapshot,
@@ -156,6 +157,7 @@ async def route_eco_app_detail(request: Request) -> JSONResponse:
                 "name": c.name,
                 "type": c.type,
                 "version": c.version,
+                "status": c.status,
                 "consumers": c.consumer_apps,
                 "entities": c.entities_involved,
                 "entities_grouped": _serialize_entities_grouped(c),
@@ -168,6 +170,7 @@ async def route_eco_app_detail(request: Request) -> JSONResponse:
                 "name": c.name,
                 "type": c.type,
                 "version": c.version,
+                "status": c.status,
                 "provider": c.provider_app,
                 "entities": c.entities_involved,
                 "entities_grouped": _serialize_entities_grouped(c),
@@ -268,6 +271,8 @@ def _build_macro_graph(engine: EcosystemEngine) -> dict:
                     "team": app.team,
                     "story_count": app.story_count,
                     "coupling_type": app.coupling_type,
+                    "maturity": app.maturity,
+                    "border_style": _maturity_border_style(app.maturity),
                     "entities_count": len(app.entities_snapshot),
                     "flows_count": len(app.flows_snapshot),
                     "health": health_info["health"],
@@ -288,6 +293,8 @@ def _build_macro_graph(engine: EcosystemEngine) -> dict:
                 "team": app.team,
                 "story_count": app.story_count,
                 "coupling_type": app.coupling_type,
+                "maturity": app.maturity,
+                "border_style": _maturity_border_style(app.maturity),
                 "entities_count": len(app.entities_snapshot),
                 "flows_count": len(app.flows_snapshot),
                 "health": health_info["health"],
@@ -308,6 +315,8 @@ def _build_macro_graph(engine: EcosystemEngine) -> dict:
                 "team": app.team,
                 "story_count": app.story_count,
                 "coupling_type": app.coupling_type,
+                "maturity": app.maturity,
+                "border_style": _maturity_border_style(app.maturity),
                 "entities_count": len(app.entities_snapshot),
                 "flows_count": len(app.flows_snapshot),
                 "health": health_info["health"],
@@ -616,14 +625,17 @@ def _build_flows_between_apps(
     }
 
 
+_stories_cache: dict[str, dict] = {}
+
+
 def _find_stories_for_entities(
     app: AppRegistration, entity_names: list[str]
 ) -> list[str]:
     """Busca HU IDs en una app que referencian las entidades dadas.
 
-    Opera de forma best-effort: si el snapshot de flows/entities
-    del app contiene referencias, las retorna. Si no hay info
-    suficiente, retorna lista vacia.
+    Lee el index.json del .hu-memory/ de la app y busca HUs que
+    mencionen alguna de las entidades proporcionadas. Utiliza un
+    cache en memoria para evitar releer el JSON en cada request.
 
     Args:
         app: App donde buscar.
@@ -632,11 +644,61 @@ def _find_stories_for_entities(
     Returns:
         Lista de story IDs que referencian esas entidades.
     """
-    # Actualmente el snapshot solo tiene entidades y flujos, no HUs por entidad.
-    # Retornamos una lista vacia — el frontend mostrara "Sin HU identificada"
-    # hasta que se implemente un indice mas granular.
-    # Esto evita lecturas pesadas al .hu-memory/ en cada request de la UI.
-    return []
+    if not entity_names:
+        return []
+
+    index_data = _load_app_index(app)
+    if not index_data:
+        return []
+
+    entity_names_lower = {e.lower() for e in entity_names}
+    matched_stories: list[str] = []
+
+    stories = index_data.get("stories", index_data.get("hus", []))
+    for story in stories:
+        story_id = story.get("id", story.get("story_id", ""))
+        if not story_id:
+            continue
+
+        story_entities = story.get("entities", [])
+        story_entities_lower = {e.lower() if isinstance(e, str) else e.get("name", "").lower() for e in story_entities}
+
+        if entity_names_lower & story_entities_lower:
+            matched_stories.append(story_id)
+
+    return matched_stories
+
+
+def _load_app_index(app: AppRegistration) -> Optional[dict]:
+    """Carga y cachea el index.json del .hu-memory/ de una app.
+
+    Args:
+        app: App cuyo indice se quiere cargar.
+
+    Returns:
+        Dict con el contenido del index.json, o None si no existe.
+    """
+    import json
+
+    cache_key = app.app_id
+    if cache_key in _stories_cache:
+        return _stories_cache[cache_key]
+
+    memory_path = Path(app.memory_path)
+    index_path = memory_path / "index.json"
+
+    if not index_path.exists():
+        _stories_cache[cache_key] = {}
+        return {}
+
+    try:
+        index_data = json.loads(index_path.read_text(encoding="utf-8"))
+        _stories_cache[cache_key] = index_data
+        return index_data
+    except (json.JSONDecodeError, OSError) as exc:
+        logger.warning("Error al leer index.json de app '%s': %s", app.app_id, exc)
+        _stories_cache[cache_key] = {}
+        return {}
 
 
 # ─── HEALTH CALCULATION ──────────────────────────────────────────────────────────
@@ -685,6 +747,27 @@ def _calculate_health(
 
 
 # ─── HELPERS ─────────────────────────────────────────────────────────────────────
+
+
+def _maturity_border_style(maturity: str) -> str:
+    """Devuelve el estilo de borde para un nodo segun su madurez.
+
+    - formalized: solid (nodo consolidado)
+    - draft: dashed (en progreso)
+    - reference: dotted (solo referenciada, sin formalizar)
+
+    Args:
+        maturity: Estado de madurez de la app.
+
+    Returns:
+        Estilo CSS de borde para Cytoscape.js.
+    """
+    style_map = {
+        "formalized": "solid",
+        "draft": "dashed",
+        "reference": "dotted",
+    }
+    return style_map.get(maturity, "dashed")
 
 
 def _serialize_entities_grouped(contract: ContractDefinition) -> dict[str, list[str]]:

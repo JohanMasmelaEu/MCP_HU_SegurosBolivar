@@ -39,6 +39,9 @@ class ContractDefinition(BaseModel):
         default="", description="Ruta o URL al OpenAPI/AsyncAPI/schema del contrato"
     )
     version: str = Field(default="1.0.0", description="Version del contrato")
+    status: Literal["draft", "active", "deprecated"] = Field(
+        default="active", description="Estado del ciclo de vida del contrato"
+    )
     entities_involved: list[str] = Field(
         default_factory=list, description="Entidades que cruzan por este contrato (nombres planos)"
     )
@@ -62,6 +65,10 @@ class AppRegistration(BaseModel):
     )
     coupling_type: Literal["cohesive", "decoupled"] = Field(
         description="Tipo de acoplamiento: cohesive (despliegan juntas) o decoupled (independientes)"
+    )
+    maturity: Literal["formalized", "draft", "reference"] = Field(
+        default="draft",
+        description="Estado de madurez: formalized (completa), draft (en progreso), reference (solo referenciada)"
     )
     description: str = Field(default="", description="Descripcion de la app")
     team: str = Field(default="", description="Equipo responsable de la app")
@@ -114,6 +121,10 @@ class EcosystemRegistry(BaseModel):
     ecosystem_id: str = Field(description="Identificador unico del ecosistema")
     name: str = Field(description="Nombre del ecosistema (ej: Plataforma Seguros)")
     description: str = Field(default="", description="Descripcion del ecosistema")
+    version: str = Field(default="0.1.0", description="Version semantica del ecosistema")
+    approved_by: list[str] = Field(
+        default_factory=list, description="Lista de aprobadores de la version actual"
+    )
     apps: list[AppRegistration] = Field(default_factory=list)
     contracts: list[ContractDefinition] = Field(default_factory=list)
     shared_entities: list[SharedEntity] = Field(default_factory=list)

@@ -94,6 +94,8 @@ class EcosystemManager:
                         "ecosystem_id": data.get("ecosystem_id", ecosystem_id),
                         "name": data.get("name", ecosystem_id),
                         "description": data.get("description", ""),
+                        "version": data.get("version", "0.1.0"),
+                        "approved_by": data.get("approved_by", []),
                         "apps_count": len(data.get("apps", [])),
                         "contracts_count": len(data.get("contracts", [])),
                         "created_at": data.get("created_at", ""),
@@ -211,10 +213,15 @@ class EcosystemManager:
 
         shutil.rmtree(str(ecosystem_path))
 
-        # Si era el activo, desactivar
+        # Si era el activo, desactivar y persistir el cambio en state.json
         if self._active_ecosystem and self._active_ecosystem.registry:
             if self._active_ecosystem.registry.ecosystem_id == ecosystem_id:
                 self._active_ecosystem = None
+                # Notificar al WorkspaceManager para que actualice state.json
+                from src.engine.workspace_manager import get_workspace_manager
+                workspace_manager = get_workspace_manager()
+                if workspace_manager:
+                    workspace_manager.set_active_ecosystem(None)
 
         logger.info("Ecosistema '%s' eliminado", ecosystem_id)
         return True

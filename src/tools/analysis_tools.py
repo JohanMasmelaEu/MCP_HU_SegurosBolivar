@@ -39,6 +39,8 @@ def handle_analyze_story(story_text: str) -> dict:
 
     # Obtener contexto relevante (si hay HUs previas)
     relevant_context = []
+    detected_entities: list[str] = []
+    detected_flows: list[str] = []
     summaries = memory.get_all_summaries()
     if summaries:
         # Extraer keywords del texto para el segmenter
@@ -81,6 +83,33 @@ def handle_analyze_story(story_text: str) -> dict:
             "standard_questions": profile.standard_questions,
         })
 
+    # Obtener cross-app context si hay ecosistema activo
+    cross_app_context = {"available": False}
+    try:
+        ecosystem = get_ecosystem()
+        if ecosystem.is_initialized:
+            current_app_id = None
+            if memory.index and memory.index.config.app_id:
+                current_app_id = memory.index.config.app_id
+
+            # Si no se detectaron entidades/flujos del segmenter, intentar deteccion basica
+            eco_entities = detected_entities
+            eco_flows = detected_flows
+            if not eco_entities:
+                known_ents = [e.name for e in memory.get_entities()]
+                eco_entities = [e for e in known_ents if e.lower() in story_text.lower()]
+            if not eco_flows:
+                known_fls = [f.name for f in memory.get_flows()]
+                eco_flows = [f for f in known_fls if f.lower() in story_text.lower().replace(" ", "_")]
+
+            cross_app_context = ecosystem.get_cross_app_context(
+                entity_names=eco_entities,
+                flow_names=eco_flows,
+                current_app_id=current_app_id,
+            )
+    except (RuntimeError, Exception):
+        pass
+
     return {
         "status": "success",
         "suggested_id": next_id,
@@ -88,6 +117,7 @@ def handle_analyze_story(story_text: str) -> dict:
         "experts_activated": [e.value for e in activated_experts],
         "expert_contexts": expert_contexts,
         "relevant_stories": relevant_context,
+        "cross_app_context": cross_app_context,
         "known_entities": [e.name for e in memory.get_entities()],
         "known_flows": [f.name for f in memory.get_flows()],
         "instructions_for_llm": (
@@ -97,7 +127,9 @@ def handle_analyze_story(story_text: str) -> dict:
             "Genera acceptance_criteria en formato given/when/then. "
             "Detecta entities_detected y flows_detected nuevos. "
             "Asigna complexity_tags y dependencies basado en relevant_stories. "
-            "Respeta las entidades y flujos ya existentes en el proyecto (known_entities, known_flows)."
+            "Respeta las entidades y flujos ya existentes en el proyecto (known_entities, known_flows). "
+            "Si cross_app_context esta disponible, considera entidades compartidas, contratos "
+            "y otras apps que tocan las mismas entidades para detectar riesgos de integracion."
         ),
         "output_schema": {
             "id": next_id,
@@ -294,7 +326,10 @@ def handle_explain_for_stakeholder(story_id: str, role: str) -> dict:
     if not story:
         return {"status": "error", "message": f"HU '{story_id}' no encontrada."}
 
-    valid_roles = ["dev_frontend", "dev_backend", "qa", "po", "ux", "devops"]
+    valid_roles = [
+        "dev_frontend", "dev_backend", "qa", "po", "ux", "devops",
+        "arquitecto", "seguridad", "dba", "legal", "negocio",
+    ]
     if role not in valid_roles:
         return {"status": "error", "message": f"Rol '{role}' no valido. Opciones: {valid_roles}"}
 
@@ -335,6 +370,36 @@ def handle_explain_for_stakeholder(story_id: str, role: str) -> dict:
             "focus": "Impacto en infra, feature flags, configuracion por ambiente, escalabilidad, despliegue",
             "include": ["devops", "observability"],
             "exclude": ["ui_details", "business_rules"],
+        },
+        "arquitecto": {
+            "perspective": "Arquitecto de Software",
+            "focus": "Patrones, acoplamiento, contratos cross-app, resiliencia, escalabilidad, decisiones tecnicas",
+            "include": ["integracion", "contratos", "acoplamiento", "patterns"],
+            "exclude": ["ui_details", "business_rules_detail"],
+        },
+        "seguridad": {
+            "perspective": "Especialista en Seguridad",
+            "focus": "Autenticacion, autorizacion, validaciones, OWASP, datos sensibles, cifrado, headers",
+            "include": ["seguridad", "datos_sensibles", "auth"],
+            "exclude": ["ui_details", "ux_flows"],
+        },
+        "dba": {
+            "perspective": "DBA / Administrador de Base de Datos",
+            "focus": "Modelo de datos, indices, migraciones, performance queries, integridad referencial",
+            "include": ["datos", "migraciones", "performance"],
+            "exclude": ["ui_details", "ux_flows", "infra_cloud"],
+        },
+        "legal": {
+            "perspective": "Legal / Cumplimiento",
+            "focus": "Habeas data, retencion de datos, consentimiento, regulacion, compliance, auditoria",
+            "include": ["legal", "compliance", "datos_personales"],
+            "exclude": ["technical_details", "ui_details"],
+        },
+        "negocio": {
+            "perspective": "Analista de Negocio",
+            "focus": "Reglas de negocio, impacto en procesos, KPIs, casos de uso, valor para el cliente",
+            "include": ["negocio", "reglas", "procesos", "valor"],
+            "exclude": ["technical_details", "infra_details"],
         },
     }
 

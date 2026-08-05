@@ -22,6 +22,22 @@ class ExpertType(str, Enum):
     LEGAL = "legal"
 
 
+# Mapeo de ExpertType a capas SDD.
+# "transversal" indica que el experto aplica a todas las capas (no tiene capa propia).
+EXPERT_SDD_LAYER_MAP: dict[str, str] = {
+    ExpertType.NEGOCIO.value: "negocio",
+    ExpertType.UX.value: "presentacion",
+    ExpertType.BACKEND.value: "logica",
+    ExpertType.DATOS.value: "persistencia",
+    ExpertType.SEGURIDAD.value: "seguridad",
+    ExpertType.QA.value: "calidad",
+    ExpertType.INTEGRACION.value: "transversal",
+    ExpertType.OBSERVABILIDAD.value: "transversal",
+    ExpertType.DEVOPS.value: "infraestructura",
+    ExpertType.LEGAL.value: "cumplimiento",
+}
+
+
 class StakeholderRole(str, Enum):
     """Roles de stakeholders para explicaciones contextualizadas."""
 
@@ -31,6 +47,11 @@ class StakeholderRole(str, Enum):
     PO = "po"
     UX = "ux"
     DEVOPS = "devops"
+    ARQUITECTO = "arquitecto"
+    SEGURIDAD = "seguridad"
+    DBA = "dba"
+    LEGAL = "legal"
+    NEGOCIO = "negocio"
 
 
 class Narrative(BaseModel):
