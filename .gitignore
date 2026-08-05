@@ -19,3 +19,6 @@ htmlcov/
 *.log
 .idea/
 .vscode/
+
+# Local docker override (no commitear)
+docker-compose.override.yml

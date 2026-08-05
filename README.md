@@ -1,6 +1,6 @@
 # MCP_HU_SegurosBolivar
 
-MCP Server para analisis inteligente de Historias de Usuario. Combina un panel de 10 expertos especializados, memoria contextual local y segmentacion inteligente de contexto para producir HUs completas, sin ambiguedades ni huecos funcionales.
+MCP Server para analisis inteligente de Historias de Usuario. Combina un panel de 10 expertos especializados, memoria contextual local, segmentacion inteligente de contexto, motor de estimacion adaptativa, gestion de specs SDD y integracion con Jira/Confluence/Clockwork Pro.
 
 Soporta **multiples workspaces y ecosistemas simultaneos** — cada proyecto vive aislado y puedes switchear entre ellos sin reiniciar.
 
@@ -8,7 +8,7 @@ Soporta **multiples workspaces y ecosistemas simultaneos** — cada proyecto viv
 
 ## Requisitos
 
-- **Docker Desktop** instalado y corriendo (unico requisito)
+- **Docker Desktop** instalado y corriendo (unico requisito para uso normal)
 - **Kiro IDE** (o cualquier cliente MCP compatible con stdio)
 
 > No se necesita Python ni ningun runtime en la maquina. Todo corre dentro de Docker.
@@ -41,11 +41,10 @@ Crear `~/.kiro/settings/mcp.json` (global) o `<workspace>/.kiro/settings/mcp.jso
 
 > **IMPORTANTE: `--pull always`** — Sin este flag, Docker usa la imagen cacheada
 > localmente y NO descarga actualizaciones aunque exista una version nueva en el registry.
-> Esto causa que el MCP siga usando una version vieja hasta que hagas `docker pull` manualmente.
 
 ### 2. Reiniciar sesion de Kiro
 
-Docker descarga la imagen la primera vez (~80MB). El MCP queda disponible con los 26 tools.
+Docker descarga la imagen la primera vez (~80MB). El MCP queda disponible con los 58 tools.
 
 ### 3. Inicializar proyecto
 
@@ -62,15 +61,13 @@ Sin `--pull always`, puedes quedar usando una version vieja indefinidamente.
 
 **Sintomas de version desactualizada:**
 - El MCP rechaza crear un segundo ecosistema/proyecto con "ya existe"
-- No aparecen tools como `list_workspaces` o `switch_ecosystem`
-- El server reporta version `1.x` en lugar de `2.x`
+- No aparecen tools nuevos (SDD, Jira, Confluence, Clockwork)
+- El server reporta version anterior
 
 **Solucion manual** (si ya tienes la config sin `--pull always`):
 ```bash
 docker pull ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest
 ```
-
-Luego reconectar el MCP desde el panel de Kiro.
 
 ### Persistencia con Named Volumes
 
@@ -86,81 +83,9 @@ docker volume rm mcp-hu-memory
 # reset_ecosystem(ecosystem_id, confirm=true)
 ```
 
-### Verificar version activa
-
-```bash
-docker run --rm --entrypoint python ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest -c "from src.server import mcp; print(mcp.name, 'v' + mcp._mcp_server_options.get('version','?') if hasattr(mcp,'_mcp_server_options') else '')"
-```
-
 ---
 
-## Multi-Workspace y Multi-Ecosistema (v2.0)
-
-A partir de v2.0, el MCP soporta **N workspaces y N ecosistemas** coexistiendo simultaneamente.
-
-### Conceptos
-
-| Concepto | Que es | Ejemplo |
-|----------|--------|---------|
-| **Workspace** | Un proyecto aislado con su propia memoria de HUs | "OCR Processing", "Cotizador Autos" |
-| **Ecosistema** | Agrupacion de apps con visibilidad transversal | "CUC Platform", "Seguros Core" |
-
-### Flujo tipico multi-proyecto
-
-```
-1. init_project("OCR Processing", domain="ocr/docs")     → crea workspace "ocr-processing"
-2. init_project("Cotizador Web", domain="seguros/autos")  → crea workspace "cotizador-web"
-3. list_workspaces()                                       → muestra ambos, indica activo
-4. switch_workspace("ocr-processing")                      → cambia al primer proyecto
-5. analyze_story("Como usuario quiero...")                  → opera sobre "ocr-processing"
-```
-
-### Flujo tipico multi-ecosistema
-
-```
-1. init_ecosystem(ecosystem_id="eco-cuc", name="CUC Platform")
-2. init_ecosystem(ecosystem_id="eco-seguros", name="Seguros Core")
-3. list_ecosystems()                               → muestra ambos
-4. switch_ecosystem("eco-cuc")                     → activa CUC
-5. register_app(app_id="app-ocr", ...)             → registra en CUC
-```
-
-### Migracion automatica desde v1
-
-Si ya tienes datos en el formato viejo (`/workspace/.hu-memory/` y `/workspace/.hu-ecosystem/`
-directamente en la raiz), el servidor los migra automaticamente al nuevo formato:
-
-```
-/workspace/.hu-memory/     → /workspace/workspaces/default/.hu-memory/
-/workspace/.hu-ecosystem/  → /workspace/ecosystems/<eco-id>/.hu-ecosystem/
-```
-
-No se pierde ningun dato. El workspace migrado se llama "default" y queda como activo.
-
-### Estructura en disco (v2)
-
-```
-/workspace/                        # Volumen Docker montado
-  state.json                       # Workspace y ecosistema activos
-  workspaces/
-    ocr-processing/
-      .hu-memory/
-        index.json, stories/, graph.json, ...
-    cotizador-web/
-      .hu-memory/
-        ...
-  ecosystems/
-    eco-cuc/
-      .hu-ecosystem/
-        ecosystem.json, apps/, contracts/
-    eco-seguros/
-      .hu-ecosystem/
-        ...
-```
-
----
-
-## Como funciona
+## Arquitectura del MCP
 
 ### Panel de Expertos (10)
 
@@ -189,8 +114,6 @@ Los expertos se activan automaticamente segun el contenido de la HU.
 └── estimations/        # Historico de estimaciones
 ```
 
-La memoria vive dentro del volumen Docker. Portable via export/import.
-
 ### Segmentacion Inteligente de Contexto
 
 No carga todas las HUs al contexto — solo las relevantes:
@@ -205,39 +128,115 @@ relevance(HU_new, HU_existing) =
 
 Solo HUs con score > 0.5 entran al contexto. Ahorro tipico: 80-90% de tokens.
 
-### Estimacion Adaptativa (opcional)
+### Estimacion Adaptativa
 
 Se calibra con cada HU completada. Rango optimista/probable/pesimista con nivel de confianza.
 
+### Specs SDD (Spec-Driven Development)
+
+Modelo de especificacion por capas:
+- **Negocio** — reglas, procesos, restricciones
+- **Arquitectura** — decisiones tecnicas, patrones
+- **Seguridad** — controles, autenticacion, cifrado
+- **Gobierno de Informacion** — clasificacion, retencion
+- **Acceso a Datos** — permisos, roles, auditorias
+- **Datos** — modelo, migraciones, indices
+- **Desarrollo** — convenciones, patrones, librerias
+- **QA** — estrategia de testing, cobertura
+
+Las specs se organizan en una **constelacion** con dependencias tipificadas entre ellas (process, data, functional).
+
+### Integracion Jira / Confluence / Clockwork Pro
+
+Operaciones con **doble confirmacion** (el agente prepara, el usuario confirma):
+- Consultar/crear subtareas en Jira
+- Registrar worklogs retroactivos
+- Mover issues entre columnas
+- Leer/crear/actualizar paginas Confluence
+- Iniciar/detener timers en Clockwork Pro
+
 ### Visualizador de Grafo Interactivo
 
-Al arrancar el MCP, se levanta un servidor web en `http://localhost:9751` con UI interactiva:
+Al arrancar el MCP se levanta un servidor web en `http://localhost:9751`:
 
-- **Selector de Workspace** — cambia de proyecto desde el navegador
-- **Selector de Ecosistema** — cambia de ecosistema desde el navegador
+- **Red Neuronal** — grafo de HUs con layout jerarquico/concentrico
+- **Ecosistema** — grafo de apps con contratos y health
+- **Selector de Workspace/Ecosistema** — cambia de proyecto desde el navegador
 - **Click en nodo** → resalta relaciones y muestra panel con detalles
-- **Boton Entidades** → muestra/oculta nodos de entidades del dominio
-- **Boton Flujos** → muestra/oculta nodos de flujos de negocio
+- **Capas** → entidades, flujos, relaciones (toggle individual)
 - **Filtro por entidad** → resalta solo HUs que involucran esa entidad
-- **Colores:** naranja (analyzed), azul (refined), verde (completed)
-
-Abrir en navegador: [http://localhost:9751](http://localhost:9751)
 
 ---
 
-## Tools disponibles (26)
+## Multi-Workspace y Multi-Ecosistema
 
-### Gestion de Workspaces y Ecosistemas
+### Conceptos
+
+| Concepto | Que es | Ejemplo |
+|----------|--------|---------|
+| **Workspace** | Un proyecto aislado con su propia memoria de HUs | "OCR Processing", "Cotizador Autos" |
+| **Ecosistema** | Agrupacion de apps con visibilidad transversal | "CUC Platform", "Seguros Core" |
+
+### Flujo tipico multi-proyecto
+
+```
+1. init_project("OCR Processing", domain="ocr/docs")     → crea workspace "ocr-processing"
+2. init_project("Cotizador Web", domain="seguros/autos")  → crea workspace "cotizador-web"
+3. list_workspaces()                                       → muestra ambos, indica activo
+4. switch_workspace("ocr-processing")                      → cambia al primer proyecto
+5. analyze_story("Como usuario quiero...")                  → opera sobre "ocr-processing"
+```
+
+### Flujo tipico multi-ecosistema
+
+```
+1. init_ecosystem(ecosystem_id="eco-cuc", name="CUC Platform")
+2. init_ecosystem(ecosystem_id="eco-seguros", name="Seguros Core")
+3. list_ecosystems()                               → muestra ambos
+4. switch_ecosystem("eco-cuc")                     → activa CUC
+5. register_app(app_id="app-ocr", ...)             → registra en CUC
+```
+
+### Estructura en disco
+
+```
+/workspace/                        # Volumen Docker montado
+  state.json                       # Workspace y ecosistema activos
+  workspaces/
+    ocr-processing/
+      .hu-memory/
+        index.json, stories/, graph.json, ...
+    cotizador-web/
+      .hu-memory/
+        ...
+  ecosystems/
+    eco-cuc/
+      .hu-ecosystem/
+        ecosystem.json, apps/, contracts/
+    eco-seguros/
+      .hu-ecosystem/
+        ...
+```
+
+### Migracion automatica desde v1
+
+Si ya tienes datos en el formato viejo (`/workspace/.hu-memory/` directamente en la raiz), el servidor los migra automaticamente al nuevo formato multi-workspace/ecosistema. No se pierde ningun dato.
+
+---
+
+## Tools disponibles (58)
+
+### Gestion de Workspaces y Ecosistemas (6)
 | Tool | Descripcion |
 |------|-------------|
 | `list_workspaces` | Lista todos los workspaces con metadata y cual es el activo |
-| `switch_workspace` | Cambia el workspace activo (todas las operaciones van a este) |
+| `switch_workspace` | Cambia el workspace activo |
 | `reset_workspace` | Elimina un workspace permanentemente (requiere confirm=true) |
 | `list_ecosystems` | Lista todos los ecosistemas con metadata y cual es el activo |
 | `switch_ecosystem` | Cambia el ecosistema activo |
 | `reset_ecosystem` | Elimina un ecosistema permanentemente (requiere confirm=true) |
 
-### Gestion de proyecto
+### Gestion de Proyecto (4)
 | Tool | Descripcion |
 |------|-------------|
 | `init_project` | Crea un workspace nuevo e inicializa su memoria |
@@ -245,7 +244,7 @@ Abrir en navegador: [http://localhost:9751](http://localhost:9751)
 | `export_memory` | Exporta memoria como .zip portable |
 | `import_memory` | Importa memoria desde export previo |
 
-### Analisis de HUs
+### Analisis de HUs (5)
 | Tool | Descripcion |
 |------|-------------|
 | `analyze_story` | Analisis multi-experto de una HU (input flexible → output estandarizado) |
@@ -254,52 +253,211 @@ Abrir en navegador: [http://localhost:9751](http://localhost:9751)
 | `get_expert_analysis` | Analisis profundo desde un experto especifico |
 | `explain_for_stakeholder` | Reformula HU para un rol (dev, qa, po, ux) |
 
-### Deteccion de problemas
+### Deteccion de Problemas (2)
 | Tool | Descripcion |
 |------|-------------|
 | `detect_conflicts` | Detecta duplicaciones, contradicciones, flujos abiertos |
 | `suggest_next_stories` | Sugiere HUs faltantes basado en gaps |
 
-### Estimacion
+### Estimacion (4)
 | Tool | Descripcion |
 |------|-------------|
-| `estimate_story` | Estimacion con rango + confianza |
+| `estimate_story` | Estimacion con rango optimista/probable/pesimista + confianza |
 | `register_completion` | Registra tiempo real (calibra el motor) |
 | `get_velocity` | Velocidad del equipo y tendencias |
 | `calibrate_estimates` | Recalcula factores manualmente |
 
-### Ecosistema (visibilidad transversal)
+### Ecosistema (5)
 | Tool | Descripcion |
 |------|-------------|
-| `init_ecosystem` | Crea un ecosistema nuevo (aislado de los demas) |
+| `init_ecosystem` | Crea un ecosistema nuevo |
 | `register_app` | Registra app en el ecosistema activo |
-| `list_ecosystem` | Estado completo del ecosistema activo (apps, contratos, entidades) |
+| `list_ecosystem` | Estado completo del ecosistema (apps, contratos, entidades) |
 | `get_cross_app_context` | Contexto transversal de otras apps relevante para una HU |
 | `sync_ecosystem` | Re-sincroniza snapshots de apps desde sus memorias |
+
+### SDD — Reglas y Specs (11)
+| Tool | Descripcion |
+|------|-------------|
+| `manage_rules_catalog` | CRUD de reglas transversales corporativas |
+| `create_spec` | Crea una nueva spec SDD (inicializa capas vacias) |
+| `update_spec_layer` | Actualiza el contenido de una capa SDD |
+| `approve_spec` | Aprueba una spec (cambia status a approved) |
+| `get_spec` | Obtiene spec completa o filtrada por rol |
+| `list_specs` | Lista resumenes de todas las specs |
+| `get_constellation` | Grafo de specs con dependencias (formato Cytoscape.js) |
+| `add_spec_dependency` | Agrega dependencia entre specs |
+| `detect_constellation_gaps` | Detecta specs huerfanas, ciclos, referencias rotas |
+| `export_spec_markdown` | Exporta spec como Markdown estructurado |
+| `import_spec` | Importa specs desde Markdown |
+
+### Documentacion y Bitacoras (2)
+| Tool | Descripcion |
+|------|-------------|
+| `generate_bitacora` | Bitacora completa del proyecto (Markdown + HTML Confluence) |
+| `generate_daily_bitacora` | Bitacora diaria con validacion de 8 horas |
+
+### Jira (7)
+| Tool | Descripcion |
+|------|-------------|
+| `jira_query_issue` | Consulta detallada de un issue |
+| `jira_search` | Busqueda por JQL |
+| `jira_add_comment` | Agregar comentario a un issue |
+| `jira_add_worklog` | Registrar worklog retroactivo |
+| `jira_get_worklogs` | Consultar worklogs de un issue |
+| `jira_delete_worklog` | Eliminar worklog propio |
+| `jira_create_subtask` | Crear subtarea en un issue existente |
+| `jira_transition_issue` | Mover issue entre columnas del flujo |
+
+### Confluence (3)
+| Tool | Descripcion |
+|------|-------------|
+| `confluence_read_page` | Leer pagina completa |
+| `confluence_create_page` | Crear pagina nueva |
+| `confluence_update_page` | Actualizar pagina existente |
+
+### Clockwork Pro (4)
+| Tool | Descripcion |
+|------|-------------|
+| `clockwork_get_assignments` | Asignaciones del usuario en sprint activo |
+| `clockwork_get_activity_types` | Tipos de tarea disponibles |
+| `clockwork_start_timer` | Iniciar timer en subtarea |
+| `clockwork_stop_timer` | Detener timer en subtarea |
+
+### Control de Acciones (3)
+| Tool | Descripcion |
+|------|-------------|
+| `confirm_action` | Ejecuta accion previamente confirmada por el usuario |
+| `reject_action` | Rechaza/cancela accion pendiente |
+| `list_pending_actions` | Lista acciones pendientes de confirmacion |
+
+### Credenciales (1)
+| Tool | Descripcion |
+|------|-------------|
+| `check_credentials_status` | Verifica que credenciales estan configuradas (no expone valores) |
+
+---
+
+## Integracion Jira / Confluence / Clockwork Pro
+
+### Configuracion de credenciales
+
+Las credenciales se pasan como variables de entorno al container:
+
+```json
+{
+  "mcpServers": {
+    "MCP_HU_SegurosBolivar": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm", "--pull", "always",
+        "-v", "mcp-hu-memory:/workspace",
+        "-p", "9751:9751",
+        "-e", "JIRA_BASE_URL=https://tu-instancia.atlassian.net",
+        "-e", "JIRA_EMAIL=tu@email.com",
+        "-e", "JIRA_API_TOKEN=tu-api-token",
+        "-e", "CONFLUENCE_BASE_URL=https://tu-instancia.atlassian.net/wiki",
+        "-e", "CONFLUENCE_EMAIL=tu@email.com",
+        "-e", "CONFLUENCE_API_TOKEN=tu-api-token",
+        "-e", "CLOCKWORK_BASE_URL=https://api.clockwork.report",
+        "-e", "CLOCKWORK_API_TOKEN=tu-clockwork-token",
+        "ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest"
+      ],
+      "disabled": false
+    }
+  }
+}
+```
+
+Usa `check_credentials_status` para verificar que todo esta configurado.
+
+### Modelo de seguridad
+
+Todas las operaciones contra servicios externos siguen un flujo de **doble confirmacion**:
+
+1. El agente **prepara** la accion (retorna preview con `action_id`)
+2. El usuario **revisa** y confirma o rechaza
+3. Solo `confirm_action` ejecuta realmente la llamada
+
+No existe path de codigo que ejecute operaciones sin confirmacion explicita.
+
+---
+
+## Build local (solo contribuidores)
+
+> **Importante:** El build requiere acceso a PyPI y unpkg.com.
+> En redes corporativas que bloquean tráfico directo, usar el override de Docker Compose.
+
+### Red con acceso directo a internet
+
+```bash
+git clone https://github.com/JohanMasmelaEu/MCP_HU_SegurosBolivar.git
+cd MCP_HU_SegurosBolivar
+docker compose build --no-cache
+docker compose up -d
+```
+
+### Red corporativa (sin acceso directo a PyPI)
+
+Crear un archivo `docker-compose.override.yml` en la raíz del proyecto (ya está en `.gitignore`, no se commitea):
+
+```yaml
+version: "3.8"
+services:
+  mcp-hu:
+    build:
+      context: .
+      network: host
+```
+
+Esto le indica a Docker que use la red del host durante el build, permitiendo resolver PyPI a través de la misma ruta que usa tu máquina.
+
+```bash
+docker compose build --no-cache
+docker compose up -d
+```
+
+### Alternativa sin Docker (desarrollo rápido)
+
+Si el build con Docker sigue fallando, puedes correr el servidor directamente con Python:
+
+```bash
+pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt
+python -m src.server
+```
+
+El visualizador queda disponible en `http://localhost:9751`.
+
+> **Tip:** Para no repetir los `--trusted-host` cada vez, crear `%APPDATA%\pip\pip.ini`:
+> ```ini
+> [global]
+> trusted-host = pypi.org
+>                pypi.python.org
+>                files.pythonhosted.org
+> ```
+
+---
+
+## Publicar imagen (maintainers)
+
+Push a `main` publica automaticamente en ghcr.io via GitHub Actions.
+
+```bash
+git tag v2.0.0 && git push origin v2.0.0
+```
+
+Hacer paquete publico: GitHub → Package settings → Danger Zone → Public.
 
 ---
 
 ## Troubleshooting
 
-### "El proyecto ya esta inicializado"
-
-**Causa:** Estas usando la version v1 del MCP (no tiene multi-workspace).
-
-**Solucion:**
-1. Verificar que la imagen sea la ultima: `docker pull ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest`
-2. Agregar `"--pull", "always"` en la config de Kiro
-3. Reconectar el MCP desde el panel de Kiro
-
-### "El ecosistema ya esta inicializado"
-
-**Causa v1:** Misma que arriba — actualizar imagen.
-**Causa v2:** Ese `ecosystem_id` ya existe. Usar `switch_ecosystem` para activarlo o `reset_ecosystem` para eliminarlo y recrear.
-
 ### Tools nuevos no aparecen
 
-El agente solo ve los tools que el MCP server expone. Si no ves `list_workspaces`, `switch_ecosystem`, etc.:
-1. La imagen es vieja → `docker pull` + reconectar
-2. El MCP no se reconecto → Panel de Kiro → MCP Servers → Reconnect
+El agente solo ve los tools que el MCP server expone. Si no ves tools recientes:
+1. La imagen es vieja → `docker pull ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest` + reconectar
+2. Agregar `--pull always` a la config
+3. Panel de Kiro → MCP Servers → Reconnect
 
 ### Docker no descarga la version nueva
 
@@ -318,32 +476,28 @@ Docker cachea imagenes `latest` localmente. Agregar `--pull always` a la config:
 docker volume rm mcp-hu-memory
 ```
 
----
+### Credenciales de Jira/Confluence no funcionan
 
-## Build local (solo contribuidores)
-
-> **Importante:** El build requiere pasar los argumentos de proxy corporativo para que
-> `pip install` pueda resolver PyPI desde la subred de Seguros Bolivar.
-
-```bash
-git clone https://github.com/JohanMasmelaEu/MCP_HU_SegurosBolivar.git
-cd MCP_HU_SegurosBolivar
-docker build --build-arg HTTP_PROXY=%HTTP_PROXY% --build-arg HTTPS_PROXY=%HTTPS_PROXY% -t ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest .
-```
-
-> En PowerShell usar `$env:HTTP_PROXY` y `$env:HTTPS_PROXY` en lugar de `%...%`.
+1. Verificar con `check_credentials_status`
+2. Los tokens de Atlassian se crean en: https://id.atlassian.com/manage-profile/security/api-tokens
+3. Usar el email de la cuenta Atlassian, no el usuario
 
 ---
 
-## Publicar imagen (maintainers)
+## Stack Tecnico
 
-Push a `main` publica automaticamente en ghcr.io via GitHub Actions.
-
-```bash
-git tag v2.0.0 && git push origin v2.0.0
-```
-
-Hacer paquete publico: GitHub → Package settings → Danger Zone → Public.
+| Componente | Tecnologia |
+|-----------|------------|
+| Runtime | Python 3.12 |
+| MCP SDK | mcp 1.9.2 |
+| Validacion | Pydantic 2.11.3 |
+| Grafos | NetworkX 3.4.2 |
+| HTTP Server (visualizador) | Starlette 0.46.2 + Uvicorn 0.34.3 |
+| HTTP Client (integraciones) | httpx 0.28.1 |
+| Frontend (visualizador) | Cytoscape.js 3.30.4 |
+| Container | Docker (python:3.12-slim) |
+| CI/CD | GitHub Actions → ghcr.io |
+| Transport | stdio (Docker) |
 
 ---
 
