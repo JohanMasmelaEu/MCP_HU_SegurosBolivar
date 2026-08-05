@@ -1,6 +1,6 @@
 # Changelog — MCP_HU_SegurosBolivar
 
-## [No publicado]
+## [2.0.0] — 2026-08-05
 
 ### Agregado
 - Se agrego soporte de ecosistemas multi-app: modelos (`ContractDefinition`, `AppRegistration`, `SharedEntity`, `EcosystemRegistry`, `CrossAppConflict`), engine (`EcosystemEngine`), y 5 tools nuevos (`init_ecosystem`, `register_app`, `list_ecosystem`, `get_cross_app_context`, `sync_ecosystem`)
