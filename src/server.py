@@ -474,7 +474,7 @@ async def sync_ecosystem(app_id: str = "") -> str:
 
 
 @mcp.tool()
-async def manage_rules_catalog(action: str, rule_data: dict = {}) -> str:
+async def manage_rules_catalog(action: str, rule_data: dict | None = None) -> str:
     """Gestiona el catálogo de reglas transversales corporativas.
 
     Permite agregar, listar, actualizar, eliminar y consultar reglas que aplican a capas SDD.
