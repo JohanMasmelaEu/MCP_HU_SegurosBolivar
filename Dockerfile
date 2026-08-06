@@ -16,7 +16,9 @@ RUN mkdir -p /app/static/vendor && \
     urllib.request.urlretrieve('https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js', '/app/static/vendor/cytoscape.min.js'); \
     urllib.request.urlretrieve('https://unpkg.com/layout-base@2.0.1/layout-base.js', '/app/static/vendor/layout-base.js'); \
     urllib.request.urlretrieve('https://unpkg.com/cose-base@2.2.0/cose-base.js', '/app/static/vendor/cose-base.js'); \
-    urllib.request.urlretrieve('https://unpkg.com/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.js', '/app/static/vendor/cytoscape-cose-bilkent.js')"
+    urllib.request.urlretrieve('https://unpkg.com/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.js', '/app/static/vendor/cytoscape-cose-bilkent.js'); \
+    urllib.request.urlretrieve('https://unpkg.com/dagre@0.8.5/dist/dagre.min.js', '/app/static/vendor/dagre.min.js'); \
+    urllib.request.urlretrieve('https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js', '/app/static/vendor/cytoscape-dagre.js')"
 
 COPY src/ ./src/
 
