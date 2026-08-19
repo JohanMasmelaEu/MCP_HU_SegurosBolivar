@@ -84,3 +84,13 @@
 - Se completó el modo claro en `ecosystem_visualizer_ui.html` con overrides para: .view-selector-brand, .view-tab-hint, #toolbar, .toolbar-row-secondary, .toggle-group, .filter-btn, #legend, .toast, .flow-card, .micro-app-block, .micro-connection-label, .seq-diagram, .seq-participant, .narrative-block, y body::before
 - Se verificó consistencia de patrones compartidos entre ambos archivos: view-selector con brand/tabs/icons/hints, glass-panel con pseudo-elemento ::before, legend colapsable, toast, toolbar con textura metálica, toggle-group
 - Se verificó integridad sintáctica: CSS braces, JS braces, y DIV tags balanceados en ambos archivos
+
+### Corregido
+- Se corrigió bug donde el panel de detalle de spec en la constelación no se mostraba al hacer click en un nodo, causado por conflicto de especificidad CSS (estilos inline sobreescribían la regla `.open` del stylesheet)
+- Se movieron los estilos iniciales de `#constellation-detail` del atributo `style=""` inline al bloque `<style>`, alineándose con el patrón que ya usaba `#panel`
+
+### Corregido
+- Se agregó fallback CDN para Cytoscape.js y cose-bilkent en `ecosystem_visualizer_ui.html`, permitiendo que el grafo cargue fuera de Docker (en entorno local sin `/static/vendor/`)
+- Se corrigió `overflow-x: hidden` en `.seq-arrow` que recortaba las puntas de flecha del diagrama de secuencia debido al comportamiento de overflow del navegador
+- Se corrigió `overflow: hidden` en `.proc-pipeline-step` que ocultaba los indicadores circulares del rail (`::before` posicionado en `left: -33px`) en el diagrama de proceso
+- Se agregó `line-color` y `target-arrow-color` por defecto en `NLVS_EDGE_BASE` para garantizar visibilidad de edges como fallback en Cytoscape
