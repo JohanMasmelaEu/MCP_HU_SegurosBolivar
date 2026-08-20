@@ -37,3 +37,4 @@
 ### Cambiado
 - Se modificó el panel de HUs en el Spec Visualizer: los items ahora son `<div>` arrastrables en lugar de `<a>` links, con un link externo independiente para abrir el detalle de la HU
 - Se agregó hint visual en el header del panel de HUs indicando que se pueden arrastrar para asociar
+- Se movió la tabla de HUs del panel superior de la spec al panel de detalle de cada item seleccionado, integrada debajo de la zona de drop para que el drag-and-drop sea directo sin scroll

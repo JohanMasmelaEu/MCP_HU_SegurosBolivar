@@ -79,10 +79,10 @@ html.light .sidebar-select option{background:#fff;color:#1c1c1e}
 .hu-panel-count{font-size:10px;background:rgba(255,255,255,.06);padding:2px 8px;border-radius:10px;font-weight:600;color:var(--text-tertiary)}
 .hu-panel-empty{font-size:12px;color:var(--text-tertiary);font-style:italic;padding:8px 0}
 .hu-filter-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.hu-filter-input{flex:1;max-width:320px;padding:7px 12px 7px 32px;font-size:12px;background:rgba(255,255,255,.04);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:var(--text-primary);outline:none;transition:border-color .2s;font-family:inherit}
+.hu-filter-input{flex:1;padding:7px 12px 7px 32px;font-size:12px;background:rgba(255,255,255,.04);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:var(--text-primary);outline:none;transition:border-color .2s;font-family:inherit}
 .hu-filter-input:focus{border-color:var(--accent-blue)}
 .hu-filter-input::placeholder{color:var(--text-tertiary)}
-.hu-filter-wrap{position:relative;flex:1;max-width:320px}
+.hu-filter-wrap{position:relative;flex:1}
 .hu-filter-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-tertiary);pointer-events:none}
 .hu-table{width:100%;border-collapse:collapse}
 .hu-table-head{display:flex;padding:6px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);border-bottom:1px solid var(--surface-border);gap:12px}
@@ -162,7 +162,7 @@ html.light .sidebar-select option{background:#fff;color:#1c1c1e}
 .layer-tab.active[data-tab="artifacts"] .layer-tab-count{background:rgba(191,90,242,.12);color:var(--accent-purple)}
 
 /* === Master-Detail (Green Area) === */
-.master-detail{display:flex;gap:0;border:1px solid var(--surface-border);border-top:none;border-radius:0 0 var(--radius-md) var(--radius-md);min-height:380px;overflow:hidden;background:var(--surface)}
+.master-detail{display:flex;gap:0;border:1px solid var(--surface-border);border-top:none;border-radius:0 0 var(--radius-md) var(--radius-md);min-height:450px;overflow:hidden;background:var(--surface)}
 .master-panel{width:280px;min-width:240px;border-right:1px solid var(--surface-border);overflow-y:auto;max-height:550px}
 body.edit-mode .master-panel{width:240px;min-width:200px}
 body.edit-mode .detail-panel{max-height:none}
@@ -184,7 +184,7 @@ body.edit-mode .detail-panel{max-height:none}
 .master-item-text{font-size:12px;color:var(--text-primary);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Detail Panel */
-.detail-panel{flex:1;padding:20px 24px;overflow-y:auto;max-height:550px}
+.detail-panel{flex:1;padding:20px 24px;overflow-y:auto;max-height:700px}
 .detail-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:280px;color:var(--text-tertiary);text-align:center}
 .detail-empty svg{width:40px;height:40px;margin-bottom:12px;opacity:.3}
 .detail-empty p{font-size:12px;max-width:260px}
@@ -465,7 +465,7 @@ async function loadSpecList(){try{var r=await fetch('/api/specs');var d=await r.
 async function loadSpec(specId){if(!specId)return;currentSpecId=specId;selectedItem=null;var main=document.getElementById('main-content');main.innerHTML='<div class="loading"><div class="loading-spinner"></div>Cargando spec...</div>';try{var url='/api/spec/'+encodeURIComponent(specId);if(currentRole)url+='?role='+encodeURIComponent(currentRole);var r=await fetch(url);var d=await r.json();if(d.error){showError(d.error);return}currentSpec=d;renderSpec();loadStories(specId);history.replaceState(null,'','/spec?spec_id='+encodeURIComponent(specId))}catch(e){showError('Error: '+e.message)}}
 
 var _huAllStories=[];var _huFilteredStories=[];var _huPage=0;var _huPageSize=4;
-async function loadStories(specId){var c=document.getElementById('hu-list-container');if(!c)return;_huAllStories=[];_huFilteredStories=[];_huPage=0;var inp=document.getElementById('hu-filter-input');if(inp)inp.value='';try{var r=await fetch('/api/spec/'+encodeURIComponent(specId)+'/stories');var d=await r.json();var stories=d.stories||[];var countEl=document.getElementById('hu-panel-count');if(countEl)countEl.textContent=stories.length;if(!stories.length){c.innerHTML='<p class="hu-panel-empty">No hay HUs asociadas a esta spec.</p>';document.getElementById('hu-pagination').style.display='none';return}_huAllStories=stories;_huFilteredStories=stories;renderHUPage()}catch(e){c.innerHTML='<p class="hu-panel-empty">Error: '+esc(e.message)+'</p>'}}
+async function loadStories(specId){_huAllStories=[];_huFilteredStories=[];_huPage=0;var inp=document.getElementById('hu-filter-input');if(inp)inp.value='';try{var r=await fetch('/api/spec/'+encodeURIComponent(specId)+'/stories');var d=await r.json();var stories=d.stories||[];if(!stories.length){_huAllStories=[];_huFilteredStories=[];return}_huAllStories=stories;_huFilteredStories=stories;renderHUPage()}catch(e){console.warn('loadStories error:',e)}}
 function filterHUList(){var inp=document.getElementById('hu-filter-input');var q=(inp?inp.value:'').toLowerCase().trim();_huPage=0;if(!q){_huFilteredStories=_huAllStories}else{_huFilteredStories=_huAllStories.filter(function(s){return s.id.toLowerCase().indexOf(q)!==-1||s.title.toLowerCase().indexOf(q)!==-1})}renderHUPage()}
 function huPagePrev(){if(_huPage>0){_huPage--;renderHUPage()}}
 function huPageNext(){var maxPage=Math.ceil(_huFilteredStories.length/_huPageSize)-1;if(_huPage<maxPage){_huPage++;renderHUPage()}}
@@ -505,9 +505,6 @@ if((spec.rules_applied||[]).length)addNavItem(navEl,'rules','Reglas','var(--acce
 
 var main=document.getElementById('main-content');
 var html='<div class="spec-header"><h1 class="spec-title">'+esc(spec.project_name||spec.spec_id)+'</h1><p class="spec-subtitle">Software Design Document &mdash; '+esc(spec.spec_id)+'</p></div>';
-
-// HU Panel
-html+='<div class="hu-panel"><div class="hu-panel-header"><span class="hu-panel-title">Historias de Usuario</span><span class="hu-panel-count" id="hu-panel-count">...</span><span style="margin-left:auto;font-size:10px;color:var(--text-tertiary);font-style:italic">Arrastra una HU al detalle de un item para asociarla</span></div><div class="hu-filter-row"><div class="hu-filter-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" class="hu-filter-input" id="hu-filter-input" placeholder="Buscar por ID o nombre..." oninput="filterHUList()"></div></div><div id="hu-list-container"><p class="hu-panel-empty">Cargando historias...</p></div><div class="hu-pagination" id="hu-pagination" style="display:none"><span class="hu-pagination-info" id="hu-pagination-info"></span><div class="hu-pagination-btns"><button class="hu-pagination-btn" id="hu-btn-prev" onclick="huPagePrev()" disabled>&laquo; Anterior</button><button class="hu-pagination-btn" id="hu-btn-next" onclick="huPageNext()">Siguiente &raquo;</button></div></div></div>';
 
 // Layer sections
 nonEmpty.forEach(function(key,idx){html+=renderLayer(key,layers[key],idx===0)});
@@ -595,7 +592,7 @@ html+='</div>';
 if(detail){html+='<div class="detail-body">'+esc(detail)+'</div>'}else{html+='<div class="detail-no-content">Sin detalle expandido. Haz clic en Editar para agregar contexto.</div>'}
 html+=renderHUDropZone(layerKey,itemKey,assocHUs);
 }
-el.innerHTML=html;initDropZone(layerKey,itemKey)}
+el.innerHTML=html;initDropZone(layerKey,itemKey);renderHUPage()}
 
 function showAddForm(layerKey,sectionKey){selectedItem=null;var el=document.getElementById('detail-'+layerKey);if(!el)return;
 var masterEl=document.getElementById('master-'+layerKey);if(masterEl)masterEl.querySelectorAll('.master-item').forEach(function(e){e.classList.remove('selected')});
@@ -694,11 +691,19 @@ function onHUDragStart(e,storyId,storyTitle){e.dataTransfer.setData('text/plain'
 
 function renderHUDropZone(layerKey,itemKey,assocHUs){var html='<div class="hu-drop-zone" id="drop-zone-'+layerKey+'-'+itemKey+'">';
 html+='<div class="hu-drop-zone-header"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg><span class="hu-drop-zone-title">HUs Asociadas</span><span class="hu-drop-zone-count">'+assocHUs.length+'</span></div>';
-if(!assocHUs.length){html+='<div class="hu-drop-zone-hint">Arrastra una HU desde el panel superior para asociarla a este item</div>'}else{
+if(!assocHUs.length){html+='<div class="hu-drop-zone-hint">Arrastra una HU desde la tabla de abajo para asociarla a este item</div>'}else{
 html+='<ul class="hu-assoc-list">';assocHUs.forEach(function(huId){var story=_huAllStories.find(function(s){return s.id===huId});var title=story?story.title:huId;
 html+='<li class="hu-assoc-chip" title="'+escAttr(title)+'"><a href="/story?id='+esc(huId)+'" target="_blank" style="color:inherit;text-decoration:none">'+esc(huId)+'</a><span class="chip-remove" onclick="removeAssociation(\''+layerKey+'\',\''+escAttr(itemKey)+'\',\''+esc(huId)+'\')">&times;</span></li>'});
 html+='</ul>'}
-html+='</div>';return html}
+html+='</div>';
+// Inline HU table for drag source
+html+='<div class="hu-panel" style="margin-top:16px;padding:10px 12px">';
+html+='<div class="hu-panel-header"><span class="hu-panel-title">Historias de Usuario</span><span class="hu-panel-count">'+_huAllStories.length+'</span><span style="margin-left:auto;font-size:10px;color:var(--text-tertiary);font-style:italic">Arrastra para asociar</span></div>';
+html+='<div class="hu-filter-row"><div class="hu-filter-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" class="hu-filter-input" id="hu-filter-input" placeholder="Buscar por ID o nombre..." oninput="filterHUList()"></div></div>';
+html+='<div id="hu-list-container"></div>';
+html+='<div class="hu-pagination" id="hu-pagination" style="display:none"><span class="hu-pagination-info" id="hu-pagination-info"></span><div class="hu-pagination-btns"><button class="hu-pagination-btn" id="hu-btn-prev" onclick="huPagePrev()" disabled>&laquo; Anterior</button><button class="hu-pagination-btn" id="hu-btn-next" onclick="huPageNext()">Siguiente &raquo;</button></div></div>';
+html+='</div>';
+return html}
 
 function initDropZone(layerKey,itemKey){var dz=document.getElementById('drop-zone-'+layerKey+'-'+itemKey);if(!dz)return;
 dz.addEventListener('dragover',function(e){e.preventDefault();e.dataTransfer.dropEffect='link';dz.classList.add('drag-over')});
