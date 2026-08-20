@@ -17,6 +17,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse
 
 from src.engine.spec_engine import get_spec_engine
+from src.engine.memory import get_memory
 from src.models.sdd import LayerContent, SDDLayer
 
 logger = logging.getLogger("mcp_hu.engine.spec_visualizer")
@@ -590,3 +591,40 @@ def _generate_impact_suggestion(target_layer: str, change_type: str, description
 
     layer_suggestions = suggestions.get(target_layer, {})
     return layer_suggestions.get(change_type, "Revisar si esta capa requiere ajustes.")
+
+
+async def route_api_spec_stories(request: Request) -> JSONResponse:
+    """API: lista las HUs asociadas al proyecto/spec actual.
+
+    GET /api/spec/{spec_id}/stories
+    Retorna lista resumida de historias de usuario disponibles en la memoria
+    del workspace activo, con id, titulo, status y narrativa.
+    """
+    spec_id = request.path_params.get("spec_id", "")
+
+    spec_engine = get_spec_engine()
+    if not spec_engine:
+        return JSONResponse({"stories": [], "error": "SpecEngine no disponible."}, status_code=500)
+
+    spec = spec_engine.get_spec(spec_id)
+    if not spec:
+        return JSONResponse({"stories": [], "error": f"Spec '{spec_id}' no encontrada."}, status_code=404)
+
+    try:
+        memory = get_memory()
+        all_stories = memory.get_all_stories()
+        stories_data = []
+        for story in all_stories:
+            stories_data.append({
+                "id": story.id,
+                "title": story.title,
+                "status": story.status,
+                "narrative": story.narrative.model_dump(mode="json") if story.narrative else None,
+                "complexity_tags": story.complexity_tags,
+                "total_gaps": story.total_gaps,
+                "total_questions": story.total_questions,
+            })
+        return JSONResponse({"stories": stories_data, "spec_id": spec_id})
+    except RuntimeError as exc:
+        logger.warning("No se pudo cargar stories: %s", exc)
+        return JSONResponse({"stories": [], "warning": str(exc)})

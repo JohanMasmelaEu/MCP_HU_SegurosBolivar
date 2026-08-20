@@ -39,3 +39,14 @@
   - Se mejoró el **contraste general del sidebar**: section titles y layer-nav items ahora usan `--text-primary`/`--text-secondary` en lugar de `--text-tertiary`.
   - Se mejoró el diseño de **item-cards**: borde izquierdo de color por tipo (azul=decisiones, naranja=restricciones, púrpura=artefactos), preview del detalle visible sin expandir, y `data-type` para estilizado contextual.
   - Se agregó **tema claro funcional** con toggle en el topnav (botón luna/sol). Variables CSS completas para light mode, persistencia en `localStorage`, y estilos específicos para selects y scrollbars en light.
+
+### Cambiado
+- Se rediseñó la UI del detalle de Spec (`spec_visualizer_ui.html`) con nuevo layout master-detail:
+  - **Panel de Elementos Asociados (HU)**: zona superior a nivel general del spec (no por capa) que muestra el listado de Historias de Usuario vinculadas. Cada HU es clickeable y abre su detalle en nueva pestaña (`target="_blank"`).
+  - **Layout Master-Detail para contenido de tabs**: la zona de Decisiones/Restricciones/Artefactos ahora se divide en un listado a la izquierda (master) y un panel de detalle a la derecha (detail). Al seleccionar un elemento de la lista, su detalle se muestra en el panel derecho.
+  - **Formulario de nuevo elemento en zona de detalle**: al presionar "+ Agregar", el panel derecho (detail) se convierte en el formulario para capturar título y detalle del nuevo item, manteniendo la consistencia visual.
+  - Se eliminó el patrón de cards colapsables (accordion) reemplazándolo por el patrón click-to-select en master-detail.
+
+### Agregado
+- Se creó endpoint `GET /api/spec/{spec_id}/stories` que retorna la lista de HUs almacenadas en la memoria del workspace activo (id, título, status, narrativa, complexity_tags, gaps, questions).
+- Se registró la nueva ruta en `visualizer.py` para servir las stories asociadas.

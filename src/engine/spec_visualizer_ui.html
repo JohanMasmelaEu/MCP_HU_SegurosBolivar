@@ -3,667 +3,306 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SDD Spec Viewer — Capas y Decisiones</title>
+<title>SDD Spec Viewer</title>
 <style>
-:root {
-  --bg: #000000;
-  --surface: rgba(28,28,30,0.72);
-  --surface-elevated: rgba(44,44,46,0.65);
-  --surface-border: rgba(255,255,255,0.12);
-  --surface-border-hover: rgba(255,255,255,0.22);
-  --surface-active: rgba(255,255,255,0.06);
-  --text-primary: rgba(255,255,255,0.95);
-  --text-secondary: rgba(255,255,255,0.65);
-  --text-tertiary: rgba(255,255,255,0.40);
-  --accent-blue: #0a84ff;
-  --accent-purple: #bf5af2;
-  --accent-orange: #ff9f0a;
-  --accent-green: #30d158;
-  --accent-red: #ff453a;
-  --accent-teal: #64d2ff;
-  --accent-pink: #ff375f;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --blur-light: blur(20px) saturate(1.4);
-  --neo-raised: 0 2px 8px rgba(0,0,0,0.4), 0 0 1px rgba(255,255,255,0.05);
-  --select-bg: rgba(255,255,255,0.08);
-  --select-border: rgba(255,255,255,0.18);
-  --select-border-hover: rgba(255,255,255,0.30);
-  --select-arrow: rgba(255,255,255,0.50);
-  --card-constraint-accent: var(--accent-orange);
-  --card-artifact-accent: var(--accent-purple);
-  --card-decision-accent: var(--accent-blue);
-}
+:root{--bg:#000;--surface:rgba(28,28,30,.72);--surface-elevated:rgba(44,44,46,.65);--surface-border:rgba(255,255,255,.12);--surface-border-hover:rgba(255,255,255,.22);--surface-active:rgba(255,255,255,.06);--text-primary:rgba(255,255,255,.95);--text-secondary:rgba(255,255,255,.65);--text-tertiary:rgba(255,255,255,.4);--accent-blue:#0a84ff;--accent-purple:#bf5af2;--accent-orange:#ff9f0a;--accent-green:#30d158;--accent-red:#ff453a;--accent-teal:#64d2ff;--accent-pink:#ff375f;--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--blur-light:blur(20px) saturate(1.4);--neo-raised:0 2px 8px rgba(0,0,0,.4),0 0 1px rgba(255,255,255,.05);--select-bg:rgba(255,255,255,.08);--select-border:rgba(255,255,255,.18);--select-border-hover:rgba(255,255,255,.3)}
+html.light{--bg:#f5f5f7;--surface:rgba(255,255,255,.85);--surface-elevated:rgba(255,255,255,.95);--surface-border:rgba(0,0,0,.1);--surface-border-hover:rgba(0,0,0,.18);--surface-active:rgba(0,0,0,.04);--text-primary:rgba(0,0,0,.88);--text-secondary:rgba(0,0,0,.58);--text-tertiary:rgba(0,0,0,.38);--accent-blue:#007aff;--accent-purple:#af52de;--accent-orange:#ff9500;--accent-green:#34c759;--accent-red:#ff3b30;--accent-teal:#5ac8fa;--accent-pink:#ff2d55;--neo-raised:0 2px 12px rgba(0,0,0,.08),0 0 1px rgba(0,0,0,.06);--select-bg:rgba(0,0,0,.04);--select-border:rgba(0,0,0,.15);--select-border-hover:rgba(0,0,0,.28)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;background:var(--bg);color:var(--text-primary);line-height:1.5;min-height:100vh;overflow-x:hidden}
 
-/* ─── Light Theme ─── */
-html.light {
-  --bg: #f5f5f7;
-  --surface: rgba(255,255,255,0.85);
-  --surface-elevated: rgba(255,255,255,0.95);
-  --surface-border: rgba(0,0,0,0.10);
-  --surface-border-hover: rgba(0,0,0,0.18);
-  --surface-active: rgba(0,0,0,0.04);
-  --text-primary: rgba(0,0,0,0.88);
-  --text-secondary: rgba(0,0,0,0.58);
-  --text-tertiary: rgba(0,0,0,0.38);
-  --accent-blue: #007aff;
-  --accent-purple: #af52de;
-  --accent-orange: #ff9500;
-  --accent-green: #34c759;
-  --accent-red: #ff3b30;
-  --accent-teal: #5ac8fa;
-  --accent-pink: #ff2d55;
-  --neo-raised: 0 2px 12px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.06);
-  --select-bg: rgba(0,0,0,0.04);
-  --select-border: rgba(0,0,0,0.15);
-  --select-border-hover: rgba(0,0,0,0.28);
-  --select-arrow: rgba(0,0,0,0.50);
-  --card-constraint-accent: var(--accent-orange);
-  --card-artifact-accent: var(--accent-purple);
-  --card-decision-accent: var(--accent-blue);
-}
-html.light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); }
-html.light ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.22); }
+/* Top Nav */
+.topnav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--surface-border);backdrop-filter:var(--blur-light)}
+.topnav-back{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--accent-blue);text-decoration:none;padding:5px 10px;border-radius:var(--radius-sm);transition:background .2s}
+.topnav-back:hover{background:rgba(10,132,255,.1)}
+.topnav-back svg{width:14px;height:14px}
+.topnav-divider{width:1px;height:24px;background:var(--surface-border)}
+.topnav-brand{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap}
+.topnav-brand svg{width:18px;height:18px;color:var(--accent-blue)}
+.topnav-spacer{flex:1}
+.topnav-version{font-size:11px;color:var(--accent-teal);font-weight:600}
+.topnav-status{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.topnav-status.draft{background:rgba(255,159,10,.15);color:var(--accent-orange)}
+.topnav-status.approved{background:rgba(48,209,88,.15);color:var(--accent-green)}
+.topnav-status.superseded{background:rgba(255,69,58,.15);color:var(--accent-red)}
+.topnav-btn{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;cursor:pointer;font-size:11px;font-weight:600;border:1px solid var(--surface-border);background:transparent;color:var(--text-secondary);transition:all .2s}
+.topnav-btn:hover{border-color:var(--accent-blue);color:var(--accent-blue)}
+.topnav-btn.active{background:rgba(10,132,255,.15);border-color:var(--accent-blue);color:var(--accent-blue)}
+.topnav-btn svg{width:13px;height:13px}
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--text-primary);
-  line-height: 1.5;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
+/* Layout */
+.layout{display:flex;margin-top:52px;min-height:calc(100vh - 52px)}
 
-/* ─── Top Nav ─── */
-.topnav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  height: 52px;
-  display: flex; align-items: center; gap: 12px;
-  padding: 0 20px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--surface-border);
-  backdrop-filter: var(--blur-light);
-  -webkit-backdrop-filter: var(--blur-light);
-}
-.topnav-back {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 12px; color: var(--accent-blue); text-decoration: none;
-  padding: 5px 10px; border-radius: var(--radius-sm); transition: background 0.2s;
-}
-.topnav-back:hover { background: rgba(10,132,255,0.1); }
-.topnav-back svg { width: 14px; height: 14px; }
-.topnav-divider { width: 1px; height: 24px; background: var(--surface-border); }
-.topnav-brand {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 14px; font-weight: 600; color: var(--text-primary); white-space: nowrap;
-}
-.topnav-brand svg { width: 18px; height: 18px; color: var(--accent-blue); }
-.topnav-spacer { flex: 1; }
-.topnav-version { font-size: 11px; color: var(--accent-teal); font-weight: 600; }
-.topnav-status {
-  font-size: 10px; padding: 3px 10px; border-radius: 20px;
-  font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
-}
-.topnav-status.draft { background: rgba(255,159,10,0.15); color: var(--accent-orange); }
-.topnav-status.approved { background: rgba(48,209,88,0.15); color: var(--accent-green); }
-.topnav-status.superseded { background: rgba(255,69,58,0.15); color: var(--accent-red); }
-.topnav-edit-toggle {
-  display: flex; align-items: center; gap: 6px;
-  padding: 5px 12px; border-radius: 20px; cursor: pointer;
-  font-size: 11px; font-weight: 600; border: 1px solid var(--surface-border);
-  background: transparent; color: var(--text-secondary); transition: all 0.2s;
-}
-.topnav-edit-toggle:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
-.topnav-edit-toggle.active { background: rgba(10,132,255,0.15); border-color: var(--accent-blue); color: var(--accent-blue); }
-.topnav-edit-toggle svg { width: 13px; height: 13px; }
+/* Sidebar */
+.sidebar{width:270px;position:fixed;top:52px;left:0;bottom:0;background:var(--surface);border-right:1px solid var(--surface-border);backdrop-filter:var(--blur-light);overflow-y:auto;padding:16px 0;z-index:50}
+.sidebar-section{padding:0 14px;margin-bottom:18px}
+.sidebar-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:8px;padding:0 4px}
+.sidebar-select{width:100%;padding:9px 32px 9px 12px;font-size:12px;background:var(--select-bg);border:1.5px solid var(--select-border);color:var(--text-primary);border-radius:var(--radius-sm);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:12px;transition:border-color .2s}
+.sidebar-select:hover{border-color:var(--select-border-hover)}
+.sidebar-select:focus{border-color:var(--accent-blue);box-shadow:0 0 0 2px rgba(10,132,255,.15)}
+.sidebar-select option{background:#1c1c1e;color:#fff}
+html.light .sidebar-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.5)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
+html.light .sidebar-select option{background:#fff;color:#1c1c1e}
 
-/* ─── Layout ─── */
-.layout { display: flex; margin-top: 52px; min-height: calc(100vh - 52px); }
+/* Layer Nav */
+.layer-nav{list-style:none}
+.layer-nav li{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;font-size:13px;color:var(--text-primary);position:relative}
+.layer-nav li:hover{background:rgba(255,255,255,.04)}
+.layer-nav li.active{background:rgba(10,132,255,.1);color:var(--accent-blue);font-weight:600}
+.layer-nav li.active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--accent-blue);border-radius:2px}
+.layer-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.layer-dot.strategic{background:var(--accent-purple)}
+.layer-dot.tactical{background:var(--accent-teal)}
+.layer-count{margin-left:auto;font-size:10px;color:var(--text-tertiary);background:rgba(255,255,255,.05);padding:2px 7px;border-radius:10px}
+.layer-progress{position:absolute;bottom:2px;left:12px;right:12px;height:2px;background:rgba(255,255,255,.04);border-radius:1px;overflow:hidden}
+.layer-progress-bar{height:100%;border-radius:1px;transition:width .3s}
 
-/* ─── Sidebar ─── */
-.sidebar {
-  width: 270px; position: fixed; top: 52px; left: 0; bottom: 0;
-  background: var(--surface); border-right: 1px solid var(--surface-border);
-  backdrop-filter: var(--blur-light); overflow-y: auto; padding: 16px 0; z-index: 50;
-}
-.sidebar-section { padding: 0 14px; margin-bottom: 18px; }
-.sidebar-section-title {
-  font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--text-secondary);
-  margin-bottom: 8px; padding: 0 4px;
-}
-.sidebar-select {
-  width: 100%; padding: 9px 32px 9px 12px; font-size: 12px;
-  background: var(--select-bg); border: 1.5px solid var(--select-border);
-  color: var(--text-primary); border-radius: var(--radius-sm);
-  outline: none; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s;
-  appearance: none; -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 12px;
-}
-.sidebar-select:hover { border-color: var(--select-border-hover); }
-.sidebar-select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(10,132,255,0.15); }
-.sidebar-select option { background: #1c1c1e; color: #fff; }
-html.light .sidebar-select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.5)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-}
-html.light .sidebar-select option { background: #fff; color: #1c1c1e; }
-
-/* Layer nav */
-.layer-nav { list-style: none; }
-.layer-nav li {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 12px; border-radius: var(--radius-sm);
-  cursor: pointer; transition: all 0.15s;
-  font-size: 13px; color: var(--text-primary); position: relative; font-weight: 400;
-}
-.layer-nav li:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
-.layer-nav li.active {
-  background: rgba(10,132,255,0.1); color: var(--accent-blue); font-weight: 600;
-}
-.layer-nav li.active::before {
-  content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
-  background: var(--accent-blue); border-radius: 2px;
-}
-.layer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.layer-dot.strategic { background: var(--accent-purple); }
-.layer-dot.tactical { background: var(--accent-teal); }
-.layer-count {
-  margin-left: auto; font-size: 10px; color: var(--text-tertiary);
-  background: rgba(255,255,255,0.05); padding: 2px 7px; border-radius: 10px;
-}
-/* Progress bar per layer */
-.layer-progress {
-  position: absolute; bottom: 2px; left: 12px; right: 12px; height: 2px;
-  background: rgba(255,255,255,0.04); border-radius: 1px; overflow: hidden;
-}
-.layer-progress-bar { height: 100%; border-radius: 1px; transition: width 0.3s; }
-
-/* Context hint for role */
-.role-hint {
-  margin-top: 6px; padding: 8px 10px; font-size: 11px;
-  background: rgba(10,132,255,0.06); border: 1px solid rgba(10,132,255,0.12);
-  border-radius: var(--radius-sm); color: var(--accent-blue); line-height: 1.4;
-  display: none;
-}
-.role-hint.visible { display: block; }
+/* Role hint */
+.role-hint{margin-top:6px;padding:8px 10px;font-size:11px;background:rgba(10,132,255,.06);border:1px solid rgba(10,132,255,.12);border-radius:var(--radius-sm);color:var(--accent-blue);line-height:1.4;display:none}
+.role-hint.visible{display:block}
 
 /* Metadata */
-.meta-card {
-  background: rgba(255,255,255,0.02); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm); padding: 10px 12px;
-}
-.meta-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; }
-.meta-label { font-size: 11px; color: var(--text-tertiary); }
-.meta-value { font-size: 11px; color: var(--text-primary); font-weight: 500; text-align: right; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+.meta-card{background:rgba(255,255,255,.02);border:1px solid var(--surface-border);border-radius:var(--radius-sm);padding:10px 12px}
+.meta-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0}
+.meta-label{font-size:11px;color:var(--text-tertiary)}
+.meta-value{font-size:11px;color:var(--text-primary);font-weight:500;text-align:right;max-width:140px;overflow:hidden;text-overflow:ellipsis}
 
-/* ─── Main Content ─── */
-.main { margin-left: 270px; flex: 1; padding: 28px 36px; max-width: 920px; }
+/* Main */
+.main{margin-left:270px;flex:1;padding:28px 36px;max-width:1200px}
+.spec-header{margin-bottom:20px}
+.spec-title{font-size:20px;font-weight:700;margin-bottom:4px}
+.spec-subtitle{font-size:12px;color:var(--text-secondary)}
 
-.spec-header { margin-bottom: 28px; }
-.spec-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-.spec-subtitle { font-size: 12px; color: var(--text-secondary); }
+/* === HU Panel (Red Area - Spec-level associated elements) === */
+.hu-panel{margin-bottom:24px;padding:16px;background:var(--surface);border:1px solid var(--surface-border);border-radius:var(--radius-md);border-left:3px solid var(--accent-pink)}
+.hu-panel-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.hu-panel-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-pink)}
+.hu-panel-count{font-size:10px;background:rgba(255,55,95,.12);padding:2px 8px;border-radius:10px;font-weight:600;color:var(--accent-pink)}
+.hu-panel-empty{font-size:12px;color:var(--text-tertiary);font-style:italic;padding:8px 0}
+.hu-list{list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+.hu-item{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-sm);background:rgba(255,255,255,.03);border:1px solid var(--surface-border);font-size:12px;color:var(--text-primary);text-decoration:none;transition:all .2s;cursor:pointer}
+.hu-item:hover{border-color:var(--accent-pink);background:rgba(255,55,95,.06);transform:translateY(-1px);box-shadow:var(--neo-raised)}
+.hu-item-id{font-size:10px;font-weight:700;color:var(--accent-pink);background:rgba(255,55,95,.1);padding:2px 6px;border-radius:4px}
+.hu-item-title{font-size:12px;color:var(--text-primary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hu-item-status{font-size:9px;font-weight:600;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:rgba(48,209,88,.1);color:var(--accent-green)}
+.hu-item-status.analyzed{background:rgba(10,132,255,.1);color:var(--accent-blue)}
+.hu-item-status.refined{background:rgba(191,90,242,.1);color:var(--accent-purple)}
+.hu-item-ext{width:12px;height:12px;color:var(--text-tertiary);flex-shrink:0}
 
-/* Layer section */
-.layer-section { display: none; animation: fadeIn 0.25s ease; }
-.layer-section.active { display: block; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+/* === Layer Section === */
+.layer-section{display:none;animation:fadeIn .25s ease}
+.layer-section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.layer-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--surface-border)}
+.layer-header h2{font-size:17px;font-weight:700}
+.layer-badge{font-size:10px;padding:3px 9px;border-radius:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.layer-badge.strategic{background:rgba(191,90,242,.15);color:var(--accent-purple)}
+.layer-badge.tactical{background:rgba(100,210,255,.15);color:var(--accent-teal)}
+.layer-description{font-size:11px;color:var(--text-tertiary);font-style:italic;margin-top:-14px;margin-bottom:16px}
 
-.layer-header {
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--surface-border);
-}
-.layer-header h2 { font-size: 17px; font-weight: 700; }
-.layer-badge {
-  font-size: 10px; padding: 3px 9px; border-radius: 10px;
-  font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
-}
-.layer-badge.strategic { background: rgba(191,90,242,0.15); color: var(--accent-purple); }
-.layer-badge.tactical { background: rgba(100,210,255,0.15); color: var(--accent-teal); }
-.layer-description {
-  font-size: 11px; color: var(--text-tertiary); font-style: italic;
-  margin-top: -14px; margin-bottom: 16px;
-}
+/* Summary */
+.layer-summary{font-size:13px;line-height:1.75;color:var(--text-secondary);margin-bottom:24px;padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--surface-border);border-radius:var(--radius-md);white-space:pre-wrap}
+.layer-summary-editor{display:none;margin-bottom:24px}
+.layer-summary-editor textarea{width:100%;min-height:120px;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--accent-blue);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;font-size:13px;line-height:1.7;resize:vertical;outline:none}
 
-/* Summary — viewer */
-.layer-summary {
-  font-size: 13px; line-height: 1.75; color: var(--text-secondary);
-  margin-bottom: 24px; padding: 14px 16px;
-  background: rgba(255,255,255,0.02); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md); white-space: pre-wrap;
-}
+/* Layer Tabs */
+.layer-tabs{display:flex;gap:0;margin-bottom:0;border-bottom:1px solid var(--surface-border)}
+.layer-tab{display:flex;align-items:center;gap:6px;padding:10px 18px;font-size:12px;font-weight:600;color:var(--text-tertiary);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;user-select:none;background:none;border-top:none;border-left:none;border-right:none}
+.layer-tab:hover{color:var(--text-secondary);background:var(--surface-active)}
+.layer-tab.active{color:var(--accent-blue);border-bottom-color:var(--accent-blue)}
+.layer-tab.active[data-tab="constraints"]{color:var(--accent-orange);border-bottom-color:var(--accent-orange)}
+.layer-tab.active[data-tab="artifacts"]{color:var(--accent-purple);border-bottom-color:var(--accent-purple)}
+.layer-tab-count{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--surface-active);color:var(--text-tertiary);font-weight:700}
+.layer-tab.active .layer-tab-count{background:rgba(10,132,255,.12);color:var(--accent-blue)}
+.layer-tab.active[data-tab="constraints"] .layer-tab-count{background:rgba(255,159,10,.12);color:var(--accent-orange)}
+.layer-tab.active[data-tab="artifacts"] .layer-tab-count{background:rgba(191,90,242,.12);color:var(--accent-purple)}
 
-/* Summary — editor */
-.layer-summary-editor {
-  display: none; margin-bottom: 24px;
-}
-.layer-summary-editor textarea {
-  width: 100%; min-height: 120px; padding: 14px 16px;
-  background: rgba(255,255,255,0.03); border: 1px solid var(--accent-blue);
-  border-radius: var(--radius-md); color: var(--text-primary);
-  font-family: inherit; font-size: 13px; line-height: 1.7; resize: vertical;
-  outline: none; transition: border-color 0.2s;
-}
-.layer-summary-editor textarea:focus { border-color: var(--accent-purple); }
+/* === Master-Detail (Green Area) === */
+.master-detail{display:flex;gap:0;border:1px solid var(--surface-border);border-top:none;border-radius:0 0 var(--radius-md) var(--radius-md);min-height:380px;overflow:hidden;background:var(--surface)}
+.master-panel{width:320px;min-width:280px;border-right:1px solid var(--surface-border);overflow-y:auto;max-height:550px}
+.master-panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--surface-border);position:sticky;top:0;background:var(--surface);z-index:5}
+.master-panel-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary)}
+.section-add-btn{display:none;align-items:center;gap:4px;padding:3px 10px;border-radius:14px;font-size:10px;font-weight:600;color:var(--accent-green);background:rgba(48,209,88,.1);border:1px solid rgba(48,209,88,.2);cursor:pointer;transition:all .2s}
+.section-add-btn:hover{background:rgba(48,209,88,.18)}
+body.edit-mode .section-add-btn{display:flex}
 
-/* ─── Content sections ─── */
-.content-section { margin-bottom: 24px; }
-.content-section.hidden { display: none; }
-.content-section-header {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-}
-.content-section-title {
-  font-size: 12px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.06em; color: var(--text-tertiary);
-}
-.badge-count {
-  font-size: 10px; background: rgba(255,255,255,0.06);
-  padding: 2px 7px; border-radius: 10px; font-weight: 600; color: var(--text-tertiary);
-}
-html.light .badge-count { background: rgba(0,0,0,0.06); }
-.section-add-btn {
-  margin-left: auto; display: none; align-items: center; gap: 4px;
-  padding: 3px 10px; border-radius: 14px; font-size: 10px; font-weight: 600;
-  color: var(--accent-green); background: rgba(48,209,88,0.1);
-  border: 1px solid rgba(48,209,88,0.2); cursor: pointer; transition: all 0.2s;
-}
-.section-add-btn:hover { background: rgba(48,209,88,0.18); }
-body.edit-mode .section-add-btn { display: flex; }
+/* Master Item */
+.master-item{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);transition:all .15s;position:relative}
+.master-item:hover{background:rgba(255,255,255,.03)}
+.master-item.selected{background:rgba(10,132,255,.08)}
+.master-item.selected::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:3px;background:var(--accent-blue);border-radius:2px}
+.master-item[data-type="constraints"].selected::before{background:var(--accent-orange)}
+.master-item[data-type="artifacts"].selected::before{background:var(--accent-purple)}
+.master-item-id{font-size:9px;font-weight:700;color:var(--accent-blue);background:rgba(10,132,255,.1);padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0}
+.master-item[data-type="constraints"] .master-item-id{color:var(--accent-orange);background:rgba(255,159,10,.1)}
+.master-item[data-type="artifacts"] .master-item-id{color:var(--accent-purple);background:rgba(191,90,242,.1)}
+.master-item-text{font-size:12px;color:var(--text-primary);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* ─── Layer Tabs ─── */
-.layer-tabs {
-  display: flex; gap: 0; margin-bottom: 20px;
-  border-bottom: 1px solid var(--surface-border);
-}
-.layer-tab {
-  display: flex; align-items: center; gap: 6px;
-  padding: 10px 18px; font-size: 12px; font-weight: 600;
-  color: var(--text-tertiary); cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s; user-select: none;
-  background: none; border-top: none; border-left: none; border-right: none;
-}
-.layer-tab:hover { color: var(--text-secondary); background: var(--surface-active); }
-.layer-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
-.layer-tab.active[data-tab="constraints"] { color: var(--accent-orange); border-bottom-color: var(--accent-orange); }
-.layer-tab.active[data-tab="artifacts"] { color: var(--accent-purple); border-bottom-color: var(--accent-purple); }
-.layer-tab-count {
-  font-size: 10px; padding: 1px 6px; border-radius: 8px;
-  background: var(--surface-active); color: var(--text-tertiary); font-weight: 700;
-}
-.layer-tab.active .layer-tab-count { background: rgba(10,132,255,0.12); color: var(--accent-blue); }
-.layer-tab.active[data-tab="constraints"] .layer-tab-count { background: rgba(255,159,10,0.12); color: var(--accent-orange); }
-.layer-tab.active[data-tab="artifacts"] .layer-tab-count { background: rgba(191,90,242,0.12); color: var(--accent-purple); }
+/* Detail Panel */
+.detail-panel{flex:1;padding:20px 24px;overflow-y:auto;max-height:550px}
+.detail-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:280px;color:var(--text-tertiary);text-align:center}
+.detail-empty svg{width:40px;height:40px;margin-bottom:12px;opacity:.3}
+.detail-empty p{font-size:12px;max-width:260px}
+.detail-header{margin-bottom:16px}
+.detail-id{display:inline-block;font-size:11px;font-weight:700;color:var(--accent-blue);background:rgba(10,132,255,.12);padding:3px 10px;border-radius:6px;margin-bottom:8px}
+.detail-id.constraints{color:var(--accent-orange);background:rgba(255,159,10,.12)}
+.detail-id.artifacts{color:var(--accent-purple);background:rgba(191,90,242,.12)}
+.detail-title{font-size:15px;font-weight:600;color:var(--text-primary);line-height:1.4}
+.detail-body{font-size:13px;line-height:1.75;color:var(--text-secondary);white-space:pre-wrap;padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--surface-border);border-radius:var(--radius-sm)}
+.detail-no-content{font-size:12px;color:var(--text-tertiary);font-style:italic;padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--surface-border);border-radius:var(--radius-sm)}
 
-/* ─── Item cards (Decisions, Constraints, Artifacts) ─── */
-.item-card {
-  background: var(--surface); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md); margin-bottom: 10px;
-  overflow: hidden; transition: all 0.2s;
-  border-left: 3px solid var(--card-decision-accent);
-}
-.item-card[data-type="constraints"] { border-left-color: var(--card-constraint-accent); }
-.item-card[data-type="artifacts"] { border-left-color: var(--card-artifact-accent); }
-.item-card:hover { border-color: var(--surface-border-hover); transform: translateY(-1px); box-shadow: var(--neo-raised); }
-.item-card-header {
-  display: flex; align-items: center; gap: 10px;
-  padding: 12px 16px; cursor: pointer; user-select: none;
-}
-.item-id {
-  font-size: 10px; font-weight: 700; color: var(--accent-blue);
-  background: rgba(10,132,255,0.12); padding: 3px 9px; border-radius: 6px;
-  white-space: nowrap; flex-shrink: 0; letter-spacing: 0.02em;
-}
-.item-card[data-type="constraints"] .item-id {
-  color: var(--accent-orange); background: rgba(255,159,10,0.12);
-}
-.item-card[data-type="artifacts"] .item-id {
-  color: var(--accent-purple); background: rgba(191,90,242,0.12);
-}
-.item-title { font-size: 13px; color: var(--text-primary); font-weight: 500; flex: 1; line-height: 1.4; }
-.item-type-badge {
-  font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
-  padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
-  color: var(--text-tertiary); background: var(--surface-active);
-}
-.expand-icon {
-  width: 14px; height: 14px; color: var(--text-tertiary); transition: transform 0.2s; flex-shrink: 0;
-}
-.item-card.expanded .expand-icon { transform: rotate(180deg); }
-.item-card-body {
-  max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
-}
-.item-card.expanded .item-card-body { max-height: 600px; }
-.item-card-detail {
-  padding: 14px 16px; font-size: 13px; line-height: 1.7;
-  color: var(--text-secondary); border-top: 1px solid var(--surface-border);
-  white-space: pre-wrap;
-}
-.item-detail-preview {
-  font-size: 11px; color: var(--text-tertiary); margin-top: 2px;
-  padding: 0 16px 10px 16px; line-height: 1.4;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
-}
-/* Edit mode for items */
-.item-card-edit {
-  display: none; padding: 10px 14px; border-top: 1px solid rgba(10,132,255,0.15);
-}
-body.edit-mode .item-card.expanded .item-card-edit { display: block; }
-.item-edit-row { margin-bottom: 8px; }
-.item-edit-label { font-size: 10px; color: var(--text-tertiary); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
-.item-edit-input {
-  width: 100%; padding: 8px 10px; font-size: 12px;
-  background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);
-  color: var(--text-primary); border-radius: var(--radius-sm);
-  font-family: inherit; outline: none; transition: border-color 0.2s;
-}
-.item-edit-input:focus { border-color: var(--accent-blue); }
-textarea.item-edit-input { min-height: 80px; resize: vertical; line-height: 1.6; }
-.item-edit-actions { display: flex; gap: 8px; margin-top: 10px; }
-.btn-save, .btn-delete {
-  padding: 5px 14px; border-radius: var(--radius-sm); font-size: 11px;
-  font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;
-}
-.btn-save { background: rgba(48,209,88,0.15); color: var(--accent-green); }
-.btn-save:hover { background: rgba(48,209,88,0.25); }
-.btn-delete { background: rgba(255,69,58,0.1); color: var(--accent-red); }
-.btn-delete:hover { background: rgba(255,69,58,0.2); }
+/* Edit form in detail */
+.detail-edit-form{display:none;margin-top:16px}
+body.edit-mode .detail-edit-form{display:block}
+.edit-row{margin-bottom:10px}
+.edit-label{font-size:10px;color:var(--text-tertiary);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.edit-input{width:100%;padding:9px 12px;font-size:12px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);color:var(--text-primary);border-radius:var(--radius-sm);font-family:inherit;outline:none;transition:border-color .2s}
+.edit-input:focus{border-color:var(--accent-blue)}
+textarea.edit-input{min-height:100px;resize:vertical;line-height:1.6}
+.edit-actions{display:flex;gap:8px;margin-top:12px}
+.btn-save,.btn-delete,.btn-formalize{padding:6px 16px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all .2s}
+.btn-save{background:rgba(48,209,88,.15);color:var(--accent-green)}
+.btn-save:hover{background:rgba(48,209,88,.25)}
+.btn-delete{background:rgba(255,69,58,.1);color:var(--accent-red)}
+.btn-delete:hover{background:rgba(255,69,58,.2)}
+.btn-formalize{background:rgba(10,132,255,.12);color:var(--accent-blue)}
+.btn-formalize:hover{background:rgba(10,132,255,.2)}
 
-/* ─── Dependencies ─── */
-.dep-list { list-style: none; }
-.dep-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 12px; margin-bottom: 6px;
-  background: rgba(255,255,255,0.02); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm); font-size: 12px; transition: all 0.15s;
-}
-.dep-item:hover { border-color: var(--surface-border-hover); }
-.dep-arrow { color: var(--accent-orange); font-weight: 700; font-size: 14px; }
-.dep-target { color: var(--text-primary); font-weight: 500; }
-.dep-meta { color: var(--text-tertiary); font-size: 11px; }
+/* Add form */
+.add-form-title{font-size:14px;font-weight:600;color:var(--accent-green);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.add-form-title svg{width:16px;height:16px}
 
-/* Rules */
-.rule-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 12px; margin: 3px 4px 3px 0;
-  background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);
-  border-radius: 20px; font-size: 11px; color: var(--text-secondary); transition: all 0.15s;
-}
-.rule-pill:hover { border-color: var(--accent-green); color: var(--accent-green); }
+/* Content section toggle */
+.content-section{display:none}
+.content-section.active{display:block}
 
-/* ─── Toast ─── */
-.toast {
-  position: fixed; bottom: 24px; right: 24px; z-index: 200;
-  padding: 12px 20px; border-radius: var(--radius-md);
-  font-size: 12px; font-weight: 500;
-  background: var(--surface-elevated); border: 1px solid var(--surface-border);
-  backdrop-filter: var(--blur-light); box-shadow: var(--neo-raised);
-  transform: translateY(80px); opacity: 0; transition: all 0.3s ease;
-  pointer-events: none;
-}
-.toast.visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
-.toast.success { border-color: rgba(48,209,88,0.3); color: var(--accent-green); }
-.toast.error { border-color: rgba(255,69,58,0.3); color: var(--accent-red); }
+/* Dependencies / Rules */
+.dep-list{list-style:none}
+.dep-item{display:flex;align-items:center;gap:10px;padding:9px 12px;margin-bottom:6px;background:rgba(255,255,255,.02);border:1px solid var(--surface-border);border-radius:var(--radius-sm);font-size:12px;transition:all .15s}
+.dep-item:hover{border-color:var(--surface-border-hover)}
+.dep-arrow{color:var(--accent-orange);font-weight:700;font-size:14px}
+.dep-target{color:var(--text-primary);font-weight:500}
+.dep-meta{color:var(--text-tertiary);font-size:11px}
+.rule-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;margin:3px 4px 3px 0;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);border-radius:20px;font-size:11px;color:var(--text-secondary);transition:all .15s}
+.rule-pill:hover{border-color:var(--accent-green);color:var(--accent-green)}
 
-/* ─── Empty / Loading ─── */
-.empty-state {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 60px 20px; color: var(--text-tertiary); text-align: center;
-}
-.empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.3; }
-.empty-state h3 { font-size: 15px; margin-bottom: 6px; color: var(--text-secondary); }
-.empty-state p { font-size: 12px; max-width: 320px; }
-.loading { display: flex; align-items: center; justify-content: center; padding: 80px 20px; color: var(--text-tertiary); }
-.loading-spinner {
-  width: 18px; height: 18px; border: 2px solid var(--surface-border);
-  border-top-color: var(--accent-blue); border-radius: 50%;
-  animation: spin 0.8s linear infinite; margin-right: 10px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:200;padding:12px 20px;border-radius:var(--radius-md);font-size:12px;font-weight:500;background:var(--surface-elevated);border:1px solid var(--surface-border);backdrop-filter:var(--blur-light);box-shadow:var(--neo-raised);transform:translateY(80px);opacity:0;transition:all .3s ease;pointer-events:none}
+.toast.visible{transform:translateY(0);opacity:1;pointer-events:auto}
+.toast.success{border-color:rgba(48,209,88,.3);color:var(--accent-green)}
+.toast.error{border-color:rgba(255,69,58,.3);color:var(--accent-red)}
 
-/* ─── Scrollbar ─── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+/* Empty/Loading */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--text-tertiary);text-align:center}
+.empty-state svg{width:48px;height:48px;margin-bottom:16px;opacity:.3}
+.empty-state h3{font-size:15px;margin-bottom:6px;color:var(--text-secondary)}
+.empty-state p{font-size:12px;max-width:320px}
+.loading{display:flex;align-items:center;justify-content:center;padding:80px 20px;color:var(--text-tertiary)}
+.loading-spinner{width:18px;height:18px;border:2px solid var(--surface-border);border-top-color:var(--accent-blue);border-radius:50%;animation:spin .8s linear infinite;margin-right:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.refine-spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--surface-border);border-top-color:var(--accent-blue);border-radius:50%;animation:spin .7s linear infinite}
 
-/* ─── Refine Panel (input → formalizado) ─── */
-.refine-overlay {
-  position: fixed; inset: 0; z-index: 300;
-  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-  display: none; align-items: center; justify-content: center;
-  animation: fadeIn 0.2s ease;
-}
-.refine-overlay.visible { display: flex; }
-.refine-panel {
-  width: 580px; max-width: 92vw; max-height: 85vh; overflow-y: auto;
-  background: rgba(28,28,30,0.95); border: 1px solid var(--surface-border-hover);
-  border-radius: var(--radius-lg); padding: 28px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-}
-.refine-title {
-  font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text-primary);
-}
-.refine-subtitle { font-size: 12px; color: var(--text-tertiary); margin-bottom: 20px; }
-.refine-input-area { margin-bottom: 20px; }
-.refine-input-area label { display: block; font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-.refine-input-area textarea {
-  width: 100%; min-height: 90px; padding: 12px 14px;
-  background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md); color: var(--text-primary);
-  font-family: inherit; font-size: 13px; line-height: 1.6; resize: vertical; outline: none;
-}
-.refine-input-area textarea:focus { border-color: var(--accent-blue); }
-.refine-actions { display: flex; gap: 10px; margin-bottom: 20px; }
-.btn-refine {
-  padding: 8px 18px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600;
-  border: none; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
-}
-.btn-refine.primary { background: rgba(10,132,255,0.2); color: var(--accent-blue); }
-.btn-refine.primary:hover { background: rgba(10,132,255,0.3); }
-.btn-refine.success { background: rgba(48,209,88,0.15); color: var(--accent-green); }
-.btn-refine.success:hover { background: rgba(48,209,88,0.25); }
-.btn-refine.ghost { background: transparent; color: var(--text-tertiary); border: 1px solid var(--surface-border); }
-.btn-refine.ghost:hover { border-color: var(--surface-border-hover); color: var(--text-secondary); }
-.btn-refine:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.18)}
+html.light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12)}
 
-/* Preview card */
-.refine-preview { display: none; animation: fadeIn 0.2s ease; }
-.refine-preview.visible { display: block; }
-.refine-preview-label {
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
-  color: var(--accent-purple); margin-bottom: 10px;
-  display: flex; align-items: center; gap: 6px;
-}
-.refine-preview-label::before {
-  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-purple);
-}
-.refine-preview-card {
-  background: rgba(191,90,242,0.04); border: 1px solid rgba(191,90,242,0.15);
-  border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;
-}
-.refine-preview-id {
-  display: inline-block; font-size: 11px; font-weight: 700; color: var(--accent-blue);
-  background: rgba(10,132,255,0.1); padding: 2px 10px; border-radius: 6px; margin-bottom: 8px;
-}
-.refine-preview-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; }
-.refine-preview-detail {
-  font-size: 12px; line-height: 1.7; color: var(--text-secondary);
-  white-space: pre-wrap; padding: 10px 12px;
-  background: rgba(255,255,255,0.02); border-radius: var(--radius-sm);
-}
-.refine-preview-editable {
-  width: 100%; min-height: 100px; padding: 10px 12px;
-  background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm); color: var(--text-secondary);
-  font-family: inherit; font-size: 12px; line-height: 1.7; resize: vertical; outline: none;
-}
-.refine-preview-editable:focus { border-color: var(--accent-purple); }
+/* Refine Overlay */
+.refine-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center}
+.refine-overlay.visible{display:flex}
+.refine-panel{width:580px;max-width:92vw;max-height:85vh;overflow-y:auto;background:rgba(28,28,30,.95);border:1px solid var(--surface-border-hover);border-radius:var(--radius-lg);padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.refine-title{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--text-primary)}
+.refine-subtitle{font-size:12px;color:var(--text-tertiary);margin-bottom:20px}
+.refine-input-area{margin-bottom:20px}
+.refine-input-area label{display:block;font-size:11px;color:var(--text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.refine-input-area textarea{width:100%;min-height:90px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;font-size:13px;line-height:1.6;resize:vertical;outline:none}
+.refine-input-area textarea:focus{border-color:var(--accent-blue)}
+.refine-actions{display:flex;gap:10px;margin-bottom:20px}
+.btn-refine{padding:8px 18px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.btn-refine.primary{background:rgba(10,132,255,.2);color:var(--accent-blue)}
+.btn-refine.primary:hover{background:rgba(10,132,255,.3)}
+.btn-refine.success{background:rgba(48,209,88,.15);color:var(--accent-green)}
+.btn-refine.success:hover{background:rgba(48,209,88,.25)}
+.btn-refine.ghost{background:transparent;color:var(--text-tertiary);border:1px solid var(--surface-border)}
+.btn-refine.ghost:hover{border-color:var(--surface-border-hover);color:var(--text-secondary)}
+.btn-refine:disabled{opacity:.4;cursor:not-allowed}
+.refine-preview{display:none;animation:fadeIn .2s ease}
+.refine-preview.visible{display:block}
+.refine-preview-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-purple);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.refine-preview-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-purple)}
+.refine-preview-card{background:rgba(191,90,242,.04);border:1px solid rgba(191,90,242,.15);border-radius:var(--radius-md);padding:16px;margin-bottom:16px}
+.refine-preview-id{display:inline-block;font-size:11px;font-weight:700;color:var(--accent-blue);background:rgba(10,132,255,.1);padding:2px 10px;border-radius:6px;margin-bottom:8px}
+.refine-preview-title{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:10px}
+.refine-preview-editable{width:100%;min-height:100px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:var(--text-secondary);font-family:inherit;font-size:12px;line-height:1.7;resize:vertical;outline:none}
+.refine-preview-editable:focus{border-color:var(--accent-purple)}
 
-.refine-spinner {
-  display: inline-block; width: 14px; height: 14px;
-  border: 2px solid var(--surface-border); border-top-color: var(--accent-blue);
-  border-radius: 50%; animation: spin 0.7s linear infinite;
-}
-
-/* ─── Confirm Overlay (propuesta antes de indexar) ─── */
-.confirm-overlay {
-  position: fixed; inset: 0; z-index: 310;
-  background: rgba(0,0,0,0.75); backdrop-filter: blur(10px);
-  display: none; align-items: center; justify-content: center;
-  animation: fadeIn 0.2s ease;
-}
-.confirm-overlay.visible { display: flex; }
-.confirm-panel {
-  width: 640px; max-width: 94vw; max-height: 88vh; overflow-y: auto;
-  background: rgba(28,28,30,0.97); border: 1px solid var(--surface-border-hover);
-  border-radius: var(--radius-lg); padding: 28px;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.7);
-}
-.confirm-title {
-  font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--text-primary);
-  display: flex; align-items: center; gap: 10px;
-}
-.confirm-title-icon {
-  width: 20px; height: 20px; color: var(--accent-orange);
-}
-.confirm-subtitle { font-size: 12px; color: var(--text-tertiary); margin-bottom: 20px; }
-.confirm-diff { margin-bottom: 20px; }
-.confirm-diff-section { margin-bottom: 16px; }
-.confirm-diff-label {
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
-  margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
-}
-.confirm-diff-label.before { color: var(--accent-red); }
-.confirm-diff-label.before::before { content:''; width:8px; height:2px; background:var(--accent-red); border-radius:1px; }
-.confirm-diff-label.after { color: var(--accent-green); }
-.confirm-diff-label.after::before { content:''; width:8px; height:2px; background:var(--accent-green); border-radius:1px; }
-.confirm-diff-content {
-  padding: 12px 14px; border-radius: var(--radius-sm);
-  font-size: 12px; line-height: 1.7; white-space: pre-wrap;
-  max-height: 180px; overflow-y: auto;
-}
-.confirm-diff-content.before {
-  background: rgba(255,69,58,0.04); border: 1px solid rgba(255,69,58,0.12);
-  color: var(--text-secondary);
-}
-.confirm-diff-content.after {
-  background: rgba(48,209,88,0.04); border: 1px solid rgba(48,209,88,0.12);
-  color: var(--text-primary);
-}
-.confirm-diff-content.new-only {
-  background: rgba(48,209,88,0.04); border: 1px solid rgba(48,209,88,0.12);
-  color: var(--text-primary);
-}
-.confirm-meta {
-  font-size: 11px; color: var(--text-tertiary); margin-bottom: 16px;
-  padding: 8px 12px; background: rgba(255,255,255,0.02);
-  border-radius: var(--radius-sm); border: 1px solid var(--surface-border);
-}
-.confirm-actions { display: flex; gap: 10px; }
-.btn-confirm-accept {
-  padding: 10px 22px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700;
-  border: none; cursor: pointer; transition: all 0.2s;
-  background: rgba(48,209,88,0.2); color: var(--accent-green);
-  display: flex; align-items: center; gap: 8px;
-}
-.btn-confirm-accept:hover { background: rgba(48,209,88,0.3); }
-.btn-confirm-reject {
-  padding: 10px 22px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
-  border: 1px solid var(--surface-border); cursor: pointer; transition: all 0.2s;
-  background: transparent; color: var(--text-secondary);
-}
-.btn-confirm-reject:hover { border-color: var(--accent-red); color: var(--accent-red); }
-
-/* Impact analysis section */
-.confirm-impact { margin-bottom: 20px; }
-.confirm-impact-title {
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
-  color: var(--accent-orange); margin-bottom: 10px;
-  display: flex; align-items: center; gap: 6px;
-}
-.confirm-impact-title::before {
-  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-orange);
-}
-.impact-list { list-style: none; }
-.impact-item {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 10px 12px; margin-bottom: 6px;
-  background: rgba(255,255,255,0.02); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-sm); transition: border-color 0.2s;
-}
-.impact-item:hover { border-color: var(--surface-border-hover); }
-.impact-level {
-  flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; margin-top: 5px;
-}
-.impact-level.high { background: var(--accent-red); box-shadow: 0 0 6px rgba(255,69,58,0.4); }
-.impact-level.medium { background: var(--accent-orange); box-shadow: 0 0 6px rgba(255,159,10,0.3); }
-.impact-level.low { background: var(--text-tertiary); }
-.impact-body { flex: 1; min-width: 0; }
-.impact-layer-name { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
-.impact-reason { font-size: 11px; color: var(--text-secondary); line-height: 1.4; }
-.impact-suggestion {
-  font-size: 10px; color: var(--accent-teal); margin-top: 4px;
-  padding: 3px 8px; background: rgba(100,210,255,0.06);
-  border-radius: 4px; display: inline-block;
-}
-.impact-loading {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 11px; color: var(--text-tertiary); padding: 8px 0;
-}
-.impact-empty { font-size: 11px; color: var(--text-tertiary); font-style: italic; padding: 4px 0; }
-
-
+/* Confirm Overlay */
+.confirm-overlay{position:fixed;inset:0;z-index:310;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center}
+.confirm-overlay.visible{display:flex}
+.confirm-panel{width:640px;max-width:94vw;max-height:88vh;overflow-y:auto;background:rgba(28,28,30,.97);border:1px solid var(--surface-border-hover);border-radius:var(--radius-lg);padding:28px;box-shadow:0 24px 80px rgba(0,0,0,.7)}
+.confirm-title{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--text-primary);display:flex;align-items:center;gap:10px}
+.confirm-title-icon{width:20px;height:20px;color:var(--accent-orange)}
+.confirm-subtitle{font-size:12px;color:var(--text-tertiary);margin-bottom:20px}
+.confirm-diff{margin-bottom:20px}
+.confirm-diff-section{margin-bottom:16px}
+.confirm-diff-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.confirm-diff-label.before{color:var(--accent-red)}
+.confirm-diff-label.before::before{content:'';width:8px;height:2px;background:var(--accent-red);border-radius:1px}
+.confirm-diff-label.after{color:var(--accent-green)}
+.confirm-diff-label.after::before{content:'';width:8px;height:2px;background:var(--accent-green);border-radius:1px}
+.confirm-diff-content{padding:12px 14px;border-radius:var(--radius-sm);font-size:12px;line-height:1.7;white-space:pre-wrap;max-height:180px;overflow-y:auto}
+.confirm-diff-content.before{background:rgba(255,69,58,.04);border:1px solid rgba(255,69,58,.12);color:var(--text-secondary)}
+.confirm-diff-content.after,.confirm-diff-content.new-only{background:rgba(48,209,88,.04);border:1px solid rgba(48,209,88,.12);color:var(--text-primary)}
+.confirm-meta{font-size:11px;color:var(--text-tertiary);margin-bottom:16px;padding:8px 12px;background:rgba(255,255,255,.02);border-radius:var(--radius-sm);border:1px solid var(--surface-border)}
+.confirm-actions{display:flex;gap:10px}
+.btn-confirm-accept{padding:10px 22px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;background:rgba(48,209,88,.2);color:var(--accent-green);display:flex;align-items:center;gap:8px}
+.btn-confirm-accept:hover{background:rgba(48,209,88,.3)}
+.btn-confirm-reject{padding:10px 22px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;border:1px solid var(--surface-border);cursor:pointer;transition:all .2s;background:transparent;color:var(--text-secondary)}
+.btn-confirm-reject:hover{border-color:var(--accent-red);color:var(--accent-red)}
+.confirm-impact{margin-bottom:20px}
+.confirm-impact-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-orange);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.confirm-impact-title::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-orange)}
+.impact-list{list-style:none}
+.impact-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;margin-bottom:6px;background:rgba(255,255,255,.02);border:1px solid var(--surface-border);border-radius:var(--radius-sm)}
+.impact-level{flex-shrink:0;width:8px;height:8px;border-radius:50%;margin-top:5px}
+.impact-level.high{background:var(--accent-red);box-shadow:0 0 6px rgba(255,69,58,.4)}
+.impact-level.medium{background:var(--accent-orange);box-shadow:0 0 6px rgba(255,159,10,.3)}
+.impact-level.low{background:var(--text-tertiary)}
+.impact-body{flex:1;min-width:0}
+.impact-layer-name{font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:2px}
+.impact-reason{font-size:11px;color:var(--text-secondary);line-height:1.4}
+.impact-suggestion{font-size:10px;color:var(--accent-teal);margin-top:4px;padding:3px 8px;background:rgba(100,210,255,.06);border-radius:4px;display:inline-block}
+.impact-loading{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-tertiary);padding:8px 0}
+.impact-empty{font-size:11px;color:var(--text-tertiary);font-style:italic;padding:4px 0}
 </style>
 </head>
 <body>
 
-<!-- Top Navigation -->
+<!-- Top Nav -->
 <nav class="topnav">
-  <a href="/ecosystem#constellation" class="topnav-back">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-    Constelacion
-  </a>
+  <a href="/ecosystem#constellation" class="topnav-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>Constelacion</a>
   <div class="topnav-divider"></div>
-  <div class="topnav-brand">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
-    <span id="nav-project-name">SDD Spec</span>
-  </div>
+  <div class="topnav-brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg><span id="nav-project-name">SDD Spec</span></div>
   <div class="topnav-spacer"></div>
   <span class="topnav-version" id="nav-version"></span>
   <span class="topnav-status draft" id="nav-status"></span>
   <div class="topnav-divider"></div>
-  <button class="topnav-edit-toggle" id="btn-theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
-    <svg id="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-    <svg id="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-    <span id="theme-label">Claro</span>
-  </button>
-  <button class="topnav-edit-toggle" id="btn-edit-mode" onclick="toggleEditMode()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-    Editar
-  </button>
+  <button class="topnav-btn" onclick="toggleTheme()" title="Cambiar tema"><svg id="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><svg id="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg><span id="theme-label">Claro</span></button>
+  <button class="topnav-btn" id="btn-edit-mode" onclick="toggleEditMode()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>
 </nav>
 
 <!-- Layout -->
 <div class="layout">
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-section-title">Spec</div>
-      <select id="spec-selector" class="sidebar-select" onchange="loadSpec(this.value)">
-        <option value="">Cargando...</option>
-      </select>
+      <select id="spec-selector" class="sidebar-select" onchange="loadSpec(this.value)"><option value="">Cargando...</option></select>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-section-title">Capas</div>
       <ul class="layer-nav" id="layer-nav"></ul>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-section-title">Perspectiva (Rol)</div>
       <select id="role-selector" class="sidebar-select" onchange="applyRoleFilter(this.value)">
@@ -682,7 +321,6 @@ textarea.item-edit-input { min-height: 80px; resize: vertical; line-height: 1.6;
       </select>
       <div class="role-hint" id="role-hint"></div>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-section-title">Metadata</div>
       <div class="meta-card">
@@ -696,38 +334,24 @@ textarea.item-edit-input { min-height: 80px; resize: vertical; line-height: 1.6;
     </div>
   </aside>
 
-  <!-- Main content -->
   <main class="main" id="main-content">
     <div class="loading"><div class="loading-spinner"></div>Selecciona una spec...</div>
   </main>
 </div>
 
-<!-- Confirm Overlay (propuesta antes de indexar) -->
+<!-- Confirm Overlay -->
 <div class="confirm-overlay" id="confirm-overlay" onclick="if(event.target===this)rejectConfirm()">
   <div class="confirm-panel">
-    <div class="confirm-title">
-      <svg class="confirm-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>
-      Confirmar cambio antes de indexar
-    </div>
-    <div class="confirm-subtitle">Revisa la propuesta. El cambio solo se persistira si lo confirmas explicitamente.</div>
-
+    <div class="confirm-title"><svg class="confirm-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>Confirmar cambio antes de indexar</div>
+    <div class="confirm-subtitle">Revisa la propuesta. El cambio solo se persistira si lo confirmas.</div>
     <div class="confirm-diff" id="confirm-diff-container"></div>
-
-    <!-- Impact analysis -->
     <div class="confirm-impact" id="confirm-impact-section">
       <div class="confirm-impact-title">Impacto en otras capas del SDD</div>
-      <ul class="impact-list" id="confirm-impact-list">
-        <li class="impact-loading"><span class="refine-spinner"></span> Analizando impacto cross-layer...</li>
-      </ul>
+      <ul class="impact-list" id="confirm-impact-list"><li class="impact-loading"><span class="refine-spinner"></span> Analizando impacto...</li></ul>
     </div>
-
     <div class="confirm-meta" id="confirm-meta"></div>
-
     <div class="confirm-actions">
-      <button class="btn-confirm-accept" onclick="executeConfirm()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-        Confirmar e indexar
-      </button>
+      <button class="btn-confirm-accept" onclick="executeConfirm()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Confirmar e indexar</button>
       <button class="btn-confirm-reject" onclick="rejectConfirm()">Descartar</button>
     </div>
   </div>
@@ -737,34 +361,22 @@ textarea.item-edit-input { min-height: 80px; resize: vertical; line-height: 1.6;
 <div class="refine-overlay" id="refine-overlay" onclick="if(event.target===this)closeRefine()">
   <div class="refine-panel">
     <div class="refine-title" id="refine-panel-title">Formalizar entrada</div>
-    <div class="refine-subtitle">Escribe tu idea en lenguaje natural. El sistema la tipificara como entrada formal del SDD con ID, titulo estructurado y detalle tecnico.</div>
-
-    <div class="refine-input-area">
-      <label>Tu input (lenguaje natural)</label>
-      <textarea id="refine-raw-input" placeholder="Ej: necesito que el sistema valide documentos duplicados antes de ingestarlos en Oleary..."></textarea>
-    </div>
-
+    <div class="refine-subtitle">Escribe tu idea en lenguaje natural. El sistema la tipificara como entrada formal del SDD.</div>
+    <div class="refine-input-area"><label>Tu input (lenguaje natural)</label><textarea id="refine-raw-input" placeholder="Ej: necesito que el sistema valide documentos duplicados..."></textarea></div>
     <div class="refine-actions">
-      <button class="btn-refine primary" id="btn-do-refine" onclick="doRefine()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        Formalizar
-      </button>
+      <button class="btn-refine primary" id="btn-do-refine" onclick="doRefine()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Formalizar</button>
       <button class="btn-refine ghost" onclick="closeRefine()">Cancelar</button>
     </div>
-
     <div class="refine-preview" id="refine-preview">
       <div class="refine-preview-label">Vista previa formalizada</div>
       <div class="refine-preview-card">
         <span class="refine-preview-id" id="refine-result-id"></span>
         <div class="refine-preview-title" id="refine-result-title"></div>
-        <label style="font-size:10px;color:var(--text-tertiary);margin-bottom:4px;display:block">DETALLE (editable antes de guardar)</label>
+        <label style="font-size:10px;color:var(--text-tertiary);margin-bottom:4px;display:block">DETALLE (editable)</label>
         <textarea class="refine-preview-editable" id="refine-result-detail"></textarea>
       </div>
       <div class="refine-actions">
-        <button class="btn-refine success" onclick="acceptRefine()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-          Aceptar y guardar
-        </button>
+        <button class="btn-refine success" onclick="acceptRefine()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Aceptar y guardar</button>
         <button class="btn-refine primary" onclick="doRefine()">Reformalizar</button>
         <button class="btn-refine ghost" onclick="closeRefine()">Descartar</button>
       </div>
@@ -772,767 +384,220 @@ textarea.item-edit-input { min-height: 80px; resize: vertical; line-height: 1.6;
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-/* ===== State ===== */
-let currentSpec = null;
-let currentSpecId = '';
-let currentRole = '';
-let editMode = false;
-let refineContext = null; // { layerKey, section }
-let lastRefinedResult = null;
-let pendingChange = null; // { layerKey, payload, description, before, after }
-
-const LAYER_META = {
-  negocio:       { label: 'Negocio',        category: 'strategic', desc: 'Procesos de negocio, reglas de dominio, stakeholders' },
-  arquitectura:  { label: 'Arquitectura',   category: 'strategic', desc: 'Decisiones de arquitectura, patrones, stack tecnologico' },
-  seguridad:     { label: 'Seguridad',      category: 'strategic', desc: 'Politicas de seguridad, autenticacion, autorizacion' },
-  gobierno_info: { label: 'Gobierno Info',   category: 'strategic', desc: 'Gobierno de informacion, lineamientos de datos' },
-  acceso_datos:  { label: 'Acceso a Datos', category: 'strategic', desc: 'Control de acceso a datos, quien puede ver/operar que' },
-  datos:         { label: 'Datos',          category: 'tactical',  desc: 'Modelo de datos, persistencia, migraciones' },
-  desarrollo:    { label: 'Desarrollo',     category: 'tactical',  desc: 'Estandares de codigo, patrones de implementacion' },
-  qa:            { label: 'QA',             category: 'tactical',  desc: 'Estrategia de testing, cobertura, criterios de calidad' },
-};
-
-const ROLE_HINTS = {
-  dev_backend: 'Vista backend: desarrollo completo, arquitectura y datos como contexto, seguridad visible.',
-  dev_frontend: 'Vista frontend: desarrollo completo, negocio y datos como contexto.',
-  qa: 'Vista QA: testing completo, negocio/seguridad/datos como contexto.',
-  po: 'Vista Product Owner: negocio y gobierno completos, QA como contexto.',
-  ux: 'Vista UX: desarrollo completo, negocio como contexto.',
-  devops: 'Vista DevOps: arquitectura completa, seguridad como contexto.',
-  arquitecto: 'Vista Arquitecto: arquitectura, seguridad y datos completos.',
-  seguridad: 'Vista Seguridad: seguridad completa, arquitectura y gobierno como contexto.',
-  dba: 'Vista DBA: datos y acceso completo, arquitectura como contexto.',
-  legal: 'Vista Legal: gobierno completo, seguridad y negocio como contexto.',
-  negocio: 'Vista Negocio: negocio completo, gobierno como contexto.',
-};
-
-/* ===== Init ===== */
-document.addEventListener('DOMContentLoaded', async function() {
-  await loadSpecList();
-  const params = new URLSearchParams(window.location.search);
-  const specId = params.get('spec_id') || params.get('id');
-  if (specId) {
-    document.getElementById('spec-selector').value = specId;
-    loadSpec(specId);
-  }
-});
-
-async function loadSpecList() {
-  try {
-    const res = await fetch('/api/specs');
-    const data = await res.json();
-    const specs = data.specs || [];
-    const sel = document.getElementById('spec-selector');
-    sel.innerHTML = '<option value="">— Seleccionar spec —</option>';
-    specs.forEach(function(s) {
-      const opt = document.createElement('option');
-      opt.value = s.spec_id;
-      opt.textContent = s.project_name + ' (' + s.status + ')';
-      sel.appendChild(opt);
-    });
-    if (specs.length === 1) { sel.value = specs[0].spec_id; loadSpec(specs[0].spec_id); }
-  } catch(e) { console.error('Error loading specs:', e); }
-}
-
-async function loadSpec(specId) {
-  if (!specId) return;
-  currentSpecId = specId;
-  const main = document.getElementById('main-content');
-  main.innerHTML = '<div class="loading"><div class="loading-spinner"></div>Cargando spec...</div>';
-
-  try {
-    let url = '/api/spec/' + encodeURIComponent(specId);
-    if (currentRole) url += '?role=' + encodeURIComponent(currentRole);
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.error) { showError(data.error); return; }
-    currentSpec = data;
-    renderSpec();
-    // Update URL without reload
-    const newUrl = '/spec?spec_id=' + encodeURIComponent(specId);
-    if (window.location.search !== '?spec_id=' + encodeURIComponent(specId)) {
-      history.replaceState(null, '', newUrl);
-    }
-  } catch(e) { showError('Error cargando spec: ' + e.message); }
-}
-
-function applyRoleFilter(role) {
-  currentRole = role;
-  const hint = document.getElementById('role-hint');
-  if (role && ROLE_HINTS[role]) {
-    hint.textContent = ROLE_HINTS[role];
-    hint.classList.add('visible');
-  } else {
-    hint.classList.remove('visible');
-  }
-  if (currentSpecId) loadSpec(currentSpecId);
-}
-
-function toggleEditMode() {
-  editMode = !editMode;
-  document.body.classList.toggle('edit-mode', editMode);
-  document.getElementById('btn-edit-mode').classList.toggle('active', editMode);
-  // Re-render to show/hide editors
-  if (currentSpec) renderSpec();
-}
-
-/* ===== Render ===== */
-function renderSpec() {
-  const spec = currentSpec;
-  if (!spec) return;
-
-  // Nav updates
-  document.getElementById('nav-project-name').textContent = spec.project_name || spec.spec_id;
-  document.getElementById('nav-version').textContent = 'v' + (spec.version || '0.1.0');
-  const statusEl = document.getElementById('nav-status');
-  statusEl.textContent = spec.status || 'draft';
-  statusEl.className = 'topnav-status ' + (spec.status || 'draft');
-
-  // Metadata
-  document.getElementById('meta-approvers').textContent = (spec.approved_by || []).join(', ') || '—';
-  document.getElementById('meta-created').textContent = fmtDate(spec.created_at);
-  document.getElementById('meta-updated').textContent = fmtDate(spec.updated_at);
-  document.getElementById('meta-app').textContent = spec.app_id || '—';
-  document.getElementById('meta-deps').textContent = (spec.dependencies || []).length;
-  document.getElementById('meta-rules').textContent = (spec.rules_applied || []).length;
-
-  // Layer nav
-  const layers = spec.layers || {};
-  const layerKeys = Object.keys(layers);
-  const navEl = document.getElementById('layer-nav');
-  navEl.innerHTML = '';
-
-  const nonEmpty = layerKeys.filter(function(k) {
-    const c = layers[k];
-    return c && (c.summary || (c.decisions && c.decisions.length) || (c.constraints && c.constraints.length) || (c.artifacts && c.artifacts.length));
-  });
-
-  nonEmpty.forEach(function(key, idx) {
-    const meta = LAYER_META[key] || { label: key, category: 'tactical', desc: '' };
-    const content = layers[key];
-    const total = (content.decisions || []).length + (content.constraints || []).length + (content.artifacts || []).length;
-    const filled = countFilled(content);
-    const pct = total > 0 ? Math.round((filled / total) * 100) : (content.summary ? 100 : 0);
-
-    const li = document.createElement('li');
-    li.className = idx === 0 ? 'active' : '';
-    li.setAttribute('data-layer', key);
-    li.onclick = function() { activateLayer(key); };
-    li.innerHTML = '<span class="layer-dot ' + meta.category + '"></span>'
-      + '<span>' + meta.label + '</span>'
-      + (total > 0 ? '<span class="layer-count">' + total + '</span>' : '')
-      + '<div class="layer-progress"><div class="layer-progress-bar" style="width:' + pct + '%;background:' + (pct === 100 ? 'var(--accent-green)' : 'var(--accent-blue)') + '"></div></div>';
-    navEl.appendChild(li);
-  });
-
-  // Extra nav items
-  if ((spec.dependencies || []).length) addNavItem(navEl, 'dependencies', 'Dependencias', 'var(--accent-orange)', spec.dependencies.length);
-  if ((spec.rules_applied || []).length) addNavItem(navEl, 'rules', 'Reglas', 'var(--accent-green)', spec.rules_applied.length);
-
-  // Main content
-  const main = document.getElementById('main-content');
-  let html = '<div class="spec-header"><h1 class="spec-title">' + esc(spec.project_name || spec.spec_id) + '</h1>'
-    + '<p class="spec-subtitle">Software Design Document &mdash; ' + esc(spec.spec_id) + '</p></div>';
-
-  nonEmpty.forEach(function(key, idx) {
-    html += renderLayer(key, layers[key], idx === 0);
-  });
-
-  // Dependencies
-  if ((spec.dependencies || []).length) {
-    html += '<div class="layer-section" id="layer-dependencies">'
-      + '<div class="layer-header"><h2>Dependencias</h2><span class="layer-badge strategic">inter-spec</span></div>'
-      + '<ul class="dep-list">';
-    spec.dependencies.forEach(function(dep) {
-      html += '<li class="dep-item"><span class="dep-arrow">&rarr;</span>'
-        + '<span class="dep-target">' + esc(dep.target_spec_id) + '</span>'
-        + '<span class="dep-meta">' + esc(dep.dependency_type) + ' &middot; ' + esc(dep.maturity || '') + '</span>'
-        + (dep.description ? '<span class="dep-meta" style="margin-left:auto">' + esc(dep.description) + '</span>' : '')
-        + '</li>';
-    });
-    html += '</ul></div>';
-  }
-
-  // Rules
-  if ((spec.rules_applied || []).length) {
-    html += '<div class="layer-section" id="layer-rules">'
-      + '<div class="layer-header"><h2>Reglas Aplicadas</h2><span class="layer-badge tactical">catalogo</span></div><div>';
-    spec.rules_applied.forEach(function(r) { html += '<span class="rule-pill">' + esc(r) + '</span>'; });
-    html += '</div></div>';
-  }
-
-  if (nonEmpty.length === 0) {
-    html = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>'
-      + '<h3>Spec sin contenido</h3><p>Esta spec no tiene capas con contenido. Usa <code>update_spec_layer</code> del MCP para alimentarla.</p></div>';
-  }
-
-  main.innerHTML = html;
-}
-
-function renderLayer(key, content, isActive) {
-  const meta = LAYER_META[key] || { label: key, category: 'tactical', desc: '' };
-  let html = '<div class="layer-section' + (isActive ? ' active' : '') + '" id="layer-' + key + '">';
-  html += '<div class="layer-header"><h2>' + meta.label + '</h2><span class="layer-badge ' + meta.category + '">' + meta.category + '</span></div>';
-  if (meta.desc) html += '<p class="layer-description">' + meta.desc + '</p>';
-
-  // Summary viewer
-  if (content.summary) {
-    html += '<div class="layer-summary" id="summary-view-' + key + '">' + esc(content.summary) + '</div>';
-  }
-  // Summary editor
-  html += '<div class="layer-summary-editor" id="summary-edit-' + key + '" ' + (editMode ? 'style="display:block"' : '') + '>'
-    + '<textarea class="item-edit-input" id="summary-textarea-' + key + '" placeholder="Escribe el resumen de esta capa...">' + esc(content.summary || '') + '</textarea>'
-    + '<div style="margin-top:8px;display:flex;gap:8px"><button class="btn-save" onclick="saveLayer(\'' + key + '\')">Guardar capa</button></div>'
-    + '</div>';
-
-  // Tabs for Decisions / Constraints / Artifacts
-  const decisionsCount = (content.decisions || []).length;
-  const constraintsCount = (content.constraints || []).length;
-  const artifactsCount = (content.artifacts || []).length;
-  const hasSections = decisionsCount || constraintsCount || artifactsCount || editMode;
-
-  if (hasSections) {
-    // Determine default active tab
-    let defaultTab = 'decisions';
-    if (!decisionsCount && constraintsCount) defaultTab = 'constraints';
-    else if (!decisionsCount && !constraintsCount && artifactsCount) defaultTab = 'artifacts';
-
-    html += '<div class="layer-tabs" id="tabs-' + key + '">';
-    html += '<button class="layer-tab' + (defaultTab === 'decisions' ? ' active' : '') + '" data-tab="decisions" onclick="switchLayerTab(\'' + key + '\', \'decisions\')">'
-      + 'Decisiones <span class="layer-tab-count">' + decisionsCount + '</span></button>';
-    html += '<button class="layer-tab' + (defaultTab === 'constraints' ? ' active' : '') + '" data-tab="constraints" onclick="switchLayerTab(\'' + key + '\', \'constraints\')">'
-      + 'Restricciones <span class="layer-tab-count">' + constraintsCount + '</span></button>';
-    html += '<button class="layer-tab' + (defaultTab === 'artifacts' ? ' active' : '') + '" data-tab="artifacts" onclick="switchLayerTab(\'' + key + '\', \'artifacts\')">'
-      + 'Artefactos <span class="layer-tab-count">' + artifactsCount + '</span></button>';
-    html += '</div>';
-
-    // Decisions section
-    html += renderItemSection('Decisiones', 'decisions', key, content.decisions || [], content.details || {}, defaultTab === 'decisions');
-    // Constraints section
-    html += renderItemSection('Restricciones', 'constraints', key, content.constraints || [], content.details || {}, defaultTab === 'constraints');
-    // Artifacts section
-    html += renderItemSection('Artefactos', 'artifacts', key, content.artifacts || [], content.details || {}, defaultTab === 'artifacts');
-  }
-
-  html += '</div>';
-  return html;
-}
-
-function renderItemSection(title, sectionKey, layerKey, items, details, isVisible) {
-  const uid = layerKey + '-' + sectionKey;
-  let html = '<div class="content-section' + (isVisible ? '' : ' hidden') + '" id="section-' + uid + '" data-section="' + sectionKey + '">';
-  html += '<div class="content-section-header">'
-    + '<span class="content-section-title">' + title + '</span>'
-    + '<span class="badge-count">' + items.length + '</span>'
-    + '<button class="section-add-btn" onclick="addItem(\'' + layerKey + '\', \'' + sectionKey + '\')">+ Agregar</button>'
-    + '</div>';
-
-  items.forEach(function(item, idx) {
-    const parsed = parseId(item);
-    const detail = findDetail(item, details);
-    const cardId = uid + '-' + idx;
-
-    html += '<div class="item-card" id="card-' + cardId + '" data-type="' + sectionKey + '">';
-    html += '<div class="item-card-header" onclick="toggleCard(\'' + cardId + '\')">';
-    if (parsed.id) html += '<span class="item-id">' + esc(parsed.id) + '</span>';
-    html += '<span class="item-title">' + esc(parsed.text) + '</span>';
-    html += '<svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>';
-    html += '</div>';
-
-    // Detail preview (visible without expanding)
-    if (detail) {
-      const previewText = detail.length > 120 ? detail.substring(0, 120) + '...' : detail;
-      html += '<div class="item-detail-preview">' + esc(previewText) + '</div>';
-    }
-
-    // Expandable body
-    html += '<div class="item-card-body">';
-    if (detail) {
-      html += '<div class="item-card-detail">' + esc(detail) + '</div>';
-    } else {
-      html += '<div class="item-card-detail" style="color:var(--text-tertiary);font-style:italic">Sin detalle expandido. Activa el modo edicion para agregar contexto.</div>';
-    }
-    // Edit panel
-    html += '<div class="item-card-edit">';
-    html += '<div class="item-edit-row"><div class="item-edit-label">Titulo</div>'
-      + '<input type="text" class="item-edit-input" id="edit-title-' + cardId + '" value="' + escAttr(item) + '"></div>';
-    html += '<div class="item-edit-row"><div class="item-edit-label">Detalle expandido</div>'
-      + '<textarea class="item-edit-input" id="edit-detail-' + cardId + '" placeholder="Describe en detalle esta decision/restriccion...">' + esc(detail || '') + '</textarea></div>';
-    html += '<div class="item-edit-actions">'
-      + '<button class="btn-save" onclick="saveItem(\'' + layerKey + '\', \'' + sectionKey + '\', ' + idx + ')">Guardar</button>'
-      + '<button class="btn-save" style="background:rgba(10,132,255,0.12);color:var(--accent-blue)" onclick="refineExisting(\'' + layerKey + '\', \'' + sectionKey + '\', ' + idx + ')">Formalizar</button>'
-      + '<button class="btn-delete" onclick="deleteItem(\'' + layerKey + '\', \'' + sectionKey + '\', ' + idx + ')">Eliminar</button>'
-      + '</div>';
-    html += '</div>';
-    html += '</div>'; // card-body
-    html += '</div>'; // item-card
-  });
-
-  html += '</div>';
-  return html;
-}
-
-/* ===== Interaction ===== */
-function toggleCard(cardId) {
-  const card = document.getElementById('card-' + cardId);
-  if (card) card.classList.toggle('expanded');
-}
-
-function switchLayerTab(layerKey, tabName) {
-  // Update tab buttons
-  const tabContainer = document.getElementById('tabs-' + layerKey);
-  if (tabContainer) {
-    tabContainer.querySelectorAll('.layer-tab').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-tab') === tabName);
-    });
-  }
-  // Show/hide content sections
-  var sections = ['decisions', 'constraints', 'artifacts'];
-  sections.forEach(function(sec) {
-    var el = document.getElementById('section-' + layerKey + '-' + sec);
-    if (el) el.classList.toggle('hidden', sec !== tabName);
-  });
-}
-
-function toggleTheme() {
-  const html = document.documentElement;
-  const isLight = html.classList.toggle('light');
-  document.getElementById('theme-icon-dark').style.display = isLight ? 'none' : '';
-  document.getElementById('theme-icon-light').style.display = isLight ? '' : 'none';
-  document.getElementById('theme-label').textContent = isLight ? 'Oscuro' : 'Claro';
-  try { localStorage.setItem('sdd-theme', isLight ? 'light' : 'dark'); } catch(e) {}
-}
-
-// Restore theme on load
-(function() {
-  try {
-    var saved = localStorage.getItem('sdd-theme');
-    if (saved === 'light') {
-      document.documentElement.classList.add('light');
-      document.addEventListener('DOMContentLoaded', function() {
-        var d = document.getElementById('theme-icon-dark');
-        var l = document.getElementById('theme-icon-light');
-        var lbl = document.getElementById('theme-label');
-        if (d) d.style.display = 'none';
-        if (l) l.style.display = '';
-        if (lbl) lbl.textContent = 'Oscuro';
-      });
-    }
-  } catch(e) {}
-})();
-
-function activateLayer(key) {
-  document.querySelectorAll('.layer-nav li').forEach(function(li) {
-    li.classList.toggle('active', li.getAttribute('data-layer') === key);
-  });
-  document.querySelectorAll('.layer-section').forEach(function(sec) {
-    sec.classList.remove('active'); sec.style.display = 'none';
-  });
-  const t = document.getElementById('layer-' + key);
-  if (t) { t.style.display = 'block'; t.classList.add('active'); }
-}
-
-function addNavItem(nav, key, label, color, count) {
-  const li = document.createElement('li');
-  li.setAttribute('data-layer', key);
-  li.onclick = function() { activateLayer(key); };
-  li.innerHTML = '<span class="layer-dot" style="background:' + color + '"></span><span>' + label + '</span><span class="layer-count">' + count + '</span>';
-  nav.appendChild(li);
-}
-
-/* ===== Edit Operations ===== */
-async function saveLayer(layerKey) {
-  if (!currentSpecId || !currentSpec) return;
-  const layers = currentSpec.layers || {};
-  const content = layers[layerKey] || {};
-
-  const textarea = document.getElementById('summary-textarea-' + layerKey);
-  const newSummary = textarea ? textarea.value : (content.summary || '');
-
-  const payload = {
-    summary: newSummary,
-    decisions: content.decisions || [],
-    constraints: content.constraints || [],
-    artifacts: content.artifacts || [],
-    details: content.details || {},
-  };
-
-  // Show confirmation
-  proposeChange(layerKey, payload, 'Actualizar resumen de capa "' + layerKey + '"', {
-    before: content.summary || '(vacio)',
-    after: newSummary || '(vacio)',
-    type: 'summary',
-  });
-}
-
-async function saveItem(layerKey, sectionKey, idx) {
-  if (!currentSpecId || !currentSpec) return;
-  const layers = currentSpec.layers || {};
-  const content = { ...(layers[layerKey] || {}) };
-  const items = [...(content[sectionKey] || [])];
-  const details = { ...(content.details || {}) };
-
-  const cardId = layerKey + '-' + sectionKey + '-' + idx;
-  const newTitle = document.getElementById('edit-title-' + cardId).value.trim();
-  const newDetail = document.getElementById('edit-detail-' + cardId).value.trim();
-
-  if (!newTitle) { toast('El titulo no puede estar vacio', 'error'); return; }
-
-  const oldTitle = items[idx];
-  const oldParsed = parseId(oldTitle);
-  const oldDetail = findDetail(oldTitle, details) || '';
-
-  items[idx] = newTitle;
-
-  const parsed = parseId(newTitle);
-  const detailKey = parsed.id || newTitle;
-  if (oldTitle !== newTitle) {
-    const oldKey = oldParsed.id || oldTitle;
-    delete details[oldKey];
-  }
-  if (newDetail) { details[detailKey] = newDetail; }
-  else { delete details[detailKey]; }
-
-  content[sectionKey] = items;
-  content.details = details;
-
-  const textarea = document.getElementById('summary-textarea-' + layerKey);
-  if (textarea) content.summary = textarea.value;
-
-  proposeChange(layerKey, content, 'Editar item en "' + sectionKey + '" de capa "' + layerKey + '"', {
-    before: oldTitle + (oldDetail ? '\n\n' + oldDetail : ''),
-    after: newTitle + (newDetail ? '\n\n' + newDetail : ''),
-    type: 'item',
-  });
-}
-
-async function deleteItem(layerKey, sectionKey, idx) {
-  if (!currentSpecId || !currentSpec) return;
-
-  const layers = currentSpec.layers || {};
-  const content = { ...(layers[layerKey] || {}) };
-  const items = [...(content[sectionKey] || [])];
-  const details = { ...(content.details || {}) };
-
-  const deletedItem = items[idx];
-  const parsed = parseId(deletedItem);
-  const detailKey = parsed.id || deletedItem;
-  const deletedDetail = details[detailKey] || '';
-  delete details[detailKey];
-  items.splice(idx, 1);
-  content[sectionKey] = items;
-  content.details = details;
-
-  const textarea = document.getElementById('summary-textarea-' + layerKey);
-  if (textarea) content.summary = textarea.value;
-
-  proposeChange(layerKey, content, 'Eliminar item de "' + sectionKey + '" en capa "' + layerKey + '"', {
-    before: deletedItem + (deletedDetail ? '\n\n' + deletedDetail : ''),
-    after: null,
-    type: 'delete',
-  });
-}
-
-async function addItem(layerKey, sectionKey) {
-  // Open refine panel instead of directly adding
-  openRefine(layerKey, sectionKey);
-}
-
-/* ===== Refine Flow ===== */
-function openRefine(layerKey, sectionKey) {
-  refineContext = { layerKey: layerKey, section: sectionKey };
-  lastRefinedResult = null;
-  const sectionLabels = { decisions: 'Decision', constraints: 'Restriccion', artifacts: 'Artefacto' };
-  const layerLabel = (LAYER_META[layerKey] || {}).label || layerKey;
-  document.getElementById('refine-panel-title').textContent = 'Formalizar ' + (sectionLabels[sectionKey] || 'entrada') + ' — ' + layerLabel;
-  document.getElementById('refine-raw-input').value = '';
-  document.getElementById('refine-preview').classList.remove('visible');
-  document.getElementById('refine-overlay').classList.add('visible');
-  setTimeout(function() { document.getElementById('refine-raw-input').focus(); }, 100);
-}
-
-async function doRefine() {
-  if (!refineContext || !currentSpecId) return;
-  const rawInput = document.getElementById('refine-raw-input').value.trim();
-  if (!rawInput) { toast('Escribe algo para formalizar', 'error'); return; }
-
-  const btn = document.getElementById('btn-do-refine');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="refine-spinner"></span> Formalizando...';
-
-  try {
-    // Gather context
-    const layers = (currentSpec && currentSpec.layers) ? currentSpec.layers : {};
-    const layerContent = layers[refineContext.layerKey] || {};
-    const existingItems = layerContent[refineContext.section] || [];
-    const existingIds = [];
-    existingItems.forEach(function(item) {
-      var m = item.match(/^([A-Z]{1,5}-\d{1,4})/);
-      if (m) existingIds.push(m[1]);
-    });
-
-    const res = await fetch('/api/spec/' + encodeURIComponent(currentSpecId) + '/refine', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        layer: refineContext.layerKey,
-        section: refineContext.section,
-        raw_input: rawInput,
-        context: {
-          existing_ids: existingIds,
-          summary: layerContent.summary || '',
-        }
-      }),
-    });
-    const data = await res.json();
-    if (data.error) { toast(data.error, 'error'); return; }
-
-    // Show preview
-    lastRefinedResult = data.refined;
-    document.getElementById('refine-result-id').textContent = data.refined.id;
-    document.getElementById('refine-result-title').textContent = data.refined.title;
-    document.getElementById('refine-result-detail').value = data.refined.detail;
-    document.getElementById('refine-preview').classList.add('visible');
-
-  } catch(e) { toast('Error: ' + e.message, 'error'); }
-  finally {
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Formalizar';
-  }
-}
-
-async function acceptRefine() {
-  if (!refineContext || !lastRefinedResult || !currentSpecId || !currentSpec) return;
-
-  const layers = currentSpec.layers || {};
-  const content = { ...(layers[refineContext.layerKey] || {}) };
-  const items = [...(content[refineContext.section] || [])];
-  const details = { ...(content.details || {}) };
-
-  // Get possibly-edited detail from textarea
-  const editedDetail = document.getElementById('refine-result-detail').value.trim();
-
-  let beforeText = null;
-  if (refineContext.replaceIdx !== undefined) {
-    // Replacing an existing item
-    const oldItem = items[refineContext.replaceIdx];
-    const oldParsed = parseId(oldItem);
-    const oldDetail = details[oldParsed.id] || details[oldItem] || '';
-    beforeText = oldItem + (oldDetail ? '\n\n' + oldDetail : '');
-    if (oldParsed.id) delete details[oldParsed.id];
-    items[refineContext.replaceIdx] = lastRefinedResult.title;
-  } else {
-    // Adding a new item
-    items.push(lastRefinedResult.title);
-  }
-
-  if (editedDetail) {
-    details[lastRefinedResult.id] = editedDetail;
-  } else {
-    delete details[lastRefinedResult.id];
-  }
-
-  content[refineContext.section] = items;
-  content.details = details;
-
-  // Preserve summary
-  const textarea = document.getElementById('summary-textarea-' + refineContext.layerKey);
-  if (textarea) content.summary = textarea.value;
-  if (!content.summary && layers[refineContext.layerKey]) content.summary = layers[refineContext.layerKey].summary || '';
-
-  const afterText = lastRefinedResult.title + (editedDetail ? '\n\n' + editedDetail : '');
-  const actionLabel = refineContext.replaceIdx !== undefined
-    ? 'Re-formalizar item en "' + refineContext.section + '"'
-    : 'Agregar item formalizado a "' + refineContext.section + '"';
-
-  closeRefine();
-  proposeChange(refineContext.layerKey, content, actionLabel + ' de capa "' + refineContext.layerKey + '"', {
-    before: beforeText,
-    after: afterText,
-    type: refineContext.replaceIdx !== undefined ? 'item' : 'add',
-  });
-}
-
-function closeRefine() {
-  document.getElementById('refine-overlay').classList.remove('visible');
-  refineContext = null;
-  lastRefinedResult = null;
-}
-
-function refineExisting(layerKey, sectionKey, idx) {
-  // Open refine panel pre-filled with current item text
-  refineContext = { layerKey: layerKey, section: sectionKey, replaceIdx: idx };
-  lastRefinedResult = null;
-  const sectionLabels = { decisions: 'Decision', constraints: 'Restriccion', artifacts: 'Artefacto' };
-  const layerLabel = (LAYER_META[layerKey] || {}).label || layerKey;
-  document.getElementById('refine-panel-title').textContent = 'Re-formalizar ' + (sectionLabels[sectionKey] || 'entrada') + ' — ' + layerLabel;
-
-  // Pre-fill with current content
-  const cardId = layerKey + '-' + sectionKey + '-' + idx;
-  const titleEl = document.getElementById('edit-title-' + cardId);
-  const detailEl = document.getElementById('edit-detail-' + cardId);
-  const prefill = (titleEl ? titleEl.value : '') + (detailEl && detailEl.value ? '\n\n' + detailEl.value : '');
-  document.getElementById('refine-raw-input').value = prefill;
-
-  document.getElementById('refine-preview').classList.remove('visible');
-  document.getElementById('refine-overlay').classList.add('visible');
-  setTimeout(function() { document.getElementById('refine-raw-input').focus(); }, 100);
-}
-
-async function putLayer(layerKey, content) {
-  try {
-    const res = await fetch('/api/spec/' + encodeURIComponent(currentSpecId) + '/layer/' + encodeURIComponent(layerKey), {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(content),
-    });
-    const data = await res.json();
-    if (data.error) { toast(data.error, 'error'); return; }
-    toast('Capa "' + layerKey + '" indexada correctamente', 'success');
-    // Reload spec to refresh UI
-    await loadSpec(currentSpecId);
-  } catch(e) { toast('Error: ' + e.message, 'error'); }
-}
-
-/* ===== Proposal & Confirm Flow ===== */
-function proposeChange(layerKey, payload, description, diff) {
-  pendingChange = { layerKey: layerKey, payload: payload, description: description, diff: diff };
-  showConfirmOverlay(description, diff);
-}
-
-function showConfirmOverlay(description, diff) {
-  const container = document.getElementById('confirm-diff-container');
-  let html = '';
-
-  if (diff.type === 'delete') {
-    html += '<div class="confirm-diff-section">'
-      + '<div class="confirm-diff-label before">Se eliminara</div>'
-      + '<div class="confirm-diff-content before">' + esc(diff.before) + '</div></div>';
-  } else if (diff.type === 'add') {
-    html += '<div class="confirm-diff-section">'
-      + '<div class="confirm-diff-label after">Se agregara (nuevo)</div>'
-      + '<div class="confirm-diff-content new-only">' + esc(diff.after) + '</div></div>';
-  } else {
-    // Edit: show before/after
-    if (diff.before) {
-      html += '<div class="confirm-diff-section">'
-        + '<div class="confirm-diff-label before">Antes</div>'
-        + '<div class="confirm-diff-content before">' + esc(diff.before) + '</div></div>';
-    }
-    html += '<div class="confirm-diff-section">'
-      + '<div class="confirm-diff-label after">Despues (propuesta)</div>'
-      + '<div class="confirm-diff-content after">' + esc(diff.after) + '</div></div>';
-  }
-
-  container.innerHTML = html;
-  document.getElementById('confirm-meta').textContent = 'Accion: ' + description + ' | Spec: ' + currentSpecId + ' | Capa: ' + (pendingChange ? pendingChange.layerKey : '');
-  document.getElementById('confirm-overlay').classList.add('visible');
-
-  // Load impact analysis
-  loadImpactAnalysis(pendingChange.layerKey, diff.type, diff.after || diff.before || description);
-}
-
-async function loadImpactAnalysis(layerKey, changeType, changeDescription) {
-  const listEl = document.getElementById('confirm-impact-list');
-  listEl.innerHTML = '<li class="impact-loading"><span class="refine-spinner"></span> Analizando impacto cross-layer...</li>';
-
-  try {
-    const res = await fetch('/api/spec/' + encodeURIComponent(currentSpecId) + '/impact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        layer: layerKey,
-        change_type: changeType === 'delete' ? 'delete' : changeType === 'add' ? 'add' : 'edit',
-        change_description: changeDescription,
-      }),
-    });
-    const data = await res.json();
-    if (data.error) { listEl.innerHTML = '<li class="impact-empty">' + esc(data.error) + '</li>'; return; }
-
-    if (!data.impacts || data.impacts.length === 0) {
-      listEl.innerHTML = '<li class="impact-empty">Sin impacto detectado en otras capas.</li>';
-      return;
-    }
-
-    let html = '';
-    data.impacts.forEach(function(imp) {
-      html += '<li class="impact-item">'
-        + '<span class="impact-level ' + imp.impact + '"></span>'
-        + '<div class="impact-body">'
-        + '<div class="impact-layer-name">' + esc(imp.label) + ' <span style="font-weight:400;color:var(--text-tertiary);font-size:10px">(' + imp.impact + ')</span></div>'
-        + '<div class="impact-reason">' + esc(imp.reason) + '</div>'
-        + (imp.suggestion ? '<span class="impact-suggestion">' + esc(imp.suggestion) + '</span>' : '')
-        + '</div></li>';
-    });
-    listEl.innerHTML = html;
-
-  } catch(e) {
-    listEl.innerHTML = '<li class="impact-empty">Error cargando impacto: ' + esc(e.message) + '</li>';
-  }
-}
-
-async function executeConfirm() {
-  if (!pendingChange) return;
-  document.getElementById('confirm-overlay').classList.remove('visible');
-  await putLayer(pendingChange.layerKey, pendingChange.payload);
-  pendingChange = null;
-}
-
-function rejectConfirm() {
-  document.getElementById('confirm-overlay').classList.remove('visible');
-  pendingChange = null;
-  toast('Cambio descartado', 'error');
-}
-
-/* ===== Helpers ===== */
-function parseId(text) {
-  const m = text.match(/^([A-Z]{1,5}-\d{1,4})[\s:]+(.+)$/);
-  return m ? { id: m[1], text: m[2] } : { id: '', text: text };
-}
-
-function findDetail(item, details) {
-  if (!details || !Object.keys(details).length) return null;
-  if (details[item]) return details[item];
-  const m = item.match(/^([A-Z]{1,5}-\d{1,4})/);
-  if (m && details[m[1]]) return details[m[1]];
-  for (var k in details) { if (item.startsWith(k)) return details[k]; }
-  return null;
-}
-
-function countFilled(content) {
-  let c = 0;
-  const details = content.details || {};
-  (content.decisions || []).forEach(function(d) { if (findDetail(d, details)) c++; });
-  (content.constraints || []).forEach(function(d) { if (findDetail(d, details)) c++; });
-  (content.artifacts || []).forEach(function(d) { if (findDetail(d, details)) c++; });
-  return c;
-}
-
-function esc(t) { if (!t) return ''; var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
-function escAttr(t) { return (t || '').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
-function fmtDate(s) {
-  if (!s) return '—';
-  try { return new Date(s).toLocaleDateString('es-CO', { year:'numeric', month:'short', day:'numeric' }); }
-  catch(e) { return s.split('T')[0] || '—'; }
-}
-
-function toast(msg, type) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast visible ' + (type || '');
-  clearTimeout(el._timer);
-  el._timer = setTimeout(function() { el.classList.remove('visible'); }, 3000);
-}
-
-function showError(msg) {
-  document.getElementById('main-content').innerHTML = '<div class="empty-state">'
-    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>'
-    + '<h3>Error</h3><p>' + esc(msg) + '</p></div>';
-}
+var currentSpec=null,currentSpecId='',currentRole='',editMode=false,refineContext=null,lastRefinedResult=null,pendingChange=null,selectedItem=null;
+var LAYER_META={negocio:{label:'Negocio',category:'strategic',desc:'Procesos de negocio, reglas de dominio, stakeholders'},arquitectura:{label:'Arquitectura',category:'strategic',desc:'Decisiones de arquitectura, patrones, stack tecnologico'},seguridad:{label:'Seguridad',category:'strategic',desc:'Politicas de seguridad, autenticacion, autorizacion'},gobierno_info:{label:'Gobierno Info',category:'strategic',desc:'Gobierno de informacion, lineamientos de datos'},acceso_datos:{label:'Acceso a Datos',category:'strategic',desc:'Control de acceso a datos'},datos:{label:'Datos',category:'tactical',desc:'Modelo de datos, persistencia, migraciones'},desarrollo:{label:'Desarrollo',category:'tactical',desc:'Estandares de codigo, patrones de implementacion'},qa:{label:'QA',category:'tactical',desc:'Estrategia de testing, cobertura, criterios de calidad'}};
+var ROLE_HINTS={dev_backend:'Vista backend: desarrollo completo, arquitectura y datos como contexto.',dev_frontend:'Vista frontend: desarrollo completo, negocio y datos como contexto.',qa:'Vista QA: testing completo, negocio/seguridad/datos como contexto.',po:'Vista PO: negocio y gobierno completos, QA como contexto.',ux:'Vista UX: desarrollo completo, negocio como contexto.',devops:'Vista DevOps: arquitectura completa, seguridad como contexto.',arquitecto:'Vista Arquitecto: arquitectura, seguridad y datos completos.',seguridad:'Vista Seguridad: seguridad completa, arquitectura y gobierno como contexto.',dba:'Vista DBA: datos y acceso completo.',legal:'Vista Legal: gobierno completo, seguridad y negocio como contexto.',negocio:'Vista Negocio: negocio completo, gobierno como contexto.'};
+
+document.addEventListener('DOMContentLoaded',async function(){await loadSpecList();var p=new URLSearchParams(window.location.search);var id=p.get('spec_id')||p.get('id');if(id){document.getElementById('spec-selector').value=id;loadSpec(id)}});
+
+async function loadSpecList(){try{var r=await fetch('/api/specs');var d=await r.json();var specs=d.specs||[];var sel=document.getElementById('spec-selector');sel.innerHTML='<option value="">— Seleccionar spec —</option>';specs.forEach(function(s){var o=document.createElement('option');o.value=s.spec_id;o.textContent=s.project_name+' ('+s.status+')';sel.appendChild(o)});if(specs.length===1){sel.value=specs[0].spec_id;loadSpec(specs[0].spec_id)}}catch(e){console.error(e)}}
+
+async function loadSpec(specId){if(!specId)return;currentSpecId=specId;selectedItem=null;var main=document.getElementById('main-content');main.innerHTML='<div class="loading"><div class="loading-spinner"></div>Cargando spec...</div>';try{var url='/api/spec/'+encodeURIComponent(specId);if(currentRole)url+='?role='+encodeURIComponent(currentRole);var r=await fetch(url);var d=await r.json();if(d.error){showError(d.error);return}currentSpec=d;renderSpec();loadStories(specId);history.replaceState(null,'','/spec?spec_id='+encodeURIComponent(specId))}catch(e){showError('Error: '+e.message)}}
+
+async function loadStories(specId){var c=document.getElementById('hu-list-container');if(!c)return;try{var r=await fetch('/api/spec/'+encodeURIComponent(specId)+'/stories');var d=await r.json();var stories=d.stories||[];var countEl=document.getElementById('hu-panel-count');if(countEl)countEl.textContent=stories.length;if(!stories.length){c.innerHTML='<p class="hu-panel-empty">No hay HUs asociadas a esta spec.</p>';return}var h='<ul class="hu-list">';stories.forEach(function(s){var sc=s.status==='analyzed'?' analyzed':s.status==='refined'?' refined':'';h+='<a class="hu-item" href="/story?id='+esc(s.id)+'" target="_blank" title="'+escAttr(s.title)+'">'+'<span class="hu-item-id">'+esc(s.id)+'</span>'+'<span class="hu-item-title">'+esc(s.title)+'</span>'+'<span class="hu-item-status'+sc+'">'+esc(s.status)+'</span>'+'<svg class="hu-item-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>'+'</a>'});h+='</ul>';c.innerHTML=h}catch(e){c.innerHTML='<p class="hu-panel-empty">Error: '+esc(e.message)+'</p>'}}
+
+function applyRoleFilter(role){currentRole=role;var h=document.getElementById('role-hint');if(role&&ROLE_HINTS[role]){h.textContent=ROLE_HINTS[role];h.classList.add('visible')}else{h.classList.remove('visible')}if(currentSpecId)loadSpec(currentSpecId)}
+function toggleEditMode(){editMode=!editMode;document.body.classList.toggle('edit-mode',editMode);document.getElementById('btn-edit-mode').classList.toggle('active',editMode);if(currentSpec)renderSpec()}
+function toggleTheme(){var html=document.documentElement;var isL=html.classList.toggle('light');document.getElementById('theme-icon-dark').style.display=isL?'none':'';document.getElementById('theme-icon-light').style.display=isL?'':'none';document.getElementById('theme-label').textContent=isL?'Oscuro':'Claro';try{localStorage.setItem('sdd-theme',isL?'light':'dark')}catch(e){}}
+(function(){try{if(localStorage.getItem('sdd-theme')==='light'){document.documentElement.classList.add('light');document.addEventListener('DOMContentLoaded',function(){var d=document.getElementById('theme-icon-dark'),l=document.getElementById('theme-icon-light'),lb=document.getElementById('theme-label');if(d)d.style.display='none';if(l)l.style.display='';if(lb)lb.textContent='Oscuro'})}}catch(e){}})();
+
+function renderSpec(){var spec=currentSpec;if(!spec)return;
+document.getElementById('nav-project-name').textContent=spec.project_name||spec.spec_id;
+document.getElementById('nav-version').textContent='v'+(spec.version||'0.1.0');
+var st=document.getElementById('nav-status');st.textContent=spec.status||'draft';st.className='topnav-status '+(spec.status||'draft');
+document.getElementById('meta-approvers').textContent=(spec.approved_by||[]).join(', ')||'—';
+document.getElementById('meta-created').textContent=fmtDate(spec.created_at);
+document.getElementById('meta-updated').textContent=fmtDate(spec.updated_at);
+document.getElementById('meta-app').textContent=spec.app_id||'—';
+document.getElementById('meta-deps').textContent=(spec.dependencies||[]).length;
+document.getElementById('meta-rules').textContent=(spec.rules_applied||[]).length;
+
+var layers=spec.layers||{};var navEl=document.getElementById('layer-nav');navEl.innerHTML='';
+var nonEmpty=Object.keys(layers).filter(function(k){var c=layers[k];return c&&(c.summary||(c.decisions&&c.decisions.length)||(c.constraints&&c.constraints.length)||(c.artifacts&&c.artifacts.length))});
+
+nonEmpty.forEach(function(key,idx){var meta=LAYER_META[key]||{label:key,category:'tactical',desc:''};var content=layers[key];var total=(content.decisions||[]).length+(content.constraints||[]).length+(content.artifacts||[]).length;var filled=countFilled(content);var pct=total>0?Math.round((filled/total)*100):(content.summary?100:0);
+var li=document.createElement('li');li.className=idx===0?'active':'';li.setAttribute('data-layer',key);li.onclick=function(){activateLayer(key)};
+li.innerHTML='<span class="layer-dot '+meta.category+'"></span><span>'+meta.label+'</span>'+(total>0?'<span class="layer-count">'+total+'</span>':'')+'<div class="layer-progress"><div class="layer-progress-bar" style="width:'+pct+'%;background:'+(pct===100?'var(--accent-green)':'var(--accent-blue)')+'"></div></div>';
+navEl.appendChild(li)});
+
+if((spec.dependencies||[]).length)addNavItem(navEl,'dependencies','Dependencias','var(--accent-orange)',spec.dependencies.length);
+if((spec.rules_applied||[]).length)addNavItem(navEl,'rules','Reglas','var(--accent-green)',spec.rules_applied.length);
+
+var main=document.getElementById('main-content');
+var html='<div class="spec-header"><h1 class="spec-title">'+esc(spec.project_name||spec.spec_id)+'</h1><p class="spec-subtitle">Software Design Document &mdash; '+esc(spec.spec_id)+'</p></div>';
+
+// HU Panel (Red Area)
+html+='<div class="hu-panel"><div class="hu-panel-header"><span class="hu-panel-title">Elementos Asociados (HU)</span><span class="hu-panel-count" id="hu-panel-count">...</span></div><div id="hu-list-container"><p class="hu-panel-empty">Cargando historias...</p></div></div>';
+
+// Layer sections
+nonEmpty.forEach(function(key,idx){html+=renderLayer(key,layers[key],idx===0)});
+
+// Dependencies
+if((spec.dependencies||[]).length){html+='<div class="layer-section" id="layer-dependencies"><div class="layer-header"><h2>Dependencias</h2><span class="layer-badge strategic">inter-spec</span></div><ul class="dep-list">';spec.dependencies.forEach(function(dep){html+='<li class="dep-item"><span class="dep-arrow">&rarr;</span><span class="dep-target">'+esc(dep.target_spec_id)+'</span><span class="dep-meta">'+esc(dep.dependency_type)+' &middot; '+esc(dep.maturity||'')+'</span>'+(dep.description?'<span class="dep-meta" style="margin-left:auto">'+esc(dep.description)+'</span>':'')+'</li>'});html+='</ul></div>'}
+
+// Rules
+if((spec.rules_applied||[]).length){html+='<div class="layer-section" id="layer-rules"><div class="layer-header"><h2>Reglas Aplicadas</h2><span class="layer-badge tactical">catalogo</span></div><div>';spec.rules_applied.forEach(function(r){html+='<span class="rule-pill">'+esc(r)+'</span>'});html+='</div></div>'}
+
+if(nonEmpty.length===0){html='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><h3>Spec sin contenido</h3><p>Usa update_spec_layer del MCP para alimentarla.</p></div>'}
+main.innerHTML=html}
+
+function renderLayer(key,content,isActive){var meta=LAYER_META[key]||{label:key,category:'tactical',desc:''};
+var html='<div class="layer-section'+(isActive?' active':'')+'" id="layer-'+key+'">';
+html+='<div class="layer-header"><h2>'+meta.label+'</h2><span class="layer-badge '+meta.category+'">'+meta.category+'</span></div>';
+if(meta.desc)html+='<p class="layer-description">'+meta.desc+'</p>';
+
+if(content.summary)html+='<div class="layer-summary" id="summary-view-'+key+'">'+esc(content.summary)+'</div>';
+html+='<div class="layer-summary-editor" id="summary-edit-'+key+'" '+(editMode?'style="display:block"':'')+'><textarea class="edit-input" id="summary-textarea-'+key+'" placeholder="Resumen de esta capa...">'+esc(content.summary||'')+'</textarea><div style="margin-top:8px"><button class="btn-save" onclick="saveLayer(\''+key+'\')">Guardar capa</button></div></div>';
+
+var dc=(content.decisions||[]).length,cc=(content.constraints||[]).length,ac=(content.artifacts||[]).length;
+var hasSections=dc||cc||ac||editMode;
+if(hasSections){
+var dt='decisions';if(!dc&&cc)dt='constraints';else if(!dc&&!cc&&ac)dt='artifacts';
+
+html+='<div class="layer-tabs" id="tabs-'+key+'">';
+html+='<button class="layer-tab'+(dt==='decisions'?' active':'')+'" data-tab="decisions" onclick="switchTab(\''+key+'\',\'decisions\')">Decisiones <span class="layer-tab-count">'+dc+'</span></button>';
+html+='<button class="layer-tab'+(dt==='constraints'?' active':'')+'" data-tab="constraints" onclick="switchTab(\''+key+'\',\'constraints\')">Restricciones <span class="layer-tab-count">'+cc+'</span></button>';
+html+='<button class="layer-tab'+(dt==='artifacts'?' active':'')+'" data-tab="artifacts" onclick="switchTab(\''+key+'\',\'artifacts\')">Artefactos <span class="layer-tab-count">'+ac+'</span></button>';
+html+='</div>';
+
+// Master-Detail
+html+='<div class="master-detail" id="md-'+key+'">';
+html+='<div class="master-panel" id="master-'+key+'">';
+html+=renderMasterList(key,'decisions',content.decisions||[],dt==='decisions');
+html+=renderMasterList(key,'constraints',content.constraints||[],dt==='constraints');
+html+=renderMasterList(key,'artifacts',content.artifacts||[],dt==='artifacts');
+html+='</div>';
+html+='<div class="detail-panel" id="detail-'+key+'"><div class="detail-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg><p>Selecciona un elemento de la lista para ver su detalle, o agrega uno nuevo.</p></div></div>';
+html+='</div>'}
+html+='</div>';return html}
+
+function renderMasterList(layerKey,sectionKey,items,isVisible){var uid=layerKey+'-'+sectionKey;var labels={decisions:'Decisiones',constraints:'Restricciones',artifacts:'Artefactos'};
+var html='<div class="content-section'+(isVisible?' active':'')+'" id="section-'+uid+'" data-section="'+sectionKey+'">';
+html+='<div class="master-panel-header"><span class="master-panel-title">'+labels[sectionKey]+' ('+items.length+')</span><button class="section-add-btn" onclick="showAddForm(\''+layerKey+'\',\''+sectionKey+'\')">+ Agregar</button></div>';
+if(!items.length){html+='<div style="padding:20px 14px;text-align:center;color:var(--text-tertiary);font-size:12px;font-style:italic">Sin elementos</div>'}else{
+items.forEach(function(item,idx){var p=parseId(item);html+='<div class="master-item" data-type="'+sectionKey+'" onclick="selectItem(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">'+(p.id?'<span class="master-item-id">'+esc(p.id)+'</span>':'')+'<span class="master-item-text">'+esc(p.text)+'</span></div>'})}
+html+='</div>';return html}
+
+function selectItem(layerKey,sectionKey,idx){selectedItem={layerKey:layerKey,section:sectionKey,idx:idx};
+var masterEl=document.getElementById('master-'+layerKey);
+if(masterEl){masterEl.querySelectorAll('.master-item').forEach(function(el){el.classList.remove('selected')});var sec=masterEl.querySelector('.content-section.active');if(sec){var items=sec.querySelectorAll('.master-item');if(items[idx])items[idx].classList.add('selected')}}
+renderDetail(layerKey,sectionKey,idx)}
+
+function renderDetail(layerKey,sectionKey,idx){var el=document.getElementById('detail-'+layerKey);if(!el)return;
+var layers=currentSpec.layers||{};var content=layers[layerKey]||{};var items=content[sectionKey]||[];var details=content.details||{};var item=items[idx];
+if(!item){el.innerHTML='<div class="detail-empty"><p>Elemento no encontrado</p></div>';return}
+var p=parseId(item);var detail=findDetail(item,details);var tc=sectionKey==='constraints'?' constraints':sectionKey==='artifacts'?' artifacts':'';
+var html='<div class="detail-header">';
+if(p.id)html+='<span class="detail-id'+tc+'">'+esc(p.id)+'</span>';
+html+='<h3 class="detail-title">'+esc(p.text)+'</h3></div>';
+if(detail){html+='<div class="detail-body">'+esc(detail)+'</div>'}else{html+='<div class="detail-no-content">Sin detalle expandido. Activa modo edicion para agregar contexto.</div>'}
+html+='<div class="detail-edit-form"><div class="edit-row"><div class="edit-label">Titulo</div><input type="text" class="edit-input" id="edit-title-'+layerKey+'-'+sectionKey+'-'+idx+'" value="'+escAttr(item)+'"></div>';
+html+='<div class="edit-row"><div class="edit-label">Detalle expandido</div><textarea class="edit-input" id="edit-detail-'+layerKey+'-'+sectionKey+'-'+idx+'" placeholder="Describe en detalle...">'+esc(detail||'')+'</textarea></div>';
+html+='<div class="edit-actions"><button class="btn-save" onclick="saveItem(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Guardar</button><button class="btn-formalize" onclick="refineExisting(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Formalizar</button><button class="btn-delete" onclick="deleteItem(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Eliminar</button></div></div>';
+el.innerHTML=html}
+
+function showAddForm(layerKey,sectionKey){selectedItem=null;var el=document.getElementById('detail-'+layerKey);if(!el)return;
+var masterEl=document.getElementById('master-'+layerKey);if(masterEl)masterEl.querySelectorAll('.master-item').forEach(function(e){e.classList.remove('selected')});
+var labels={decisions:'Decision',constraints:'Restriccion',artifacts:'Artefacto'};
+var html='<div class="add-form-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg> Agregar '+labels[sectionKey]+'</div>';
+html+='<div class="edit-row"><div class="edit-label">Titulo</div><input type="text" class="edit-input" id="add-title-'+layerKey+'-'+sectionKey+'" placeholder="Ej: DN-005 El sistema debe..."></div>';
+html+='<div class="edit-row"><div class="edit-label">Detalle (opcional)</div><textarea class="edit-input" id="add-detail-'+layerKey+'-'+sectionKey+'" placeholder="Contexto y justificacion..."></textarea></div>';
+html+='<div class="edit-actions"><button class="btn-save" onclick="saveNewItem(\''+layerKey+'\',\''+sectionKey+'\')">Guardar</button><button class="btn-formalize" onclick="openRefine(\''+layerKey+'\',\''+sectionKey+'\')">Formalizar con IA</button></div>';
+el.innerHTML=html}
+
+function switchTab(layerKey,tabName){var tc=document.getElementById('tabs-'+layerKey);if(tc){tc.querySelectorAll('.layer-tab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-tab')===tabName)})}
+var m=document.getElementById('master-'+layerKey);if(m){m.querySelectorAll('.content-section').forEach(function(s){s.classList.toggle('active',s.getAttribute('data-section')===tabName)})}
+selectedItem=null;var d=document.getElementById('detail-'+layerKey);if(d){d.innerHTML='<div class="detail-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg><p>Selecciona un elemento de la lista para ver su detalle, o agrega uno nuevo.</p></div>'}}
+
+function activateLayer(key){document.querySelectorAll('.layer-nav li').forEach(function(li){li.classList.toggle('active',li.getAttribute('data-layer')===key)});document.querySelectorAll('.layer-section').forEach(function(s){s.classList.remove('active');s.style.display='none'});var t=document.getElementById('layer-'+key);if(t){t.style.display='block';t.classList.add('active')}selectedItem=null}
+function addNavItem(nav,key,label,color,count){var li=document.createElement('li');li.setAttribute('data-layer',key);li.onclick=function(){activateLayer(key)};li.innerHTML='<span class="layer-dot" style="background:'+color+'"></span><span>'+label+'</span><span class="layer-count">'+count+'</span>';nav.appendChild(li)}
+
+/* Edit Operations */
+function saveLayer(layerKey){if(!currentSpecId||!currentSpec)return;var layers=currentSpec.layers||{};var content=layers[layerKey]||{};var ta=document.getElementById('summary-textarea-'+layerKey);var ns=ta?ta.value:(content.summary||'');
+var payload={summary:ns,decisions:content.decisions||[],constraints:content.constraints||[],artifacts:content.artifacts||[],details:content.details||{}};
+proposeChange(layerKey,payload,'Actualizar resumen de capa "'+layerKey+'"',{before:content.summary||'(vacio)',after:ns||'(vacio)',type:'summary'})}
+
+function saveItem(layerKey,sectionKey,idx){if(!currentSpecId||!currentSpec)return;var layers=currentSpec.layers||{};var content=JSON.parse(JSON.stringify(layers[layerKey]||{}));var items=content[sectionKey]||[];var details=content.details||{};
+var cid=layerKey+'-'+sectionKey+'-'+idx;var nt=document.getElementById('edit-title-'+cid).value.trim();var nd=document.getElementById('edit-detail-'+cid).value.trim();
+if(!nt){toast('Titulo vacio','error');return}
+var old=items[idx];var op=parseId(old);var od=findDetail(old,details)||'';items[idx]=nt;var np=parseId(nt);var dk=np.id||nt;
+if(old!==nt){delete details[op.id||old]}
+if(nd){details[dk]=nd}else{delete details[dk]}
+content[sectionKey]=items;content.details=details;var ta=document.getElementById('summary-textarea-'+layerKey);if(ta)content.summary=ta.value;
+proposeChange(layerKey,content,'Editar item en "'+sectionKey+'" de capa "'+layerKey+'"',{before:old+(od?'\n\n'+od:''),after:nt+(nd?'\n\n'+nd:''),type:'item'})}
+
+function saveNewItem(layerKey,sectionKey){if(!currentSpecId||!currentSpec)return;var nt=document.getElementById('add-title-'+layerKey+'-'+sectionKey).value.trim();var nd=document.getElementById('add-detail-'+layerKey+'-'+sectionKey).value.trim();
+if(!nt){toast('Titulo vacio','error');return}
+var layers=currentSpec.layers||{};var content=JSON.parse(JSON.stringify(layers[layerKey]||{}));var items=content[sectionKey]||[];var details=content.details||{};
+items.push(nt);var p=parseId(nt);if(nd){details[p.id||nt]=nd}
+content[sectionKey]=items;content.details=details;var ta=document.getElementById('summary-textarea-'+layerKey);if(ta)content.summary=ta.value;if(!content.summary&&layers[layerKey])content.summary=layers[layerKey].summary||'';
+proposeChange(layerKey,content,'Agregar item a "'+sectionKey+'" de capa "'+layerKey+'"',{before:null,after:nt+(nd?'\n\n'+nd:''),type:'add'})}
+
+function deleteItem(layerKey,sectionKey,idx){if(!currentSpecId||!currentSpec)return;var layers=currentSpec.layers||{};var content=JSON.parse(JSON.stringify(layers[layerKey]||{}));var items=content[sectionKey]||[];var details=content.details||{};
+var del=items[idx];var p=parseId(del);var dk=p.id||del;var dd=details[dk]||'';delete details[dk];items.splice(idx,1);content[sectionKey]=items;content.details=details;
+var ta=document.getElementById('summary-textarea-'+layerKey);if(ta)content.summary=ta.value;
+proposeChange(layerKey,content,'Eliminar item de "'+sectionKey+'" en capa "'+layerKey+'"',{before:del+(dd?'\n\n'+dd:''),after:null,type:'delete'})}
+
+/* Refine */
+function openRefine(layerKey,sectionKey){refineContext={layerKey:layerKey,section:sectionKey};lastRefinedResult=null;var labels={decisions:'Decision',constraints:'Restriccion',artifacts:'Artefacto'};var ll=(LAYER_META[layerKey]||{}).label||layerKey;
+document.getElementById('refine-panel-title').textContent='Formalizar '+(labels[sectionKey]||'entrada')+' — '+ll;document.getElementById('refine-raw-input').value='';document.getElementById('refine-preview').classList.remove('visible');document.getElementById('refine-overlay').classList.add('visible');setTimeout(function(){document.getElementById('refine-raw-input').focus()},100)}
+
+async function doRefine(){if(!refineContext||!currentSpecId)return;var raw=document.getElementById('refine-raw-input').value.trim();if(!raw){toast('Escribe algo','error');return}
+var btn=document.getElementById('btn-do-refine');btn.disabled=true;btn.innerHTML='<span class="refine-spinner"></span> Formalizando...';
+try{var layers=(currentSpec&&currentSpec.layers)?currentSpec.layers:{};var lc=layers[refineContext.layerKey]||{};var ei=lc[refineContext.section]||[];var ids=[];ei.forEach(function(i){var m=i.match(/^([A-Z]{1,5}-\d{1,4})/);if(m)ids.push(m[1])});
+var r=await fetch('/api/spec/'+encodeURIComponent(currentSpecId)+'/refine',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({layer:refineContext.layerKey,section:refineContext.section,raw_input:raw,context:{existing_ids:ids,summary:lc.summary||''}})});
+var d=await r.json();if(d.error){toast(d.error,'error');return}
+lastRefinedResult=d.refined;document.getElementById('refine-result-id').textContent=d.refined.id;document.getElementById('refine-result-title').textContent=d.refined.title;document.getElementById('refine-result-detail').value=d.refined.detail;document.getElementById('refine-preview').classList.add('visible')}catch(e){toast('Error: '+e.message,'error')}finally{btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Formalizar'}}
+
+async function acceptRefine(){if(!refineContext||!lastRefinedResult||!currentSpecId||!currentSpec)return;
+var layers=currentSpec.layers||{};var content=JSON.parse(JSON.stringify(layers[refineContext.layerKey]||{}));var items=content[refineContext.section]||[];var details=content.details||{};
+var ed=document.getElementById('refine-result-detail').value.trim();var before=null;
+if(refineContext.replaceIdx!==undefined){var old=items[refineContext.replaceIdx];var op=parseId(old);var od=details[op.id]||details[old]||'';before=old+(od?'\n\n'+od:'');if(op.id)delete details[op.id];items[refineContext.replaceIdx]=lastRefinedResult.title}else{items.push(lastRefinedResult.title)}
+if(ed){details[lastRefinedResult.id]=ed}else{delete details[lastRefinedResult.id]}
+content[refineContext.section]=items;content.details=details;
+var ta=document.getElementById('summary-textarea-'+refineContext.layerKey);if(ta)content.summary=ta.value;if(!content.summary&&layers[refineContext.layerKey])content.summary=layers[refineContext.layerKey].summary||'';
+var after=lastRefinedResult.title+(ed?'\n\n'+ed:'');var label=refineContext.replaceIdx!==undefined?'Re-formalizar':'Agregar formalizado a "'+refineContext.section+'"';
+closeRefine();proposeChange(refineContext.layerKey,content,label+' en capa "'+refineContext.layerKey+'"',{before:before,after:after,type:refineContext.replaceIdx!==undefined?'item':'add'})}
+
+function closeRefine(){document.getElementById('refine-overlay').classList.remove('visible');refineContext=null;lastRefinedResult=null}
+
+function refineExisting(layerKey,sectionKey,idx){refineContext={layerKey:layerKey,section:sectionKey,replaceIdx:idx};lastRefinedResult=null;var labels={decisions:'Decision',constraints:'Restriccion',artifacts:'Artefacto'};var ll=(LAYER_META[layerKey]||{}).label||layerKey;
+document.getElementById('refine-panel-title').textContent='Re-formalizar '+(labels[sectionKey]||'entrada')+' — '+ll;
+var cid=layerKey+'-'+sectionKey+'-'+idx;var te=document.getElementById('edit-title-'+cid);var de=document.getElementById('edit-detail-'+cid);var pf=(te?te.value:'')+(de&&de.value?'\n\n'+de.value:'');
+document.getElementById('refine-raw-input').value=pf;document.getElementById('refine-preview').classList.remove('visible');document.getElementById('refine-overlay').classList.add('visible');setTimeout(function(){document.getElementById('refine-raw-input').focus()},100)}
+
+async function putLayer(layerKey,content){try{var r=await fetch('/api/spec/'+encodeURIComponent(currentSpecId)+'/layer/'+encodeURIComponent(layerKey),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(content)});var d=await r.json();if(d.error){toast(d.error,'error');return}toast('Capa "'+layerKey+'" indexada','success');await loadSpec(currentSpecId)}catch(e){toast('Error: '+e.message,'error')}}
+
+/* Confirm flow */
+function proposeChange(layerKey,payload,description,diff){pendingChange={layerKey:layerKey,payload:payload,description:description,diff:diff};showConfirmOverlay(description,diff)}
+
+function showConfirmOverlay(description,diff){var c=document.getElementById('confirm-diff-container');var html='';
+if(diff.type==='delete'){html+='<div class="confirm-diff-section"><div class="confirm-diff-label before">Se eliminara</div><div class="confirm-diff-content before">'+esc(diff.before)+'</div></div>'}
+else if(diff.type==='add'){html+='<div class="confirm-diff-section"><div class="confirm-diff-label after">Se agregara (nuevo)</div><div class="confirm-diff-content new-only">'+esc(diff.after)+'</div></div>'}
+else{if(diff.before){html+='<div class="confirm-diff-section"><div class="confirm-diff-label before">Antes</div><div class="confirm-diff-content before">'+esc(diff.before)+'</div></div>'}html+='<div class="confirm-diff-section"><div class="confirm-diff-label after">Despues</div><div class="confirm-diff-content after">'+esc(diff.after)+'</div></div>'}
+c.innerHTML=html;document.getElementById('confirm-meta').textContent='Accion: '+description+' | Spec: '+currentSpecId;document.getElementById('confirm-overlay').classList.add('visible');loadImpactAnalysis(pendingChange.layerKey,diff.type,diff.after||diff.before||description)}
+
+async function loadImpactAnalysis(layerKey,changeType,desc){var el=document.getElementById('confirm-impact-list');el.innerHTML='<li class="impact-loading"><span class="refine-spinner"></span> Analizando impacto...</li>';
+try{var r=await fetch('/api/spec/'+encodeURIComponent(currentSpecId)+'/impact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({layer:layerKey,change_type:changeType==='delete'?'delete':changeType==='add'?'add':'edit',change_description:desc})});
+var d=await r.json();if(d.error){el.innerHTML='<li class="impact-empty">'+esc(d.error)+'</li>';return}
+if(!d.impacts||!d.impacts.length){el.innerHTML='<li class="impact-empty">Sin impacto detectado.</li>';return}
+var html='';d.impacts.forEach(function(imp){html+='<li class="impact-item"><span class="impact-level '+imp.impact+'"></span><div class="impact-body"><div class="impact-layer-name">'+esc(imp.label)+' <span style="font-weight:400;color:var(--text-tertiary);font-size:10px">('+imp.impact+')</span></div><div class="impact-reason">'+esc(imp.reason)+'</div>'+(imp.suggestion?'<span class="impact-suggestion">'+esc(imp.suggestion)+'</span>':'')+'</div></li>'});el.innerHTML=html}catch(e){el.innerHTML='<li class="impact-empty">Error: '+esc(e.message)+'</li>'}}
+
+async function executeConfirm(){if(!pendingChange)return;document.getElementById('confirm-overlay').classList.remove('visible');await putLayer(pendingChange.layerKey,pendingChange.payload);pendingChange=null}
+function rejectConfirm(){document.getElementById('confirm-overlay').classList.remove('visible');pendingChange=null;toast('Descartado','error')}
+
+/* Helpers */
+function parseId(t){var m=t.match(/^([A-Z]{1,5}-\d{1,4})[\s:]+(.+)$/);return m?{id:m[1],text:m[2]}:{id:'',text:t}}
+function findDetail(item,details){if(!details||!Object.keys(details).length)return null;if(details[item])return details[item];var m=item.match(/^([A-Z]{1,5}-\d{1,4})/);if(m&&details[m[1]])return details[m[1]];for(var k in details){if(item.startsWith(k))return details[k]}return null}
+function countFilled(content){var c=0;var d=content.details||{};(content.decisions||[]).forEach(function(i){if(findDetail(i,d))c++});(content.constraints||[]).forEach(function(i){if(findDetail(i,d))c++});(content.artifacts||[]).forEach(function(i){if(findDetail(i,d))c++});return c}
+function esc(t){if(!t)return '';var d=document.createElement('div');d.textContent=t;return d.innerHTML}
+function escAttr(t){return(t||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+function fmtDate(s){if(!s)return '—';try{return new Date(s).toLocaleDateString('es-CO',{year:'numeric',month:'short',day:'numeric'})}catch(e){return s.split('T')[0]||'—'}}
+function toast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='toast visible '+(type||'');clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('visible')},3000)}
+function showError(msg){document.getElementById('main-content').innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><h3>Error</h3><p>'+esc(msg)+'</p></div>'}
 </script>
 </body>
 </html>

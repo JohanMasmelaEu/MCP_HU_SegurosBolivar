@@ -40,6 +40,7 @@ from src.engine.spec_visualizer import (
     route_api_spec_update_layer,
     route_api_spec_refine,
     route_api_spec_impact,
+    route_api_spec_stories,
 )
 
 logger = logging.getLogger("mcp_hu.engine.visualizer")
@@ -298,6 +299,7 @@ app = Starlette(routes=[
     Route("/api/spec/{spec_id}/layer/{layer}", route_api_spec_update_layer, methods=["PUT"]),
     Route("/api/spec/{spec_id}/refine", route_api_spec_refine, methods=["POST"]),
     Route("/api/spec/{spec_id}/impact", route_api_spec_impact, methods=["POST"]),
+    Route("/api/spec/{spec_id}/stories", route_api_spec_stories),
 ])
 
 # Montar archivos estáticos (vendor scripts bundleados en Docker)
