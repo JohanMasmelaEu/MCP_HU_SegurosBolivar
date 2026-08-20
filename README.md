@@ -128,7 +128,7 @@ Reconectar: `Cmd/Ctrl+Shift+P` → "MCP: Restart Server"
 
 ### 2. Reiniciar sesion del IDE
 
-Docker descarga la imagen la primera vez (~80MB). El MCP queda disponible con los 61 tools.
+Docker descarga la imagen la primera vez (~80MB). El MCP queda disponible con los 64 tools.
 
 ### 3. Inicializar proyecto
 
@@ -308,7 +308,7 @@ Si ya tienes datos en el formato viejo (`/workspace/.hu-memory/` directamente en
 
 ---
 
-## Tools disponibles (61)
+## Tools disponibles (64)
 
 ### Gestion de Workspaces y Ecosistemas (6)
 | Tool | Descripcion |
@@ -415,11 +415,14 @@ Si ya tienes datos en el formato viejo (`/workspace/.hu-memory/` directamente en
 | `reject_action` | Rechaza/cancela accion pendiente |
 | `list_pending_actions` | Lista acciones pendientes de confirmacion |
 
-### Memoria Compartida (2)
+### Memoria Compartida y Wiki (5)
 | Tool | Descripcion |
 |------|-------------|
 | `sync_shared_memory` | Exportar/importar memoria compartida (.hu-memory/shared/) como Markdown para Git/Wiki |
 | `migrate_workspace_to_shared` | Migrar un workspace existente generando su estructura shared/ completa |
+| `generate_wiki_content` | Genera toda la wiki del proyecto como Markdown listo para copiar (sin necesitar GitHub Actions ni PAT) |
+| `export_memory_to_wiki` | Escribe la memoria del workspace directamente en un repo de wiki clonado (listo para commit + push) |
+| `import_wiki_to_memory` | Importa contenido desde un repo de wiki clonado localmente hacia la memoria del MCP con resumen de cambios |
 
 ### Deteccion de IDE (1)
 | Tool | Descripcion |

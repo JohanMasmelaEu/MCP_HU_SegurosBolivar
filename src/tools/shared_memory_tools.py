@@ -41,11 +41,68 @@ def handle_sync_shared_memory(params: dict) -> dict:
     elif action == "import":
         return shared.import_from_shared()
 
+    elif action == "wiki":
+        return shared.generate_wiki_bundle()
+
     else:
         return {
             "status": "error",
-            "message": f"Acción no válida: '{action}'. Usar 'export', 'import' o 'status'.",
+            "message": f"Acción no válida: '{action}'. Usar 'export', 'import', 'status' o 'wiki'.",
         }
+
+
+def handle_generate_wiki_content() -> dict:
+    """Handler dedicado para generar el contenido completo de la wiki.
+
+    Returns:
+        Bundle con todas las páginas de la wiki como Markdown.
+    """
+    try:
+        shared = get_shared_memory()
+    except RuntimeError as e:
+        return {"status": "error", "message": str(e)}
+
+    return shared.generate_wiki_bundle()
+
+
+def handle_export_memory_to_wiki(wiki_path: str) -> dict:
+    """Handler para exportar la memoria del workspace al repo de wiki clonado.
+
+    Args:
+        wiki_path: Ruta local al repo de la wiki clonado.
+
+    Returns:
+        Resultado con archivos escritos y resumen.
+    """
+    if not wiki_path or not wiki_path.strip():
+        return {"status": "error", "message": "Se requiere la ruta al repo de la wiki clonado."}
+
+    try:
+        shared = get_shared_memory()
+    except RuntimeError as e:
+        return {"status": "error", "message": str(e)}
+
+    return shared.export_to_wiki_repo(wiki_path.strip())
+
+
+def handle_import_wiki_to_memory(wiki_path: str) -> dict:
+    """Handler para importar contenido desde un repo de wiki clonado.
+
+    Args:
+        wiki_path: Ruta local al repo de la wiki clonado.
+
+    Returns:
+        Resultado con resumen de cambios.
+    """
+    if not wiki_path or not wiki_path.strip():
+        return {"status": "error", "message": "Se requiere la ruta al repo de la wiki clonado."}
+
+    try:
+        shared = get_shared_memory()
+    except RuntimeError as e:
+        return {"status": "error", "message": str(e)}
+
+    return shared.import_from_wiki_repo(wiki_path.strip())
 
 
 def handle_migrate_workspace_to_shared(

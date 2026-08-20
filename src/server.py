@@ -69,6 +69,9 @@ from src.tools.sdd_tools import (
 )
 from src.tools.shared_memory_tools import (
     handle_sync_shared_memory,
+    handle_generate_wiki_content,
+    handle_export_memory_to_wiki,
+    handle_import_wiki_to_memory,
     handle_migrate_workspace_to_shared,
 )
 from src.engine.ide_detector import (
@@ -167,8 +170,10 @@ mcp = FastMCP(
         "Detecta automaticamente el IDE conectado (Kiro, Cursor, Claude Code, "
         "VS Code, Windsurf) via el handshake MCP — no preguntar al usuario que IDE usa. "
         "Usar get_ide_info si se necesita informacion de configuracion especifica del IDE. "
-        "sync_shared_memory y migrate_workspace_to_shared solo se ejecutan cuando "
-        "el usuario lo pide explicitamente — nunca invocar automaticamente."
+        "sync_shared_memory, migrate_workspace_to_shared y generate_wiki_content "
+        "solo se ejecutan cuando el usuario lo pide explicitamente — nunca invocar automaticamente. "
+        "Cuando el usuario pida generar la wiki o el contenido para la wiki, usar "
+        "generate_wiki_content y presentar el resultado completo para que lo copie."
     ),
 )
 
@@ -727,6 +732,79 @@ async def migrate_workspace_to_shared(workspace_id: str = "", confirm: bool = Fa
         confirm: Debe ser true para ejecutar la migración.
     """
     result = handle_migrate_workspace_to_shared(workspace_id if workspace_id else None, confirm)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def generate_wiki_content() -> str:
+    """Genera el contenido completo de la wiki del proyecto listo para copiar.
+
+    Lee la memoria local del workspace activo y produce todas las páginas
+    de la wiki como Markdown estructurado. El resultado incluye:
+    - Página principal (Home) con índice de entidades, flujos y decisiones
+    - Una página por cada entidad del dominio
+    - Una página por cada flujo de negocio
+    - Una página por cada decisión arquitectónica
+
+    El agente DEBE presentar el campo 'full_content' al usuario para que lo copie,
+    o usar las herramientas del IDE para escribirlo al portapapeles/archivos.
+
+    IMPORTANTE: Solo ejecutar cuando el usuario lo solicite explícitamente.
+    No requiere GitHub Actions, PAT, ni acceso a red — todo es local.
+    """
+    result = handle_generate_wiki_content()
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def export_memory_to_wiki(wiki_path: str) -> str:
+    """Exporta la memoria del workspace activo al repo de wiki de GitHub clonado localmente.
+
+    Escribe los archivos Markdown directamente en la estructura de carpetas del
+    wiki repo. Genera:
+    - memoria/Home.md — página principal con índice
+    - memoria/entidades/*.md — una página por entidad
+    - memoria/flujos/*.md — una página por flujo
+    - memoria/decisiones/*.md — una página por decisión
+    - _Sidebar.md — navegación lateral para la wiki
+
+    Si el MCP no puede escribir (ej: Docker sin volumen montado al wiki repo),
+    retorna el contenido de cada página para que el agente lo escriba con sus
+    propias herramientas de filesystem.
+
+    Después de ejecutar, el usuario solo necesita:
+      cd <wiki_path> && git add -A && git commit -m "sync" && git push
+
+    IMPORTANTE: Solo ejecutar cuando el usuario lo solicite explícitamente.
+
+    Args:
+        wiki_path: Ruta local al directorio del repo wiki clonado (ej: C:/repos/MiRepo.wiki).
+    """
+    result = handle_export_memory_to_wiki(wiki_path)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def import_wiki_to_memory(wiki_path: str) -> str:
+    """Importa contenido desde un repo de wiki de GitHub clonado localmente hacia la memoria del MCP.
+
+    Lee los archivos Markdown del repo de wiki clonado, detecta automáticamente
+    la estructura de carpetas (memoria/entidades/, entidades/, entities/, etc.),
+    y hace merge inteligente con la memoria existente en Docker:
+    - Agrega entidades/flujos/decisiones nuevas
+    - Actualiza las existentes si hay campos, relaciones o pasos nuevos
+    - Reporta un resumen detallado de todos los cambios
+
+    Uso típico:
+    1. git clone https://github.com/tu-org/tu-repo.wiki.git
+    2. Llamar este tool con la ruta donde se clonó
+
+    IMPORTANTE: Solo ejecutar cuando el usuario lo solicite explícitamente.
+
+    Args:
+        wiki_path: Ruta local al directorio del repo wiki clonado (ej: C:/repos/MiRepo.wiki).
+    """
+    result = handle_import_wiki_to_memory(wiki_path)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
