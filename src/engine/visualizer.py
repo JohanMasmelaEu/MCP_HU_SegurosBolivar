@@ -226,6 +226,79 @@ async def route_story(request):
     return JSONResponse(_get_story_detail(story_id))
 
 
+async def route_story_feedback(request: Request):
+    """API: agrega una pregunta o gap a una HU.
+
+    POST /api/story/{story_id}/feedback
+    Body JSON:
+    {
+        "type": "question" | "gap",
+        "text": "Texto de la pregunta o gap",
+        "ac_reference": "Given/When/Then text (opcional)"
+    }
+
+    Persiste la pregunta o gap en el expert 'negocio' de la HU
+    y actualiza los contadores total_gaps / total_questions.
+    """
+    story_id = request.path_params["story_id"]
+    memory = get_memory()
+    story = memory.get_story(story_id)
+    if not story:
+        return JSONResponse({"error": f"HU '{story_id}' no encontrada"}, status_code=404)
+
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Body JSON inválido."}, status_code=400)
+
+    feedback_type = body.get("type", "")
+    text = body.get("text", "").strip()
+    ac_ref = body.get("ac_reference", "").strip()
+
+    if feedback_type not in ("question", "gap"):
+        return JSONResponse({"error": "type debe ser 'question' o 'gap'."}, status_code=400)
+    if not text:
+        return JSONResponse({"error": "text es requerido."}, status_code=400)
+
+    # Build full text with AC reference if provided
+    full_text = text
+    if ac_ref:
+        full_text = f"[Ref AC: {ac_ref}] {text}"
+
+    # Find or create a 'negocio' expert section to add the feedback
+    from src.models.story import ExpertType
+    target_expert = None
+    for expert_section in story.expert_analysis:
+        if expert_section.expert == ExpertType.NEGOCIO:
+            target_expert = expert_section
+            break
+
+    if not target_expert:
+        from src.models.story import ExpertSection
+        target_expert = ExpertSection(expert=ExpertType.NEGOCIO)
+        story.expert_analysis.append(target_expert)
+
+    if feedback_type == "question":
+        target_expert.questions.append(full_text)
+        story.total_questions += 1
+    else:
+        target_expert.gaps.append(full_text)
+        story.total_gaps += 1
+
+    from datetime import datetime
+    story.updated_at = datetime.now().isoformat()
+    memory.save_story(story)
+
+    return JSONResponse({
+        "status": "success",
+        "story_id": story_id,
+        "type": feedback_type,
+        "text": full_text,
+        "total_gaps": story.total_gaps,
+        "total_questions": story.total_questions,
+    })
+
+
 async def route_neighbors(request):
     """API: vecinos de un nodo."""
     story_id = request.path_params["story_id"]
@@ -317,6 +390,7 @@ app = Starlette(routes=[
     Route("/", route_index),
     Route("/api/graph", route_graph),
     Route("/api/story/{story_id}", route_story),
+    Route("/api/story/{story_id}/feedback", route_story_feedback, methods=["POST"]),
     Route("/api/neighbors/{story_id}", route_neighbors),
     Route("/api/workspaces", route_workspaces),
     Route("/api/workspaces/switch", route_switch_workspace, methods=["POST"]),

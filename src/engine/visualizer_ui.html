@@ -1166,7 +1166,9 @@ async function showDetail(id) {
   h += '<div class="stats-row">';
   h += '<span class="stat-pill"><span class="stat-num">' + s.total_gaps + '</span> gaps</span>';
   h += '<span class="stat-pill"><span class="stat-num">' + s.total_questions + '</span> preguntas</span>';
-  h += '</div></div></div>';
+  h += '</div>';
+  h += '<a href="/story?id=' + encodeURIComponent(s.id) + '" target="_blank" style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1px solid var(--surface-border);background:transparent;color:var(--accent-blue);text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor=\'var(--accent-blue)\';this.style.background=\'rgba(10,132,255,.08)\'" onmouseout="this.style.borderColor=\'var(--surface-border)\';this.style.background=\'transparent\'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>Ver detalle</a>';
+  h += '</div></div>';
 
   h += '<div class="panel-section"><h3>Narrativa</h3>';
   h += '<div class="narrative-block">';
