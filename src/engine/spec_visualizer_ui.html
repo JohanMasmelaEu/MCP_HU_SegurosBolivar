@@ -119,16 +119,17 @@ html.light .sidebar-select option{background:#fff;color:#1c1c1e}
 .layer-description{font-size:11px;color:var(--text-tertiary);font-style:italic;margin-top:-14px;margin-bottom:16px}
 
 /* Summary */
-.layer-summary-wrap{position:relative;margin-bottom:24px}
-.layer-summary{font-size:13px;line-height:1.75;color:var(--text-secondary);padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--surface-border);border-radius:var(--radius-md);white-space:pre-wrap}
+.layer-summary{font-size:13px;line-height:1.75;color:var(--text-secondary);margin-bottom:24px;padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--surface-border);border-radius:var(--radius-md);white-space:pre-wrap}
 .layer-summary-editor{display:none;margin-bottom:24px}
 .layer-summary-editor textarea{width:100%;min-height:120px;padding:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--accent-blue);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;font-size:13px;line-height:1.7;resize:vertical;outline:none}
 /* Inline edit buttons */
 .inline-edit-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:16px;font-size:11px;font-weight:600;border:1px solid var(--surface-border);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all .2s}
 .inline-edit-btn:hover{border-color:var(--accent-blue);color:var(--accent-blue);background:rgba(10,132,255,.06)}
 .inline-edit-btn svg{width:12px;height:12px}
-.summary-edit-btn{position:absolute;top:10px;right:10px}
-.detail-edit-btn{margin-top:12px}
+.summary-header-row{display:flex;align-items:center;justify-content:flex-end;margin-bottom:8px}
+.detail-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.detail-header-row .detail-header{margin-bottom:0;flex:1;min-width:0}
+.detail-header-row .inline-edit-btn{flex-shrink:0;margin-left:12px}
 
 /* Layer Tabs */
 .layer-tabs{display:flex;gap:0;margin-bottom:0;border-bottom:1px solid var(--surface-border)}
@@ -455,9 +456,10 @@ function renderHUPage(){var c=document.getElementById('hu-list-container');if(!c
 function applyRoleFilter(role){currentRole=role;var h=document.getElementById('role-hint');if(role&&ROLE_HINTS[role]){h.textContent=ROLE_HINTS[role];h.classList.add('visible')}else{h.classList.remove('visible')}if(currentSpecId)loadSpec(currentSpecId)}
 function toggleEditMode(){editMode=!editMode;document.body.classList.toggle('edit-mode',editMode);document.getElementById('btn-edit-mode').classList.toggle('active',editMode);if(selectedItem){renderDetail(selectedItem.layerKey,selectedItem.section,selectedItem.idx)}else if(currentSpec){renderSpec()}}
 
-function toggleSummaryEdit(layerKey){var view=document.getElementById('summary-view-'+layerKey);var editor=document.getElementById('summary-edit-'+layerKey);var btn=document.getElementById('summary-btn-'+layerKey);if(!view||!editor)return;var isEditing=editor.style.display==='block';if(isEditing){editor.style.display='none';view.style.display='';btn.style.display=''}else{editor.style.display='block';view.style.display='none';btn.style.display='none'}}
-function cancelSummaryEdit(layerKey){var view=document.getElementById('summary-view-'+layerKey);var editor=document.getElementById('summary-edit-'+layerKey);var btn=document.getElementById('summary-btn-'+layerKey);if(editor)editor.style.display='none';if(view)view.style.display='';if(btn)btn.style.display='';var ta=document.getElementById('summary-textarea-'+layerKey);var layers=(currentSpec&&currentSpec.layers)?currentSpec.layers:{};var content=layers[layerKey]||{};if(ta)ta.value=content.summary||''}
+function toggleSummaryEdit(layerKey){var view=document.getElementById('summary-view-'+layerKey);var editor=document.getElementById('summary-edit-'+layerKey);var btn=document.getElementById('summary-btn-'+layerKey);if(!view||!editor)return;var isEditing=editor.style.display==='block';if(isEditing){editor.style.display='none';view.style.display='';if(btn)btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar'}else{editor.style.display='block';view.style.display='none';if(btn)btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>Cancelar'}}
+function cancelSummaryEdit(layerKey){var view=document.getElementById('summary-view-'+layerKey);var editor=document.getElementById('summary-edit-'+layerKey);var btn=document.getElementById('summary-btn-'+layerKey);if(editor)editor.style.display='none';if(view)view.style.display='';if(btn)btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar';var ta=document.getElementById('summary-textarea-'+layerKey);var layers=(currentSpec&&currentSpec.layers)?currentSpec.layers:{};var content=layers[layerKey]||{};if(ta)ta.value=content.summary||''}
 function enableItemEdit(layerKey,sectionKey,idx){editMode=true;document.body.classList.add('edit-mode');renderDetail(layerKey,sectionKey,idx)}
+function cancelItemEdit(layerKey,sectionKey,idx){editMode=false;document.body.classList.remove('edit-mode');renderDetail(layerKey,sectionKey,idx)}
 function toggleTheme(){var html=document.documentElement;var isL=html.classList.toggle('light');document.getElementById('theme-icon-dark').style.display=isL?'none':'';document.getElementById('theme-icon-light').style.display=isL?'':'none';document.getElementById('theme-label').textContent=isL?'Oscuro':'Claro';try{localStorage.setItem('sdd-theme',isL?'light':'dark')}catch(e){}}
 (function(){try{if(localStorage.getItem('sdd-theme')==='light'){document.documentElement.classList.add('light');document.addEventListener('DOMContentLoaded',function(){var d=document.getElementById('theme-icon-dark'),l=document.getElementById('theme-icon-light'),lb=document.getElementById('theme-label');if(d)d.style.display='none';if(l)l.style.display='';if(lb)lb.textContent='Oscuro'})}}catch(e){}})();
 
@@ -506,12 +508,10 @@ var html='<div class="layer-section'+(isActive?' active':'')+'" id="layer-'+key+
 html+='<div class="layer-header"><h2>'+meta.label+'</h2><span class="layer-badge '+meta.category+'">'+meta.category+'</span></div>';
 if(meta.desc)html+='<p class="layer-description">'+meta.desc+'</p>';
 
-html+='<div class="layer-summary-wrap">';
+html+='<div class="summary-header-row"><button class="inline-edit-btn" onclick="toggleSummaryEdit(\''+key+'\')" id="summary-btn-'+key+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button></div>';
 if(content.summary)html+='<div class="layer-summary" id="summary-view-'+key+'">'+esc(content.summary)+'</div>';
 else html+='<div class="layer-summary" id="summary-view-'+key+'" style="color:var(--text-tertiary);font-style:italic">Sin resumen. Haz clic en Editar para agregar uno.</div>';
-html+='<button class="inline-edit-btn summary-edit-btn" onclick="toggleSummaryEdit(\''+key+'\')" id="summary-btn-'+key+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>';
 html+='<div class="layer-summary-editor" id="summary-edit-'+key+'"><textarea class="edit-input" id="summary-textarea-'+key+'" placeholder="Resumen de esta capa...">'+esc(content.summary||'')+'</textarea><div style="margin-top:8px;display:flex;gap:8px"><button class="btn-save" onclick="saveLayer(\''+key+'\')">Guardar</button><button class="btn-delete" onclick="cancelSummaryEdit(\''+key+'\')">Cancelar</button></div></div>';
-html+='</div>';
 
 var dc=(content.decisions||[]).length,cc=(content.constraints||[]).length,ac=(content.artifacts||[]).length;
 var hasSections=dc||cc||ac||editMode;
@@ -562,14 +562,16 @@ html+='</div>';
 html+='<div class="detail-col-edit">';
 html+='<div class="edit-row"><div class="edit-label">Titulo</div><input type="text" class="edit-input" id="edit-title-'+layerKey+'-'+sectionKey+'-'+idx+'" value="'+escAttr(item)+'"></div>';
 html+='<div class="edit-row"><div class="edit-label">Detalle expandido</div><textarea class="edit-input" id="edit-detail-'+layerKey+'-'+sectionKey+'-'+idx+'" placeholder="Describe en detalle...">'+esc(detail||'')+'</textarea></div>';
-html+='<div class="edit-actions"><button class="btn-save" onclick="saveItem(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Guardar</button><button class="btn-formalize" onclick="refineExisting(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Formalizar</button><button class="btn-delete" onclick="deleteItem(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Eliminar</button></div>';
+html+='<div class="edit-actions"><button class="btn-save" onclick="saveItem(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Guardar</button><button class="btn-formalize" onclick="refineExisting(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Formalizar</button><button class="btn-delete" onclick="deleteItem(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Eliminar</button><button class="btn-delete" style="background:rgba(255,255,255,.05);color:var(--text-secondary)" onclick="cancelItemEdit(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Cancelar</button></div>';
 html+='</div></div>';
 }else{
+html+='<div class="detail-header-row">';
 html+='<div class="detail-header">';
 if(p.id)html+='<span class="detail-id'+tc+'">'+esc(p.id)+'</span>';
 html+='<h3 class="detail-title">'+esc(p.text)+'</h3></div>';
+html+='<button class="inline-edit-btn" onclick="enableItemEdit(\''+layerKey+'\',\''+sectionKey+'\','+idx+')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>';
+html+='</div>';
 if(detail){html+='<div class="detail-body">'+esc(detail)+'</div>'}else{html+='<div class="detail-no-content">Sin detalle expandido. Haz clic en Editar para agregar contexto.</div>'}
-html+='<button class="inline-edit-btn detail-edit-btn" onclick="enableItemEdit(\''+layerKey+'\',\''+sectionKey+'\','+idx+')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>';
 }
 el.innerHTML=html}
 

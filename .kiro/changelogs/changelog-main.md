@@ -20,6 +20,7 @@
 - Se corrigió error "not found" al acceder al detalle de una HU desde la vista de Spec (el endpoint `/story` no existía)
 
 ### Cambiado
-- Se reemplazó el botón global "Editar" del top nav por botones de edición contextuales: uno junto a la descripción/resumen de cada capa y otro en el panel de detalle de cada elemento seleccionado
+- Se reemplazó el botón global "Editar" del top nav por botones de edición contextuales: uno en la esquina superior derecha de la descripción de cada capa y otro en la esquina superior derecha del panel de detalle de cada elemento seleccionado
+- Se agregó botón "Cancelar" tanto en la edición de la descripción de la capa como en la edición del detalle de un elemento, para poder salir del modo edición sin guardar
 - Se hizo visible permanentemente el botón "+ Agregar" en los paneles master (antes solo aparecía en modo edición global)
 - Se actualizó el texto placeholder de "Sin detalle expandido" para reflejar el nuevo flujo contextual
