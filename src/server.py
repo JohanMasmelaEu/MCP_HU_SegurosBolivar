@@ -10,7 +10,7 @@ import json
 import logging
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 
 from src.engine.workspace_manager import init_workspace_manager
 from src.engine.ecosystem_manager import init_ecosystem_manager
@@ -66,6 +66,16 @@ from src.tools.sdd_tools import (
     handle_detect_constellation_gaps,
     handle_export_spec_markdown,
     handle_import_spec,
+)
+from src.tools.shared_memory_tools import (
+    handle_sync_shared_memory,
+    handle_migrate_workspace_to_shared,
+)
+from src.engine.ide_detector import (
+    detect_ide_from_session,
+    get_client_info,
+    get_detected_ide,
+    get_ide_specific_instructions,
 )
 from src.tools.documentation_tools import (
     handle_generate_bitacora,
@@ -149,13 +159,46 @@ def _ensure_str(value: Any) -> str:
 mcp = FastMCP(
     name="MCP_HU_SegurosBolivar",
     instructions=(
-        "MCP Server v2.0.0 para analisis inteligente de Historias de Usuario. "
+        "MCP Server v2.1.0 para analisis inteligente de Historias de Usuario. "
         "Panel de 10 expertos, memoria contextual, segmentacion de contexto, "
         "estimacion adaptativa y visibilidad transversal de ecosistemas. "
         "Soporta multiples workspaces y ecosistemas simultaneos. "
-        "Produce HUs estandarizadas sin ambiguedades."
+        "Produce HUs estandarizadas sin ambiguedades. "
+        "Detecta automaticamente el IDE conectado (Kiro, Cursor, Claude Code, "
+        "VS Code, Windsurf) via el handshake MCP — no preguntar al usuario que IDE usa. "
+        "Usar get_ide_info si se necesita informacion de configuracion especifica del IDE. "
+        "sync_shared_memory y migrate_workspace_to_shared solo se ejecutan cuando "
+        "el usuario lo pide explicitamente — nunca invocar automaticamente."
     ),
 )
+
+
+# ─── IDE DETECTION ───────────────────────────────────────────────────────────────
+
+
+def _try_detect_ide(ctx) -> None:
+    """Intenta detectar el IDE desde el contexto del request (lazy, una sola vez)."""
+    try:
+        session = ctx.session
+        detect_ide_from_session(session)
+    except Exception:
+        pass
+
+
+@mcp.tool()
+async def get_ide_info(ctx: Context) -> str:
+    """Retorna información del IDE/cliente conectado al MCP.
+
+    Detecta automáticamente qué IDE está usando el agente (Kiro, Cursor, Claude Code,
+    VS Code, Windsurf) sin necesidad de preguntar al usuario. Incluye rutas de
+    configuración específicas del IDE.
+    """
+    _try_detect_ide(ctx)
+
+    info = get_client_info()
+    info["instructions"] = get_ide_specific_instructions()
+    info["status"] = "success"
+    return json.dumps(info, ensure_ascii=False, indent=2)
 
 
 # ─── WORKSPACE MANAGEMENT ────────────────────────────────────────────────────────
@@ -233,7 +276,7 @@ async def reset_ecosystem(ecosystem_id: str, confirm: bool = False) -> str:
 
 
 @mcp.tool()
-async def init_project(config: dict) -> str:
+async def init_project(config: dict, ctx: Context) -> str:
     """Inicializa un nuevo proyecto creando un workspace dedicado (.hu-memory/).
 
     Cada proyecto vive en su propio workspace aislado. Si un workspace con el
@@ -243,8 +286,12 @@ async def init_project(config: dict) -> str:
     Args:
         config: Objeto con project_name, domain, stakeholders y description. Opcionalmente ecosystem_id, app_id, workspace_id.
     """
+    _try_detect_ide(ctx)
     config_dict = _ensure_dict(config)
     result = handle_init_project(config_dict)
+    ide = get_detected_ide()
+    if ide.value != "unknown":
+        result["ide_detected"] = ide.value
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
@@ -637,6 +684,49 @@ async def import_spec(source_path: str, as_reference: bool = True) -> str:
         as_reference: Si true, specs importadas entran con maturity reference (default true).
     """
     result = handle_import_spec(source_path, as_reference)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+# ─── SHARED MEMORY ───────────────────────────────────────────────────────────────
+
+
+@mcp.tool()
+async def sync_shared_memory(action: str = "status", scope: str = "all") -> str:
+    """Gestiona la memoria compartida del proyecto (.hu-memory/shared/).
+
+    La memoria compartida permite versionar entidades, flujos y decisiones
+    como archivos Markdown en el repositorio Git para sincronización con
+    la wiki de GitHub y visibilidad del equipo.
+
+    IMPORTANTE: Solo ejecutar cuando el usuario lo solicite explícitamente.
+    No invocar automáticamente durante análisis de HUs.
+
+    Args:
+        action: Operación a realizar:
+            - "status": Ver estado actual de shared/ (default).
+            - "export": Exportar memoria local → shared/ (Markdown).
+            - "import": Importar shared/ → memoria local (después de git pull).
+        scope: Solo para export — qué exportar: "all", "entities", "flows", "decisions".
+    """
+    result = handle_sync_shared_memory({"action": action, "scope": scope})
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def migrate_workspace_to_shared(workspace_id: str = "", confirm: bool = False) -> str:
+    """Migra un workspace existente generando su estructura shared/ con todo su contenido.
+
+    Toma las entidades, flujos y decisiones del workspace local (.hu-memory/)
+    y crea los archivos Markdown correspondientes en .hu-memory/shared/.
+    No modifica ni elimina la memoria local — solo genera la capa shared.
+
+    IMPORTANTE: Solo ejecutar cuando el usuario lo solicite explícitamente.
+
+    Args:
+        workspace_id: ID del workspace a migrar. Si vacío, usa el activo.
+        confirm: Debe ser true para ejecutar la migración.
+    """
+    result = handle_migrate_workspace_to_shared(workspace_id if workspace_id else None, confirm)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 

@@ -9,15 +9,19 @@ Soporta **multiples workspaces y ecosistemas simultaneos** — cada proyecto viv
 ## Requisitos
 
 - **Docker Desktop** instalado y corriendo (unico requisito para uso normal)
-- **Kiro IDE** (o cualquier cliente MCP compatible con stdio)
+- **IDE compatible con MCP**: Kiro, Cursor, Claude Code, VS Code, o Windsurf
 
 > No se necesita Python ni ningun runtime en la maquina. Todo corre dentro de Docker.
+> El MCP detecta automaticamente que IDE lo esta usando — no necesitas configurar nada extra.
 
 ---
 
 ## Inicio Rapido
 
-### 1. Configurar MCP en Kiro
+### 1. Configurar MCP en tu IDE
+
+<details>
+<summary><strong>Kiro</strong></summary>
 
 Crear `~/.kiro/settings/mcp.json` (global) o `<workspace>/.kiro/settings/mcp.json`:
 
@@ -39,16 +43,96 @@ Crear `~/.kiro/settings/mcp.json` (global) o `<workspace>/.kiro/settings/mcp.jso
 }
 ```
 
+Reconectar: Panel MCP → Reconnect
+</details>
+
+<details>
+<summary><strong>Cursor</strong></summary>
+
+Crear `~/.cursor/mcp.json` (global) o `<workspace>/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "MCP_HU_SegurosBolivar": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "--pull", "always",
+        "-v", "mcp-hu-memory:/workspace",
+        "-p", "9751:9751",
+        "ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest"
+      ]
+    }
+  }
+}
+```
+
+Reconectar: `Cmd/Ctrl+Shift+P` → "MCP: List Servers" → Restart
+
+> **Nota:** En Cursor la key `disabled` no aplica. Para deshabilitar, eliminar la entrada o usar la UI de MCP Servers.
+</details>
+
+<details>
+<summary><strong>Claude Code</strong></summary>
+
+Agregar a `~/.claude/settings.json` o `<workspace>/.claude/settings.json`, bajo `mcpServers`:
+
+```json
+{
+  "mcpServers": {
+    "MCP_HU_SegurosBolivar": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "--pull", "always",
+        "-v", "mcp-hu-memory:/workspace",
+        "-p", "9751:9751",
+        "ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest"
+      ]
+    }
+  }
+}
+```
+
+Reconectar: `/mcp` o reiniciar sesion
+</details>
+
+<details>
+<summary><strong>VS Code (con extensión MCP)</strong></summary>
+
+Crear `<workspace>/.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "MCP_HU_SegurosBolivar": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "--pull", "always",
+        "-v", "mcp-hu-memory:/workspace",
+        "-p", "9751:9751",
+        "ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest"
+      ]
+    }
+  }
+}
+```
+
+Reconectar: `Cmd/Ctrl+Shift+P` → "MCP: Restart Server"
+</details>
+
 > **IMPORTANTE: `--pull always`** — Sin este flag, Docker usa la imagen cacheada
 > localmente y NO descarga actualizaciones aunque exista una version nueva en el registry.
 
-### 2. Reiniciar sesion de Kiro
+### 2. Reiniciar sesion del IDE
 
-Docker descarga la imagen la primera vez (~80MB). El MCP queda disponible con los 58 tools.
+Docker descarga la imagen la primera vez (~80MB). El MCP queda disponible con los 61 tools.
 
 ### 3. Inicializar proyecto
 
-Decirle a Kiro: "Inicializa un proyecto de HUs para [tu dominio]"
+Decirle al agente: "Inicializa un proyecto de HUs para [tu dominio]"
 
 ---
 
@@ -224,7 +308,7 @@ Si ya tienes datos en el formato viejo (`/workspace/.hu-memory/` directamente en
 
 ---
 
-## Tools disponibles (58)
+## Tools disponibles (61)
 
 ### Gestion de Workspaces y Ecosistemas (6)
 | Tool | Descripcion |
@@ -331,6 +415,17 @@ Si ya tienes datos en el formato viejo (`/workspace/.hu-memory/` directamente en
 | `reject_action` | Rechaza/cancela accion pendiente |
 | `list_pending_actions` | Lista acciones pendientes de confirmacion |
 
+### Memoria Compartida (2)
+| Tool | Descripcion |
+|------|-------------|
+| `sync_shared_memory` | Exportar/importar memoria compartida (.hu-memory/shared/) como Markdown para Git/Wiki |
+| `migrate_workspace_to_shared` | Migrar un workspace existente generando su estructura shared/ completa |
+
+### Deteccion de IDE (1)
+| Tool | Descripcion |
+|------|-------------|
+| `get_ide_info` | Detecta automaticamente el IDE conectado (Kiro, Cursor, Claude Code, VS Code, Windsurf) |
+
 ### Credenciales (1)
 | Tool | Descripcion |
 |------|-------------|
@@ -342,31 +437,23 @@ Si ya tienes datos en el formato viejo (`/workspace/.hu-memory/` directamente en
 
 ### Configuracion de credenciales
 
-Las credenciales se pasan como variables de entorno al container:
+Las credenciales se pasan como variables de entorno al container. Agregar los flags `-e` al array `args` de la configuracion MCP de tu IDE (ver seccion Inicio Rapido para la ruta correcta segun tu IDE):
 
 ```json
-{
-  "mcpServers": {
-    "MCP_HU_SegurosBolivar": {
-      "command": "docker",
-      "args": [
-        "run", "-i", "--rm", "--pull", "always",
-        "-v", "mcp-hu-memory:/workspace",
-        "-p", "9751:9751",
-        "-e", "JIRA_BASE_URL=https://tu-instancia.atlassian.net",
-        "-e", "JIRA_EMAIL=tu@email.com",
-        "-e", "JIRA_API_TOKEN=tu-api-token",
-        "-e", "CONFLUENCE_BASE_URL=https://tu-instancia.atlassian.net/wiki",
-        "-e", "CONFLUENCE_EMAIL=tu@email.com",
-        "-e", "CONFLUENCE_API_TOKEN=tu-api-token",
-        "-e", "CLOCKWORK_BASE_URL=https://api.clockwork.report",
-        "-e", "CLOCKWORK_API_TOKEN=tu-clockwork-token",
-        "ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest"
-      ],
-      "disabled": false
-    }
-  }
-}
+"args": [
+  "run", "-i", "--rm", "--pull", "always",
+  "-v", "mcp-hu-memory:/workspace",
+  "-p", "9751:9751",
+  "-e", "JIRA_BASE_URL=https://tu-instancia.atlassian.net",
+  "-e", "JIRA_EMAIL=tu@email.com",
+  "-e", "JIRA_API_TOKEN=tu-api-token",
+  "-e", "CONFLUENCE_BASE_URL=https://tu-instancia.atlassian.net/wiki",
+  "-e", "CONFLUENCE_EMAIL=tu@email.com",
+  "-e", "CONFLUENCE_API_TOKEN=tu-api-token",
+  "-e", "CLOCKWORK_BASE_URL=https://api.clockwork.report",
+  "-e", "CLOCKWORK_API_TOKEN=tu-clockwork-token",
+  "ghcr.io/johanmasmelaeu/mcp-hu-segurosbolivar:latest"
+]
 ```
 
 Usa `check_credentials_status` para verificar que todo esta configurado.

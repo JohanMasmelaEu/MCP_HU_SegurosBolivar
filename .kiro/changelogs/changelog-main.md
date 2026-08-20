@@ -40,6 +40,6 @@
 - Se movió la tabla de HUs del panel superior de la spec al panel de detalle de cada item seleccionado, integrada debajo de la zona de drop para que el drag-and-drop sea directo sin scroll
 
 ### Agregado
-- Se agregó formulario "Agregar Pregunta o Gap" en la página de detalle de HU (`story_detail_ui.html`) con selector de tipo (pregunta/gap), dropdown de referencia a Criterio de Aceptación (opcional), textarea para descripción y botón de envío
+- Se agregó formulario inline de "Pregunta" y "Gap" en cada Criterio de Aceptación de la página de detalle de HU (`story_detail_ui.html`): iconos de pregunta (?) y gap (⚠) junto a cada CA que al hacer clic expanden un mini-formulario contextual con la referencia al criterio pre-llenada
 - Se creó endpoint `POST /api/story/{story_id}/feedback` en `src/engine/visualizer.py` para persistir preguntas y gaps en una HU, actualizando contadores `total_gaps`/`total_questions` y guardando en la sección del experto 'negocio'
 - Se agregó botón "Ver detalle" en el panel lateral de la red neuronal (`visualizer_ui.html`) al seleccionar un nodo de HU, que abre la página de detalle completo en una nueva ventana (`/story?id=HU-XXX`)

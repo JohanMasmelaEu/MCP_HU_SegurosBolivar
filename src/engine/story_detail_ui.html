@@ -119,24 +119,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-s
 .error-state p{font-size:13px;color:var(--text-secondary)}
 
 /* Feedback Form */
-.feedback-form{margin-top:4px}
-.feedback-row{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
-.feedback-row.full{flex-direction:column}
-.feedback-select{padding:8px 12px;font-size:12px;background:rgba(255,255,255,.04);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:var(--text-primary);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:12px;padding-right:30px;min-width:130px}
-html.light .feedback-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.5)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
-.feedback-select:focus{border-color:var(--accent-blue)}
-.feedback-select option{background:#1c1c1e;color:#fff}
-html.light .feedback-select option{background:#fff;color:#1c1c1e}
-.feedback-textarea{flex:1;width:100%;padding:9px 12px;font-size:12px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;line-height:1.5;resize:vertical;min-height:60px;outline:none;transition:border-color .2s}
-.feedback-textarea:focus{border-color:var(--accent-blue)}
-.feedback-textarea::placeholder{color:var(--text-tertiary)}
-.feedback-btn{padding:8px 18px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.feedback-btn.primary{background:rgba(10,132,255,.15);color:var(--accent-blue)}
-.feedback-btn.primary:hover{background:rgba(10,132,255,.25)}
-.feedback-btn:disabled{opacity:.4;cursor:not-allowed}
-.feedback-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:4px}
-.feedback-success{font-size:11px;color:var(--accent-green);padding:6px 10px;background:rgba(48,209,88,.08);border-radius:var(--radius-sm);display:none;align-items:center;gap:6px}
-.feedback-success.visible{display:inline-flex}
+.ac-actions{display:flex;gap:4px;margin-left:auto;flex-shrink:0;align-self:flex-start;margin-top:2px}
+.ac-action-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;border:1px solid var(--surface-border);background:transparent;color:var(--text-tertiary);cursor:pointer;transition:all .2s;padding:0}
+.ac-action-btn:hover{border-color:var(--accent-teal);color:var(--accent-teal);background:rgba(100,210,255,.08)}
+.ac-action-btn.gap-btn:hover{border-color:var(--accent-orange);color:var(--accent-orange);background:rgba(255,159,10,.08)}
+.ac-action-btn svg{width:12px;height:12px}
+.ac-item{position:relative}
+.ac-inline-form{display:none;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid var(--accent-blue);border-radius:var(--radius-sm);animation:fadeIn .2s ease}
+.ac-inline-form.visible{display:flex;gap:8px;align-items:flex-end}
+.ac-inline-form textarea{flex:1;padding:7px 10px;font-size:12px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;line-height:1.4;resize:none;height:34px;outline:none;transition:border-color .2s}
+.ac-inline-form textarea:focus{border-color:var(--accent-blue)}
+.ac-inline-form textarea::placeholder{color:var(--text-tertiary)}
+.ac-inline-form .form-btn{padding:7px 12px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all .2s;white-space:nowrap}
+.ac-inline-form .form-btn.submit{background:rgba(10,132,255,.15);color:var(--accent-blue)}
+.ac-inline-form .form-btn.submit:hover{background:rgba(10,132,255,.25)}
 </style>
 </head>
 <body>
@@ -234,11 +230,24 @@ function renderStory(s){
     h+='<div class="section">';
     h+='<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Criterios de Aceptacion ('+s.acceptance_criteria.length+')</div>';
     h+='<div class="ac-list">';
-    s.acceptance_criteria.forEach(function(ac){
-      h+='<div class="ac-item">';
+    s.acceptance_criteria.forEach(function(ac,idx){
+      var acRef='CA-'+(idx+1)+': '+(ac.given||'').substring(0,60);
+      h+='<div class="ac-item" id="ac-item-'+idx+'">';
+      h+='<div style="display:flex;align-items:flex-start;gap:8px">';
+      h+='<div style="flex:1">';
       if(ac.given)h+='<div class="ac-row"><span class="ac-label ac-given">Given</span><span class="ac-text">'+esc(ac.given)+'</span></div>';
       if(ac.when)h+='<div class="ac-row"><span class="ac-label ac-when">When</span><span class="ac-text">'+esc(ac.when)+'</span></div>';
       if(ac.then)h+='<div class="ac-row"><span class="ac-label ac-then">Then</span><span class="ac-text">'+esc(ac.then)+'</span></div>';
+      h+='</div>';
+      h+='<div class="ac-actions">';
+      h+='<button class="ac-action-btn" title="Agregar pregunta" onclick="showACForm('+idx+',\'question\',\''+esc(acRef).replace(/'/g,"\\'")+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg></button>';
+      h+='<button class="ac-action-btn gap-btn" title="Reportar gap" onclick="showACForm('+idx+',\'gap\',\''+esc(acRef).replace(/'/g,"\\'")+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg></button>';
+      h+='</div></div>';
+      // Inline form (hidden by default)
+      h+='<div class="ac-inline-form" id="ac-form-'+idx+'">';
+      h+='<textarea id="ac-form-text-'+idx+'" placeholder="Escribe aqui..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();submitACFeedback('+idx+')}"></textarea>';
+      h+='<button class="form-btn submit" onclick="submitACFeedback('+idx+')">Enviar</button>';
+      h+='</div>';
       h+='</div>';
     });
     h+='</div></div>';
@@ -337,92 +346,65 @@ function renderStory(s){
     h+='</div></div>';
   }
 
-  // Feedback form (questions/gaps)
-  h+=buildFeedbackSection(s);
+  // Feedback form (inline per AC - no standalone section needed)
 
   _currentStory=s;
   document.getElementById('main-content').innerHTML=h;
 }
 
 var _currentStory=null;
+var _acFormState={};
 
-function buildFeedbackSection(s){
-  var h='<div class="section">';
-  h+='<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Agregar Pregunta o Gap</div>';
-  h+='<div class="feedback-form">';
-  // Row 1: type + AC reference
-  h+='<div class="feedback-row">';
-  h+='<div><div class="feedback-label">Tipo</div><select class="feedback-select" id="feedback-type"><option value="question">Pregunta</option><option value="gap">Gap</option></select></div>';
-  h+='<div style="flex:1"><div class="feedback-label">Criterio de Aceptacion (opcional)</div><select class="feedback-select" id="feedback-ac" style="width:100%"><option value="">— Sin referencia a CA —</option>';
-  if(s.acceptance_criteria&&s.acceptance_criteria.length){
-    s.acceptance_criteria.forEach(function(ac,idx){
-      var label='CA-'+(idx+1)+': '+((ac.given||'').substring(0,40));
-      h+='<option value="'+esc('CA-'+(idx+1)+': '+ac.given)+'">'+esc(label)+'</option>';
-    });
-  }
-  h+='</select></div>';
-  h+='</div>';
-  // Row 2: text
-  h+='<div class="feedback-row full">';
-  h+='<div class="feedback-label">Descripcion</div>';
-  h+='<textarea class="feedback-textarea" id="feedback-text" placeholder="Describe la pregunta o el gap detectado..."></textarea>';
-  h+='</div>';
-  // Row 3: button + success
-  h+='<div class="feedback-row" style="align-items:center">';
-  h+='<button class="feedback-btn primary" id="feedback-submit" onclick="submitFeedback()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Agregar</button>';
-  h+='<span class="feedback-success" id="feedback-success"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg><span id="feedback-success-text">Agregado</span></span>';
-  h+='</div>';
-  h+='</div></div>';
-  return h;
+function showACForm(idx,type,acRef){
+  document.querySelectorAll('.ac-inline-form.visible').forEach(function(f){f.classList.remove('visible')});
+  var form=document.getElementById('ac-form-'+idx);
+  if(!form)return;
+  _acFormState[idx]={type:type,acRef:acRef};
+  form.classList.add('visible');
+  var ta=document.getElementById('ac-form-text-'+idx);
+  if(ta){ta.value='';ta.focus()}
 }
 
-async function submitFeedback(){
+function hideACForm(idx){
+  var form=document.getElementById('ac-form-'+idx);
+  if(form)form.classList.remove('visible');
+}
+
+async function submitACFeedback(idx){
   var params=new URLSearchParams(window.location.search);
   var storyId=params.get('id');
   if(!storyId)return;
 
-  var typeEl=document.getElementById('feedback-type');
-  var textEl=document.getElementById('feedback-text');
-  var acEl=document.getElementById('feedback-ac');
-  var btn=document.getElementById('feedback-submit');
-  var successEl=document.getElementById('feedback-success');
+  var state=_acFormState[idx];
+  if(!state)return;
 
-  var feedbackType=typeEl.value;
-  var text=textEl.value.trim();
-  var acRef=acEl.value;
+  var ta=document.getElementById('ac-form-text-'+idx);
+  var text=(ta?ta.value:'').trim();
+  if(!text){if(ta)ta.focus();return}
 
-  if(!text){textEl.focus();return}
-
-  btn.disabled=true;
-  btn.textContent='Guardando...';
+  var btn=document.getElementById('ac-form-'+idx).querySelector('.form-btn.submit');
+  btn.disabled=true;btn.textContent='...';
 
   try{
     var r=await fetch('/api/story/'+encodeURIComponent(storyId)+'/feedback',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({type:feedbackType,text:text,ac_reference:acRef})
+      body:JSON.stringify({type:state.type,text:text,ac_reference:state.acRef})
     });
     var d=await r.json();
     if(d.error){alert(d.error);return}
 
-    // Update stats
     var gapStat=document.querySelector('.stat-card.gaps .stat-num');
     var qStat=document.querySelector('.stat-card.questions .stat-num');
     if(gapStat)gapStat.textContent=d.total_gaps;
     if(qStat)qStat.textContent=d.total_questions;
 
-    // Show success
-    successEl.classList.add('visible');
-    document.getElementById('feedback-success-text').textContent=(feedbackType==='question'?'Pregunta':'Gap')+' agregado';
-    textEl.value='';
-    acEl.value='';
-
-    setTimeout(function(){successEl.classList.remove('visible')},3000);
+    if(ta)ta.value='';
+    hideACForm(idx);
   }catch(e){
     alert('Error: '+e.message);
   }finally{
-    btn.disabled=false;
-    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Agregar';
+    btn.disabled=false;btn.textContent='Enviar';
   }
 }
 
