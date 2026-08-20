@@ -31,3 +31,11 @@
 - Se reemplazó el panel superficial de detalle de spec en la Constelación por redirección a la pantalla dedicada `/spec?spec_id=...`. Al hacer click en una spec del árbol radial, ahora abre la vista completa.
 - Se mejoró la generación de markdown del SDD: el export ahora produce un documento profesional con headers `####` por sección (Decisiones, Restricciones, Artefactos), items en **bold**, y contenido expandido indentado debajo de cada item cuando existe detalle en el campo `details`.
 - Se actualizó docstring de `update_spec_layer` y `export_spec_markdown` en `server.py` para documentar el campo `details` y el nuevo comportamiento de retorno.
+
+### Cambiado
+- Se rediseñó la UI del SDD Spec Viewer (`spec_visualizer_ui.html`):
+  - Se implementó navegación por **tabs** (Decisiones / Restricciones / Artefactos) dentro de cada capa, reemplazando el listado secuencial. Cada tab muestra el conteo de items y cambia de color según el tipo.
+  - Se corrigieron los **selects invisibles en dark mode**: fondo diferenciado (`--select-bg`), bordes más visibles (`--select-border`), flecha custom SVG, y focus state con box-shadow azul.
+  - Se mejoró el **contraste general del sidebar**: section titles y layer-nav items ahora usan `--text-primary`/`--text-secondary` en lugar de `--text-tertiary`.
+  - Se mejoró el diseño de **item-cards**: borde izquierdo de color por tipo (azul=decisiones, naranja=restricciones, púrpura=artefactos), preview del detalle visible sin expandir, y `data-type` para estilizado contextual.
+  - Se agregó **tema claro funcional** con toggle en el topnav (botón luna/sol). Variables CSS completas para light mode, persistencia en `localStorage`, y estilos específicos para selects y scrollbars en light.

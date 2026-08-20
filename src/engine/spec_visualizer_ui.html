@@ -9,12 +9,12 @@
   --bg: #000000;
   --surface: rgba(28,28,30,0.72);
   --surface-elevated: rgba(44,44,46,0.65);
-  --surface-border: rgba(255,255,255,0.08);
-  --surface-border-hover: rgba(255,255,255,0.15);
-  --surface-active: rgba(255,255,255,0.04);
-  --text-primary: rgba(255,255,255,0.92);
-  --text-secondary: rgba(255,255,255,0.55);
-  --text-tertiary: rgba(255,255,255,0.35);
+  --surface-border: rgba(255,255,255,0.12);
+  --surface-border-hover: rgba(255,255,255,0.22);
+  --surface-active: rgba(255,255,255,0.06);
+  --text-primary: rgba(255,255,255,0.95);
+  --text-secondary: rgba(255,255,255,0.65);
+  --text-tertiary: rgba(255,255,255,0.40);
   --accent-blue: #0a84ff;
   --accent-purple: #bf5af2;
   --accent-orange: #ff9f0a;
@@ -27,7 +27,44 @@
   --radius-lg: 16px;
   --blur-light: blur(20px) saturate(1.4);
   --neo-raised: 0 2px 8px rgba(0,0,0,0.4), 0 0 1px rgba(255,255,255,0.05);
+  --select-bg: rgba(255,255,255,0.08);
+  --select-border: rgba(255,255,255,0.18);
+  --select-border-hover: rgba(255,255,255,0.30);
+  --select-arrow: rgba(255,255,255,0.50);
+  --card-constraint-accent: var(--accent-orange);
+  --card-artifact-accent: var(--accent-purple);
+  --card-decision-accent: var(--accent-blue);
 }
+
+/* ─── Light Theme ─── */
+html.light {
+  --bg: #f5f5f7;
+  --surface: rgba(255,255,255,0.85);
+  --surface-elevated: rgba(255,255,255,0.95);
+  --surface-border: rgba(0,0,0,0.10);
+  --surface-border-hover: rgba(0,0,0,0.18);
+  --surface-active: rgba(0,0,0,0.04);
+  --text-primary: rgba(0,0,0,0.88);
+  --text-secondary: rgba(0,0,0,0.58);
+  --text-tertiary: rgba(0,0,0,0.38);
+  --accent-blue: #007aff;
+  --accent-purple: #af52de;
+  --accent-orange: #ff9500;
+  --accent-green: #34c759;
+  --accent-red: #ff3b30;
+  --accent-teal: #5ac8fa;
+  --accent-pink: #ff2d55;
+  --neo-raised: 0 2px 12px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.06);
+  --select-bg: rgba(0,0,0,0.04);
+  --select-border: rgba(0,0,0,0.15);
+  --select-border-hover: rgba(0,0,0,0.28);
+  --select-arrow: rgba(0,0,0,0.50);
+  --card-constraint-accent: var(--accent-orange);
+  --card-artifact-accent: var(--accent-purple);
+  --card-decision-accent: var(--accent-blue);
+}
+html.light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); }
+html.light ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.22); }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -94,16 +131,27 @@ body {
 .sidebar-section { padding: 0 14px; margin-bottom: 18px; }
 .sidebar-section-title {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--text-tertiary);
+  letter-spacing: 0.08em; color: var(--text-secondary);
   margin-bottom: 8px; padding: 0 4px;
 }
 .sidebar-select {
-  width: 100%; padding: 7px 10px; font-size: 12px;
-  background: rgba(255,255,255,0.04); border: 1px solid var(--surface-border);
+  width: 100%; padding: 9px 32px 9px 12px; font-size: 12px;
+  background: var(--select-bg); border: 1.5px solid var(--select-border);
   color: var(--text-primary); border-radius: var(--radius-sm);
-  outline: none; cursor: pointer; transition: border-color 0.2s;
+  outline: none; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
 }
-.sidebar-select:hover { border-color: var(--surface-border-hover); }
+.sidebar-select:hover { border-color: var(--select-border-hover); }
+.sidebar-select:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(10,132,255,0.15); }
+.sidebar-select option { background: #1c1c1e; color: #fff; }
+html.light .sidebar-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.5)' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+html.light .sidebar-select option { background: #fff; color: #1c1c1e; }
 
 /* Layer nav */
 .layer-nav { list-style: none; }
@@ -111,7 +159,7 @@ body {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 12px; border-radius: var(--radius-sm);
   cursor: pointer; transition: all 0.15s;
-  font-size: 13px; color: var(--text-secondary); position: relative;
+  font-size: 13px; color: var(--text-primary); position: relative; font-weight: 400;
 }
 .layer-nav li:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
 .layer-nav li.active {
@@ -204,6 +252,7 @@ body {
 
 /* ─── Content sections ─── */
 .content-section { margin-bottom: 24px; }
+.content-section.hidden { display: none; }
 .content-section-header {
   display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
 }
@@ -215,6 +264,7 @@ body {
   font-size: 10px; background: rgba(255,255,255,0.06);
   padding: 2px 7px; border-radius: 10px; font-weight: 600; color: var(--text-tertiary);
 }
+html.light .badge-count { background: rgba(0,0,0,0.06); }
 .section-add-btn {
   margin-left: auto; display: none; align-items: center; gap: 4px;
   padding: 3px 10px; border-radius: 14px; font-size: 10px; font-weight: 600;
@@ -224,23 +274,62 @@ body {
 .section-add-btn:hover { background: rgba(48,209,88,0.18); }
 body.edit-mode .section-add-btn { display: flex; }
 
+/* ─── Layer Tabs ─── */
+.layer-tabs {
+  display: flex; gap: 0; margin-bottom: 20px;
+  border-bottom: 1px solid var(--surface-border);
+}
+.layer-tab {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 18px; font-size: 12px; font-weight: 600;
+  color: var(--text-tertiary); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s; user-select: none;
+  background: none; border-top: none; border-left: none; border-right: none;
+}
+.layer-tab:hover { color: var(--text-secondary); background: var(--surface-active); }
+.layer-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+.layer-tab.active[data-tab="constraints"] { color: var(--accent-orange); border-bottom-color: var(--accent-orange); }
+.layer-tab.active[data-tab="artifacts"] { color: var(--accent-purple); border-bottom-color: var(--accent-purple); }
+.layer-tab-count {
+  font-size: 10px; padding: 1px 6px; border-radius: 8px;
+  background: var(--surface-active); color: var(--text-tertiary); font-weight: 700;
+}
+.layer-tab.active .layer-tab-count { background: rgba(10,132,255,0.12); color: var(--accent-blue); }
+.layer-tab.active[data-tab="constraints"] .layer-tab-count { background: rgba(255,159,10,0.12); color: var(--accent-orange); }
+.layer-tab.active[data-tab="artifacts"] .layer-tab-count { background: rgba(191,90,242,0.12); color: var(--accent-purple); }
+
 /* ─── Item cards (Decisions, Constraints, Artifacts) ─── */
 .item-card {
   background: var(--surface); border: 1px solid var(--surface-border);
-  border-radius: var(--radius-md); margin-bottom: 8px;
+  border-radius: var(--radius-md); margin-bottom: 10px;
   overflow: hidden; transition: all 0.2s;
+  border-left: 3px solid var(--card-decision-accent);
 }
+.item-card[data-type="constraints"] { border-left-color: var(--card-constraint-accent); }
+.item-card[data-type="artifacts"] { border-left-color: var(--card-artifact-accent); }
 .item-card:hover { border-color: var(--surface-border-hover); transform: translateY(-1px); box-shadow: var(--neo-raised); }
 .item-card-header {
   display: flex; align-items: center; gap: 10px;
-  padding: 11px 14px; cursor: pointer; user-select: none;
+  padding: 12px 16px; cursor: pointer; user-select: none;
 }
 .item-id {
   font-size: 10px; font-weight: 700; color: var(--accent-blue);
-  background: rgba(10,132,255,0.1); padding: 2px 8px; border-radius: 6px;
-  white-space: nowrap; flex-shrink: 0;
+  background: rgba(10,132,255,0.12); padding: 3px 9px; border-radius: 6px;
+  white-space: nowrap; flex-shrink: 0; letter-spacing: 0.02em;
 }
-.item-title { font-size: 13px; color: var(--text-primary); font-weight: 500; flex: 1; }
+.item-card[data-type="constraints"] .item-id {
+  color: var(--accent-orange); background: rgba(255,159,10,0.12);
+}
+.item-card[data-type="artifacts"] .item-id {
+  color: var(--accent-purple); background: rgba(191,90,242,0.12);
+}
+.item-title { font-size: 13px; color: var(--text-primary); font-weight: 500; flex: 1; line-height: 1.4; }
+.item-type-badge {
+  font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+  color: var(--text-tertiary); background: var(--surface-active);
+}
 .expand-icon {
   width: 14px; height: 14px; color: var(--text-tertiary); transition: transform 0.2s; flex-shrink: 0;
 }
@@ -250,9 +339,14 @@ body.edit-mode .section-add-btn { display: flex; }
 }
 .item-card.expanded .item-card-body { max-height: 600px; }
 .item-card-detail {
-  padding: 12px 14px; font-size: 13px; line-height: 1.7;
+  padding: 14px 16px; font-size: 13px; line-height: 1.7;
   color: var(--text-secondary); border-top: 1px solid var(--surface-border);
   white-space: pre-wrap;
+}
+.item-detail-preview {
+  font-size: 11px; color: var(--text-tertiary); margin-top: 2px;
+  padding: 0 16px 10px 16px; line-height: 1.4;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
 /* Edit mode for items */
 .item-card-edit {
@@ -543,6 +637,11 @@ textarea.item-edit-input { min-height: 80px; resize: vertical; line-height: 1.6;
   <span class="topnav-version" id="nav-version"></span>
   <span class="topnav-status draft" id="nav-status"></span>
   <div class="topnav-divider"></div>
+  <button class="topnav-edit-toggle" id="btn-theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+    <svg id="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    <svg id="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    <span id="theme-label">Claro</span>
+  </button>
   <button class="topnav-edit-toggle" id="btn-edit-mode" onclick="toggleEditMode()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
     Editar
@@ -890,26 +989,42 @@ function renderLayer(key, content, isActive) {
     + '<div style="margin-top:8px;display:flex;gap:8px"><button class="btn-save" onclick="saveLayer(\'' + key + '\')">Guardar capa</button></div>'
     + '</div>';
 
-  // Decisions
-  if ((content.decisions || []).length || editMode) {
-    html += renderItemSection('Decisiones', 'decisions', key, content.decisions || [], content.details || {});
-  }
-  // Constraints
-  if ((content.constraints || []).length || editMode) {
-    html += renderItemSection('Restricciones', 'constraints', key, content.constraints || [], content.details || {});
-  }
-  // Artifacts
-  if ((content.artifacts || []).length || editMode) {
-    html += renderItemSection('Artefactos', 'artifacts', key, content.artifacts || [], content.details || {});
+  // Tabs for Decisions / Constraints / Artifacts
+  const decisionsCount = (content.decisions || []).length;
+  const constraintsCount = (content.constraints || []).length;
+  const artifactsCount = (content.artifacts || []).length;
+  const hasSections = decisionsCount || constraintsCount || artifactsCount || editMode;
+
+  if (hasSections) {
+    // Determine default active tab
+    let defaultTab = 'decisions';
+    if (!decisionsCount && constraintsCount) defaultTab = 'constraints';
+    else if (!decisionsCount && !constraintsCount && artifactsCount) defaultTab = 'artifacts';
+
+    html += '<div class="layer-tabs" id="tabs-' + key + '">';
+    html += '<button class="layer-tab' + (defaultTab === 'decisions' ? ' active' : '') + '" data-tab="decisions" onclick="switchLayerTab(\'' + key + '\', \'decisions\')">'
+      + 'Decisiones <span class="layer-tab-count">' + decisionsCount + '</span></button>';
+    html += '<button class="layer-tab' + (defaultTab === 'constraints' ? ' active' : '') + '" data-tab="constraints" onclick="switchLayerTab(\'' + key + '\', \'constraints\')">'
+      + 'Restricciones <span class="layer-tab-count">' + constraintsCount + '</span></button>';
+    html += '<button class="layer-tab' + (defaultTab === 'artifacts' ? ' active' : '') + '" data-tab="artifacts" onclick="switchLayerTab(\'' + key + '\', \'artifacts\')">'
+      + 'Artefactos <span class="layer-tab-count">' + artifactsCount + '</span></button>';
+    html += '</div>';
+
+    // Decisions section
+    html += renderItemSection('Decisiones', 'decisions', key, content.decisions || [], content.details || {}, defaultTab === 'decisions');
+    // Constraints section
+    html += renderItemSection('Restricciones', 'constraints', key, content.constraints || [], content.details || {}, defaultTab === 'constraints');
+    // Artifacts section
+    html += renderItemSection('Artefactos', 'artifacts', key, content.artifacts || [], content.details || {}, defaultTab === 'artifacts');
   }
 
   html += '</div>';
   return html;
 }
 
-function renderItemSection(title, sectionKey, layerKey, items, details) {
+function renderItemSection(title, sectionKey, layerKey, items, details, isVisible) {
   const uid = layerKey + '-' + sectionKey;
-  let html = '<div class="content-section" id="section-' + uid + '">';
+  let html = '<div class="content-section' + (isVisible ? '' : ' hidden') + '" id="section-' + uid + '" data-section="' + sectionKey + '">';
   html += '<div class="content-section-header">'
     + '<span class="content-section-title">' + title + '</span>'
     + '<span class="badge-count">' + items.length + '</span>'
@@ -921,12 +1036,18 @@ function renderItemSection(title, sectionKey, layerKey, items, details) {
     const detail = findDetail(item, details);
     const cardId = uid + '-' + idx;
 
-    html += '<div class="item-card" id="card-' + cardId + '">';
+    html += '<div class="item-card" id="card-' + cardId + '" data-type="' + sectionKey + '">';
     html += '<div class="item-card-header" onclick="toggleCard(\'' + cardId + '\')">';
     if (parsed.id) html += '<span class="item-id">' + esc(parsed.id) + '</span>';
     html += '<span class="item-title">' + esc(parsed.text) + '</span>';
     html += '<svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>';
     html += '</div>';
+
+    // Detail preview (visible without expanding)
+    if (detail) {
+      const previewText = detail.length > 120 ? detail.substring(0, 120) + '...' : detail;
+      html += '<div class="item-detail-preview">' + esc(previewText) + '</div>';
+    }
 
     // Expandable body
     html += '<div class="item-card-body">';
@@ -960,6 +1081,49 @@ function toggleCard(cardId) {
   const card = document.getElementById('card-' + cardId);
   if (card) card.classList.toggle('expanded');
 }
+
+function switchLayerTab(layerKey, tabName) {
+  // Update tab buttons
+  const tabContainer = document.getElementById('tabs-' + layerKey);
+  if (tabContainer) {
+    tabContainer.querySelectorAll('.layer-tab').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === tabName);
+    });
+  }
+  // Show/hide content sections
+  var sections = ['decisions', 'constraints', 'artifacts'];
+  sections.forEach(function(sec) {
+    var el = document.getElementById('section-' + layerKey + '-' + sec);
+    if (el) el.classList.toggle('hidden', sec !== tabName);
+  });
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isLight = html.classList.toggle('light');
+  document.getElementById('theme-icon-dark').style.display = isLight ? 'none' : '';
+  document.getElementById('theme-icon-light').style.display = isLight ? '' : 'none';
+  document.getElementById('theme-label').textContent = isLight ? 'Oscuro' : 'Claro';
+  try { localStorage.setItem('sdd-theme', isLight ? 'light' : 'dark'); } catch(e) {}
+}
+
+// Restore theme on load
+(function() {
+  try {
+    var saved = localStorage.getItem('sdd-theme');
+    if (saved === 'light') {
+      document.documentElement.classList.add('light');
+      document.addEventListener('DOMContentLoaded', function() {
+        var d = document.getElementById('theme-icon-dark');
+        var l = document.getElementById('theme-icon-light');
+        var lbl = document.getElementById('theme-label');
+        if (d) d.style.display = 'none';
+        if (l) l.style.display = '';
+        if (lbl) lbl.textContent = 'Oscuro';
+      });
+    }
+  } catch(e) {}
+})();
 
 function activateLayer(key) {
   document.querySelectorAll('.layer-nav li').forEach(function(li) {
