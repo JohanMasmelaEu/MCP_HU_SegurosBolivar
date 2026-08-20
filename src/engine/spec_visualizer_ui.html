@@ -107,6 +107,24 @@ html.light .sidebar-select option{background:#fff;color:#1c1c1e}
 .hu-pagination-btn:hover:not(:disabled){border-color:var(--accent-blue);color:var(--accent-blue)}
 .hu-pagination-btn:disabled{opacity:.3;cursor:not-allowed}
 
+/* HU Drag-and-drop */
+.hu-item[draggable="true"]{cursor:grab;user-select:none}
+.hu-item[draggable="true"]:active{cursor:grabbing;opacity:.7}
+.hu-item.dragging{opacity:.4;transform:scale(.97)}
+
+/* HU Drop Zone in detail */
+.hu-drop-zone{margin-top:16px;padding:12px 14px;border:2px dashed var(--surface-border);border-radius:var(--radius-md);transition:all .2s;min-height:60px}
+.hu-drop-zone.drag-over{border-color:var(--accent-teal);background:rgba(100,210,255,.06)}
+.hu-drop-zone-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.hu-drop-zone-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-teal)}
+.hu-drop-zone-count{font-size:10px;background:rgba(100,210,255,.1);padding:1px 7px;border-radius:8px;font-weight:600;color:var(--accent-teal)}
+.hu-drop-zone-hint{font-size:11px;color:var(--text-tertiary);font-style:italic;padding:6px 0}
+.hu-assoc-list{list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.hu-assoc-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(100,210,255,.08);border:1px solid rgba(100,210,255,.2);border-radius:14px;font-size:11px;font-weight:600;color:var(--accent-teal);transition:all .15s}
+.hu-assoc-chip:hover{border-color:rgba(100,210,255,.4);background:rgba(100,210,255,.12)}
+.hu-assoc-chip .chip-remove{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(255,69,58,.15);color:var(--accent-red);font-size:10px;cursor:pointer;transition:all .15s;line-height:1}
+.hu-assoc-chip .chip-remove:hover{background:rgba(255,69,58,.3)}
+
 /* === Layer Section === */
 .layer-section{display:none;animation:fadeIn .25s ease}
 .layer-section.active{display:block}
@@ -451,7 +469,7 @@ async function loadStories(specId){var c=document.getElementById('hu-list-contai
 function filterHUList(){var inp=document.getElementById('hu-filter-input');var q=(inp?inp.value:'').toLowerCase().trim();_huPage=0;if(!q){_huFilteredStories=_huAllStories}else{_huFilteredStories=_huAllStories.filter(function(s){return s.id.toLowerCase().indexOf(q)!==-1||s.title.toLowerCase().indexOf(q)!==-1})}renderHUPage()}
 function huPagePrev(){if(_huPage>0){_huPage--;renderHUPage()}}
 function huPageNext(){var maxPage=Math.ceil(_huFilteredStories.length/_huPageSize)-1;if(_huPage<maxPage){_huPage++;renderHUPage()}}
-function renderHUPage(){var c=document.getElementById('hu-list-container');if(!c)return;var total=_huFilteredStories.length;var maxPage=Math.max(0,Math.ceil(total/_huPageSize)-1);if(_huPage>maxPage)_huPage=maxPage;var start=_huPage*_huPageSize;var end=Math.min(start+_huPageSize,total);var page=_huFilteredStories.slice(start,end);var h='<div class="hu-table-head"><span>ID</span><span>Titulo</span><span>Estado</span><span></span></div>';h+='<ul class="hu-table-body">';if(!page.length){h+='<li style="padding:12px;font-size:12px;color:var(--text-tertiary);font-style:italic">Sin resultados</li>'}else{page.forEach(function(s){var sc=s.status==='analyzed'?' analyzed':s.status==='refined'?' refined':'';h+='<a class="hu-item" href="/story?id='+esc(s.id)+'" target="_blank" title="'+escAttr(s.title)+'">'+'<span class="hu-item-id">'+esc(s.id)+'</span>'+'<span class="hu-item-title">'+esc(s.title)+'</span>'+'<span class="hu-item-status'+sc+'">'+esc(s.status)+'</span>'+'<svg class="hu-item-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>'+'</a>'})}h+='</ul>';c.innerHTML=h;var pag=document.getElementById('hu-pagination');var info=document.getElementById('hu-pagination-info');var btnP=document.getElementById('hu-btn-prev');var btnN=document.getElementById('hu-btn-next');if(total>_huPageSize){pag.style.display='flex';info.textContent=(start+1)+' - '+end+' de '+total;btnP.disabled=_huPage===0;btnN.disabled=_huPage>=maxPage}else{pag.style.display='none'}}
+function renderHUPage(){var c=document.getElementById('hu-list-container');if(!c)return;var total=_huFilteredStories.length;var maxPage=Math.max(0,Math.ceil(total/_huPageSize)-1);if(_huPage>maxPage)_huPage=maxPage;var start=_huPage*_huPageSize;var end=Math.min(start+_huPageSize,total);var page=_huFilteredStories.slice(start,end);var h='<div class="hu-table-head"><span>ID</span><span>Titulo</span><span>Estado</span><span></span></div>';h+='<ul class="hu-table-body">';if(!page.length){h+='<li style="padding:12px;font-size:12px;color:var(--text-tertiary);font-style:italic">Sin resultados</li>'}else{page.forEach(function(s){var sc=s.status==='analyzed'?' analyzed':s.status==='refined'?' refined':'';h+='<div class="hu-item" draggable="true" ondragstart="onHUDragStart(event,\''+esc(s.id)+'\',\''+escAttr(s.title)+'\')" title="'+escAttr(s.title)+' — Arrastra para asociar">'+'<span class="hu-item-id">'+esc(s.id)+'</span>'+'<span class="hu-item-title">'+esc(s.title)+'</span>'+'<span class="hu-item-status'+sc+'">'+esc(s.status)+'</span>'+'<a href="/story?id='+esc(s.id)+'" target="_blank" onclick="event.stopPropagation()" style="display:flex"><svg class="hu-item-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg></a>'+'</div>'})}h+='</ul>';c.innerHTML=h;var pag=document.getElementById('hu-pagination');var info=document.getElementById('hu-pagination-info');var btnP=document.getElementById('hu-btn-prev');var btnN=document.getElementById('hu-btn-next');if(total>_huPageSize){pag.style.display='flex';info.textContent=(start+1)+' - '+end+' de '+total;btnP.disabled=_huPage===0;btnN.disabled=_huPage>=maxPage}else{pag.style.display='none'}}
 
 function applyRoleFilter(role){currentRole=role;var h=document.getElementById('role-hint');if(role&&ROLE_HINTS[role]){h.textContent=ROLE_HINTS[role];h.classList.add('visible')}else{h.classList.remove('visible')}if(currentSpecId)loadSpec(currentSpecId)}
 function toggleEditMode(){editMode=!editMode;document.body.classList.toggle('edit-mode',editMode);document.getElementById('btn-edit-mode').classList.toggle('active',editMode);if(selectedItem){renderDetail(selectedItem.layerKey,selectedItem.section,selectedItem.idx)}else if(currentSpec){renderSpec()}}
@@ -489,7 +507,7 @@ var main=document.getElementById('main-content');
 var html='<div class="spec-header"><h1 class="spec-title">'+esc(spec.project_name||spec.spec_id)+'</h1><p class="spec-subtitle">Software Design Document &mdash; '+esc(spec.spec_id)+'</p></div>';
 
 // HU Panel
-html+='<div class="hu-panel"><div class="hu-panel-header"><span class="hu-panel-title">Historias de Usuario</span><span class="hu-panel-count" id="hu-panel-count">...</span></div><div class="hu-filter-row"><div class="hu-filter-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" class="hu-filter-input" id="hu-filter-input" placeholder="Buscar por ID o nombre..." oninput="filterHUList()"></div></div><div id="hu-list-container"><p class="hu-panel-empty">Cargando historias...</p></div><div class="hu-pagination" id="hu-pagination" style="display:none"><span class="hu-pagination-info" id="hu-pagination-info"></span><div class="hu-pagination-btns"><button class="hu-pagination-btn" id="hu-btn-prev" onclick="huPagePrev()" disabled>&laquo; Anterior</button><button class="hu-pagination-btn" id="hu-btn-next" onclick="huPageNext()">Siguiente &raquo;</button></div></div></div>';
+html+='<div class="hu-panel"><div class="hu-panel-header"><span class="hu-panel-title">Historias de Usuario</span><span class="hu-panel-count" id="hu-panel-count">...</span><span style="margin-left:auto;font-size:10px;color:var(--text-tertiary);font-style:italic">Arrastra una HU al detalle de un item para asociarla</span></div><div class="hu-filter-row"><div class="hu-filter-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" class="hu-filter-input" id="hu-filter-input" placeholder="Buscar por ID o nombre..." oninput="filterHUList()"></div></div><div id="hu-list-container"><p class="hu-panel-empty">Cargando historias...</p></div><div class="hu-pagination" id="hu-pagination" style="display:none"><span class="hu-pagination-info" id="hu-pagination-info"></span><div class="hu-pagination-btns"><button class="hu-pagination-btn" id="hu-btn-prev" onclick="huPagePrev()" disabled>&laquo; Anterior</button><button class="hu-pagination-btn" id="hu-btn-next" onclick="huPageNext()">Siguiente &raquo;</button></div></div></div>';
 
 // Layer sections
 nonEmpty.forEach(function(key,idx){html+=renderLayer(key,layers[key],idx===0)});
@@ -548,9 +566,11 @@ if(masterEl){masterEl.querySelectorAll('.master-item').forEach(function(el){el.c
 renderDetail(layerKey,sectionKey,idx)}
 
 function renderDetail(layerKey,sectionKey,idx){var el=document.getElementById('detail-'+layerKey);if(!el)return;
-var layers=currentSpec.layers||{};var content=layers[layerKey]||{};var items=content[sectionKey]||[];var details=content.details||{};var item=items[idx];
+var layers=currentSpec.layers||{};var content=layers[layerKey]||{};var items=content[sectionKey]||[];var details=content.details||{};var associations=content.associations||{};var item=items[idx];
 if(!item){el.innerHTML='<div class="detail-empty"><p>Elemento no encontrado</p></div>';return}
 var p=parseId(item);var detail=findDetail(item,details);var tc=sectionKey==='constraints'?' constraints':sectionKey==='artifacts'?' artifacts':'';
+var itemKey=p.id||item;
+var assocHUs=associations[itemKey]||[];
 var html='';
 if(editMode){
 html+='<div class="detail-two-col">';
@@ -558,6 +578,7 @@ html+='<div class="detail-col-read">';
 if(p.id)html+='<span class="detail-id'+tc+'">'+esc(p.id)+'</span>';
 html+='<h3 class="detail-title">'+esc(p.text)+'</h3>';
 if(detail){html+='<div class="detail-text-plain">'+esc(detail)+'</div>'}else{html+='<div class="detail-text-plain" style="color:var(--text-tertiary);font-style:italic">Sin detalle expandido.</div>'}
+html+=renderHUDropZone(layerKey,itemKey,assocHUs);
 html+='</div>';
 html+='<div class="detail-col-edit">';
 html+='<div class="edit-row"><div class="edit-label">Titulo</div><input type="text" class="edit-input" id="edit-title-'+layerKey+'-'+sectionKey+'-'+idx+'" value="'+escAttr(item)+'"></div>';
@@ -572,8 +593,9 @@ html+='<h3 class="detail-title">'+esc(p.text)+'</h3></div>';
 html+='<button class="inline-edit-btn" onclick="enableItemEdit(\''+layerKey+'\',\''+sectionKey+'\','+idx+')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>';
 html+='</div>';
 if(detail){html+='<div class="detail-body">'+esc(detail)+'</div>'}else{html+='<div class="detail-no-content">Sin detalle expandido. Haz clic en Editar para agregar contexto.</div>'}
+html+=renderHUDropZone(layerKey,itemKey,assocHUs);
 }
-el.innerHTML=html}
+el.innerHTML=html;initDropZone(layerKey,itemKey)}
 
 function showAddForm(layerKey,sectionKey){selectedItem=null;var el=document.getElementById('detail-'+layerKey);if(!el)return;
 var masterEl=document.getElementById('master-'+layerKey);if(masterEl)masterEl.querySelectorAll('.master-item').forEach(function(e){e.classList.remove('selected')});
@@ -666,6 +688,36 @@ async function executeConfirm(){if(!pendingChange)return;document.getElementById
 function rejectConfirm(){document.getElementById('confirm-overlay').classList.remove('visible');pendingChange=null;toast('Descartado','error')}
 
 /* Helpers */
+
+/* HU Drag & Drop + Associations */
+function onHUDragStart(e,storyId,storyTitle){e.dataTransfer.setData('text/plain',storyId);e.dataTransfer.setData('application/x-hu-id',storyId);e.dataTransfer.setData('application/x-hu-title',storyTitle);e.dataTransfer.effectAllowed='link';e.target.classList.add('dragging');setTimeout(function(){e.target.classList.remove('dragging')},200)}
+
+function renderHUDropZone(layerKey,itemKey,assocHUs){var html='<div class="hu-drop-zone" id="drop-zone-'+layerKey+'-'+itemKey+'">';
+html+='<div class="hu-drop-zone-header"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg><span class="hu-drop-zone-title">HUs Asociadas</span><span class="hu-drop-zone-count">'+assocHUs.length+'</span></div>';
+if(!assocHUs.length){html+='<div class="hu-drop-zone-hint">Arrastra una HU desde el panel superior para asociarla a este item</div>'}else{
+html+='<ul class="hu-assoc-list">';assocHUs.forEach(function(huId){var story=_huAllStories.find(function(s){return s.id===huId});var title=story?story.title:huId;
+html+='<li class="hu-assoc-chip" title="'+escAttr(title)+'"><a href="/story?id='+esc(huId)+'" target="_blank" style="color:inherit;text-decoration:none">'+esc(huId)+'</a><span class="chip-remove" onclick="removeAssociation(\''+layerKey+'\',\''+escAttr(itemKey)+'\',\''+esc(huId)+'\')">&times;</span></li>'});
+html+='</ul>'}
+html+='</div>';return html}
+
+function initDropZone(layerKey,itemKey){var dz=document.getElementById('drop-zone-'+layerKey+'-'+itemKey);if(!dz)return;
+dz.addEventListener('dragover',function(e){e.preventDefault();e.dataTransfer.dropEffect='link';dz.classList.add('drag-over')});
+dz.addEventListener('dragleave',function(e){dz.classList.remove('drag-over')});
+dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('drag-over');var storyId=e.dataTransfer.getData('application/x-hu-id')||e.dataTransfer.getData('text/plain');if(storyId)addAssociation(layerKey,itemKey,storyId)})}
+
+async function addAssociation(layerKey,itemKey,storyId){if(!currentSpecId)return;
+try{var r=await fetch('/api/spec/'+encodeURIComponent(currentSpecId)+'/associations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'add',layer:layerKey,item_id:itemKey,story_id:storyId})});var d=await r.json();if(d.error){toast(d.error,'error');return}
+// Update local model
+var layers=currentSpec.layers||{};var content=layers[layerKey]||{};if(!content.associations)content.associations={};if(!content.associations[itemKey])content.associations[itemKey]=[];if(content.associations[itemKey].indexOf(storyId)===-1)content.associations[itemKey].push(storyId);
+toast(storyId+' asociada a '+itemKey,'success');if(selectedItem)renderDetail(selectedItem.layerKey,selectedItem.section,selectedItem.idx)}catch(e){toast('Error: '+e.message,'error')}}
+
+async function removeAssociation(layerKey,itemKey,storyId){if(!currentSpecId)return;
+try{var r=await fetch('/api/spec/'+encodeURIComponent(currentSpecId)+'/associations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'remove',layer:layerKey,item_id:itemKey,story_id:storyId})});var d=await r.json();if(d.error){toast(d.error,'error');return}
+// Update local model
+var layers=currentSpec.layers||{};var content=layers[layerKey]||{};if(content.associations&&content.associations[itemKey]){var idx=content.associations[itemKey].indexOf(storyId);if(idx!==-1)content.associations[itemKey].splice(idx,1);if(!content.associations[itemKey].length)delete content.associations[itemKey]}
+toast(storyId+' desasociada de '+itemKey,'success');if(selectedItem)renderDetail(selectedItem.layerKey,selectedItem.section,selectedItem.idx)}catch(e){toast('Error: '+e.message,'error')}}
+
+
 function parseId(t){var m=t.match(/^([A-Z]{1,5}-\d{1,4})[\s:]+(.+)$/);return m?{id:m[1],text:m[2]}:{id:'',text:t}}
 function findDetail(item,details){if(!details||!Object.keys(details).length)return null;if(details[item])return details[item];var m=item.match(/^([A-Z]{1,5}-\d{1,4})/);if(m&&details[m[1]])return details[m[1]];for(var k in details){if(item.startsWith(k))return details[k]}return null}
 function countFilled(content){var c=0;var d=content.details||{};(content.decisions||[]).forEach(function(i){if(findDetail(i,d))c++});(content.constraints||[]).forEach(function(i){if(findDetail(i,d))c++});(content.artifacts||[]).forEach(function(i){if(findDetail(i,d))c++});return c}

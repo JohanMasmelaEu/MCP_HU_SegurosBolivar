@@ -24,3 +24,16 @@
 - Se agregó botón "Cancelar" tanto en la edición de la descripción de la capa como en la edición del detalle de un elemento, para poder salir del modo edición sin guardar
 - Se hizo visible permanentemente el botón "+ Agregar" en los paneles master (antes solo aparecía en modo edición global)
 - Se actualizó el texto placeholder de "Sin detalle expandido" para reflejar el nuevo flujo contextual
+
+### Agregado
+- Se agregó campo `associations: dict[str, list[str]]` al modelo `LayerContent` en `src/models/sdd.py` para vincular HUs a items individuales (decisiones, restricciones, artefactos) de cada capa del SDD
+- Se creó endpoint `POST/GET /api/spec/{spec_id}/associations` en `src/engine/spec_visualizer.py` para gestionar asociaciones HU↔item (acciones: add, remove)
+- Se registró ruta `/api/spec/{spec_id}/associations` en `src/engine/visualizer.py`
+- Se implementó drag-and-drop en el panel de HUs del Spec Visualizer: los items de HU son arrastrables (`draggable`) hacia la zona de drop en el detalle de cada elemento
+- Se agregó zona de drop ("HUs Asociadas") en el panel de detalle de cada item (tanto en modo lectura como edición) que muestra chips con las HUs vinculadas y permite eliminar asociaciones
+- Se exponen nodos `sdd_item` y aristas `implements` (HU→item) en el grafo del workspace (`_get_graph_data()` en `visualizer.py`) para que la red neuronal muestre qué HUs implementan qué items del SDD
+- Se exponen nodos `story` y aristas `implements` (HU→spec) en el grafo de constelación (`build_constellation()` en `constellation.py`) para visualizar la relación HU↔Spec en la vista de constelación
+
+### Cambiado
+- Se modificó el panel de HUs en el Spec Visualizer: los items ahora son `<div>` arrastrables en lugar de `<a>` links, con un link externo independiente para abrir el detalle de la HU
+- Se agregó hint visual en el header del panel de HUs indicando que se pueden arrastrar para asociar

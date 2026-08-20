@@ -129,6 +129,9 @@ class LayerContent(BaseModel):
     - Campo details: diccionario con contenido expandido por cada decisión/constraint/artifact.
       Formato: {"DN-001": "texto largo con contexto completo", "CN-001": "..."}
       Esto permite almacenar el detalle completo y exportarlo en el markdown.
+    - Campo associations: mapeo de item IDs a listas de HU IDs asociados.
+      Formato: {"DN-001": ["HU-001", "HU-003"], "CN-002": ["HU-005"]}
+      Permite vincular HUs específicas a decisiones/restricciones/artefactos.
     """
 
     summary: str = Field(default="", description="Resumen de la capa")
@@ -140,6 +143,14 @@ class LayerContent(BaseModel):
         description=(
             "Contenido expandido por ID de decisión/constraint/artifact. "
             "Clave: ID (ej: DN-001, CN-001, HU-001). Valor: descripción detallada completa."
+        ),
+    )
+    associations: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description=(
+            "HUs asociadas a cada item de la capa. "
+            "Clave: ID del item (ej: DN-001, CN-001, AR-001). "
+            "Valor: lista de IDs de HUs vinculadas (ej: ['HU-001', 'HU-003'])."
         ),
     )
 

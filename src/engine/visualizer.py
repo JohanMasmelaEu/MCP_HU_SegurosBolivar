@@ -19,6 +19,7 @@ from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
 
 from src.engine.memory import get_memory
+from src.engine.spec_engine import get_spec_engine
 from src.engine.workspace_manager import get_workspace_manager
 from src.engine.ecosystem_manager import get_ecosystem_manager
 from src.engine.ecosystem_visualizer import (
@@ -42,6 +43,7 @@ from src.engine.spec_visualizer import (
     route_api_spec_refine,
     route_api_spec_impact,
     route_api_spec_stories,
+    route_api_spec_associations,
 )
 
 logger = logging.getLogger("mcp_hu.engine.visualizer")
@@ -140,6 +142,45 @@ def _get_graph_data() -> dict:
                         "weight": 0.3,
                 }
             })
+
+    # ─── SDD Spec Item nodes + HU→Item edges (associations) ──────────────────
+    spec_engine = get_spec_engine()
+    if spec_engine:
+        for spec_summary in spec_engine.list_specs():
+            spec = spec_engine.get_spec(spec_summary["spec_id"])
+            if not spec:
+                continue
+            for layer_name, layer_content in spec.layers.items():
+                if not layer_content.associations:
+                    continue
+                for item_id, hu_ids in layer_content.associations.items():
+                    if not hu_ids:
+                        continue
+                    # Create a node for the SDD item
+                    node_id = f"sdd:{spec.spec_id}:{layer_name}:{item_id}"
+                    nodes.append({
+                        "data": {
+                            "id": node_id,
+                            "label": item_id,
+                            "type": "sdd_item",
+                            "spec_id": spec.spec_id,
+                            "spec_name": spec.project_name,
+                            "layer": layer_name,
+                            "item_id": item_id,
+                        }
+                    })
+                    valid_node_ids.add(node_id)
+                    # Create edges from each associated HU to this item
+                    for hu_id in hu_ids:
+                        if hu_id in valid_node_ids:
+                            edges.append({
+                                "data": {
+                                    "source": hu_id,
+                                    "target": node_id,
+                                    "relation": "implements",
+                                    "weight": 0.6,
+                                }
+                            })
 
     return {"nodes": nodes, "edges": edges}
 
@@ -302,6 +343,7 @@ app = Starlette(routes=[
     Route("/api/spec/{spec_id}/refine", route_api_spec_refine, methods=["POST"]),
     Route("/api/spec/{spec_id}/impact", route_api_spec_impact, methods=["POST"]),
     Route("/api/spec/{spec_id}/stories", route_api_spec_stories),
+    Route("/api/spec/{spec_id}/associations", route_api_spec_associations, methods=["GET", "POST"]),
 ])
 
 # Montar archivos estáticos (vendor scripts bundleados en Docker)

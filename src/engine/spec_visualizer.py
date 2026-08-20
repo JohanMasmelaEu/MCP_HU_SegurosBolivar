@@ -11,6 +11,7 @@ Se integra con el servidor Starlette existente en visualizer.py (puerto 9751).
 
 import json
 import logging
+from datetime import datetime
 from pathlib import Path
 
 from starlette.requests import Request
@@ -646,3 +647,93 @@ async def route_story_index(request: Request) -> HTMLResponse:
             content="<h1>Story Detail UI not found</h1>",
             status_code=500,
         )
+
+
+async def route_api_spec_associations(request: Request) -> JSONResponse:
+    """API: gestiona asociaciones entre HUs y items de capas del SDD.
+
+    POST /api/spec/{spec_id}/associations
+    Body JSON:
+    {
+        "action": "add" | "remove",
+        "layer": "negocio",
+        "item_id": "DN-001",
+        "story_id": "HU-001"
+    }
+
+    GET /api/spec/{spec_id}/associations
+    Retorna todas las asociaciones de la spec agrupadas por capa.
+
+    Permite vincular HUs específicas a decisiones, restricciones o artefactos
+    individuales dentro de una capa del SDD, creando trazabilidad bidireccional.
+    """
+    spec_id = request.path_params.get("spec_id", "")
+
+    spec_engine = get_spec_engine()
+    if not spec_engine:
+        return JSONResponse({"error": "SpecEngine no disponible."}, status_code=500)
+
+    spec = spec_engine.get_spec(spec_id)
+    if not spec:
+        return JSONResponse({"error": f"Spec '{spec_id}' no encontrada."}, status_code=404)
+
+    if request.method == "GET":
+        all_associations: dict[str, dict[str, list[str]]] = {}
+        for layer_name, layer_content in spec.layers.items():
+            if layer_content.associations:
+                all_associations[layer_name] = layer_content.associations
+        return JSONResponse({"spec_id": spec_id, "associations": all_associations})
+
+    # POST: add or remove association
+    try:
+        body = await request.json()
+    except json.JSONDecodeError:
+        return JSONResponse({"error": "Body JSON inválido."}, status_code=400)
+
+    action = body.get("action", "")
+    layer_name = body.get("layer", "")
+    item_id = body.get("item_id", "").strip()
+    story_id = body.get("story_id", "").strip()
+
+    if action not in ("add", "remove"):
+        return JSONResponse({"error": "action debe ser 'add' o 'remove'."}, status_code=400)
+    if not layer_name or not item_id or not story_id:
+        return JSONResponse({"error": "Campos requeridos: layer, item_id, story_id."}, status_code=400)
+
+    try:
+        sdd_layer = SDDLayer(layer_name)
+    except ValueError:
+        valid = [layer.value for layer in SDDLayer]
+        return JSONResponse({"error": f"Capa '{layer_name}' no válida. Opciones: {valid}"}, status_code=400)
+
+    layer_content = spec.layers.get(sdd_layer.value)
+    if not layer_content:
+        return JSONResponse({"error": f"Capa '{layer_name}' no tiene contenido."}, status_code=404)
+
+    if action == "add":
+        if item_id not in layer_content.associations:
+            layer_content.associations[item_id] = []
+        if story_id not in layer_content.associations[item_id]:
+            layer_content.associations[item_id].append(story_id)
+            logger.info("Asociación añadida: %s → %s en capa '%s' de spec '%s'", story_id, item_id, layer_name, spec_id)
+    elif action == "remove":
+        if item_id in layer_content.associations and story_id in layer_content.associations[item_id]:
+            layer_content.associations[item_id].remove(story_id)
+            if not layer_content.associations[item_id]:
+                del layer_content.associations[item_id]
+            logger.info("Asociación removida: %s → %s en capa '%s' de spec '%s'", story_id, item_id, layer_name, spec_id)
+        else:
+            return JSONResponse({"error": f"Asociación no encontrada: {story_id} → {item_id}"}, status_code=404)
+
+    spec.updated_at = datetime.now().isoformat()
+    spec_engine._save_spec(spec)
+
+    return JSONResponse({
+        "status": "success",
+        "action": action,
+        "spec_id": spec_id,
+        "layer": layer_name,
+        "item_id": item_id,
+        "story_id": story_id,
+        "current_associations": layer_content.associations.get(item_id, []),
+    })

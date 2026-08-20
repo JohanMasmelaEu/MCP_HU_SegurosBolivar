@@ -86,6 +86,43 @@ class ConstellationEngine:
                     "classes": f"dep-{dep.dependency_type} maturity-{dep.maturity}",
                 })
 
+        # ─── HU associations: HU nodes + HU→Spec edges ──────────────────────────
+        hu_nodes_added: set[str] = set()
+        for spec_summary in specs_list:
+            spec = self._specs.get_spec(spec_summary["spec_id"])
+            if not spec:
+                continue
+            for layer_name, layer_content in spec.layers.items():
+                if not layer_content.associations:
+                    continue
+                for item_id, hu_ids in layer_content.associations.items():
+                    for hu_id in hu_ids:
+                        # Add HU node only once
+                        if hu_id not in hu_nodes_added:
+                            hu_nodes_added.add(hu_id)
+                            nodes.append({
+                                "data": {
+                                    "id": hu_id,
+                                    "label": hu_id,
+                                    "type": "story",
+                                },
+                                "classes": "story-node",
+                            })
+                        # Edge from HU to the spec (grouped by item)
+                        edge_id = f"{hu_id}-->{spec.spec_id}:{item_id}"
+                        edges.append({
+                            "data": {
+                                "id": edge_id,
+                                "source": hu_id,
+                                "target": spec.spec_id,
+                                "dependency_type": "implements",
+                                "layer": layer_name,
+                                "item_id": item_id,
+                                "description": f"{hu_id} implementa {item_id} en capa {layer_name}",
+                            },
+                            "classes": "dep-implements",
+                        })
+
         return {"nodes": nodes, "edges": edges}
 
     # ─── GAP DETECTION ───────────────────────────────────────────────────────────
