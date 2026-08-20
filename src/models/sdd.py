@@ -122,12 +122,26 @@ class RoleDepthMatrix(BaseModel):
 
 
 class LayerContent(BaseModel):
-    """Contenido de una capa dentro de un ProjectSpec."""
+    """Contenido de una capa dentro de un ProjectSpec.
+
+    Soporta dos niveles de detalle:
+    - Campos base (summary, decisions, constraints, artifacts): texto plano o listas de strings cortos.
+    - Campo details: diccionario con contenido expandido por cada decisión/constraint/artifact.
+      Formato: {"DN-001": "texto largo con contexto completo", "CN-001": "..."}
+      Esto permite almacenar el detalle completo y exportarlo en el markdown.
+    """
 
     summary: str = Field(default="", description="Resumen de la capa")
     decisions: list[str] = Field(default_factory=list, description="Decisiones tomadas")
     constraints: list[str] = Field(default_factory=list, description="Restricciones aplicables")
     artifacts: list[str] = Field(default_factory=list, description="Referencias a artefactos (docs, diagramas)")
+    details: dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Contenido expandido por ID de decisión/constraint/artifact. "
+            "Clave: ID (ej: DN-001, CN-001, HU-001). Valor: descripción detallada completa."
+        ),
+    )
 
 
 class SpecDependency(BaseModel):

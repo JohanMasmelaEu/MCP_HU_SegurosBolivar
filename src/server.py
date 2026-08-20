@@ -506,10 +506,20 @@ async def create_spec(spec_config: dict) -> str:
 async def update_spec_layer(spec_id: str, layer: str, content: dict) -> str:
     """Actualiza el contenido de una capa SDD en una spec.
 
+    Permite almacenar tanto el resumen y listas de items como el detalle expandido
+    de cada decisión/constraint/artifact para exportación completa.
+
     Args:
         spec_id: ID de la spec.
         layer: Capa SDD (negocio, arquitectura, seguridad, gobierno_info, acceso_datos, datos, desarrollo, qa).
-        content: Objeto con summary, decisions (lista), constraints (lista), artifacts (lista).
+        content: Objeto con los siguientes campos:
+            - summary (str): Resumen descriptivo de la capa.
+            - decisions (list[str]): Lista de decisiones (ej: ["DN-001: Pipeline parametrizable por banderas"]).
+            - constraints (list[str]): Lista de restricciones (ej: ["CN-001: Volumen 312K docs/mes"]).
+            - artifacts (list[str]): Lista de artefactos/entregables.
+            - details (dict[str, str]): Contenido expandido por ID. Clave = ID del item (ej: "DN-001"),
+              Valor = descripción completa y detallada. Esto permite exportar el SDD con nivel de
+              detalle profesional en lugar de solo bullets superficiales.
     """
     content_dict = _ensure_dict(content)
     result = handle_update_spec_layer(spec_id, layer, content_dict)
@@ -595,14 +605,21 @@ async def detect_constellation_gaps(ecosystem_id: str = "") -> str:
 
 @mcp.tool()
 async def export_spec_markdown(spec_id: str, output_path: str = "") -> str:
-    """Exporta una spec como archivo Markdown estructurado.
+    """Exporta una spec como archivo Markdown estructurado con contenido completo.
 
-    Genera un documento con capas, decisiones, constraints, reglas y dependencias.
-    Si output_path se proporciona, guarda el archivo ahí. Si no, retorna el markdown.
+    Genera un documento profesional con capas, decisiones expandidas, constraints
+    detallados, artefactos, reglas y dependencias. Incluye el campo 'details' de
+    cada capa para máximo nivel de detalle.
+
+    IMPORTANTE: Siempre retorna el campo 'markdown' en la respuesta JSON. Si se
+    proporciona output_path, intentará escribir el archivo pero si falla (ej: MCP
+    en Docker sin acceso al filesystem del host), retorna el markdown igualmente
+    para que el llamador lo escriba con sus propias herramientas (fs_write, etc).
 
     Args:
         spec_id: ID de la spec a exportar.
-        output_path: Ruta de salida (opcional). Vacío = retornar como string.
+        output_path: Ruta de salida (opcional). Vacío = solo retornar markdown como string.
+                     Si se proporciona, intenta escribir + siempre retorna markdown.
     """
     result = handle_export_spec_markdown(spec_id, output_path if output_path else None)
     return json.dumps(result, ensure_ascii=False, indent=2)

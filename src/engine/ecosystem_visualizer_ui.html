@@ -2777,25 +2777,8 @@ function renderConstellationTree(data) {
 }
 
 function showConstellationDetail(nodeData) {
-  var panel = document.getElementById('constellation-detail');
-  var content = document.getElementById('constellation-detail-content');
-  
-  const layers = nodeData.layers_count || 0;
-  const rules = nodeData.rules_applied || 0;
-  const approvers = (nodeData.approved_by || []).join(', ') || 'Pendiente';
-  
-  content.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
-    + '<strong style="font-size:14px;">' + escapeHtml(nodeData.label) + '</strong>'
-    + '<span onclick="hideConstellationDetail()" style="cursor:pointer;opacity:0.5;">✕</span></div>'
-    + '<div style="color:var(--text-secondary);margin-bottom:8px;">ID: ' + escapeHtml(nodeData.id) + '</div>'
-    + '<div style="margin-bottom:4px;">Status: <span style="color:' + (nodeData.status === 'approved' ? 'var(--accent-green)' : 'var(--accent-orange)') + ';">' + escapeHtml(nodeData.status) + '</span></div>'
-    + '<div style="margin-bottom:4px;">Version: ' + escapeHtml(nodeData.version || '') + '</div>'
-    + '<div style="margin-bottom:4px;">Capas con contenido: ' + layers + '</div>'
-    + '<div style="margin-bottom:4px;">Reglas aplicadas: ' + rules + '</div>'
-    + '<div style="margin-bottom:4px;">Aprobado por: ' + escapeHtml(approvers) + '</div>'
-    + (nodeData.app_id ? '<div style="margin-bottom:4px;">App vinculada: ' + escapeHtml(nodeData.app_id) + '</div>' : '');
-  
-  panel.classList.add('open');
+  // Abrir la pantalla dedicada de spec en lugar del panel superficial
+  window.location.href = '/spec?spec_id=' + encodeURIComponent(nodeData.id);
 }
 
 function hideConstellationDetail() {

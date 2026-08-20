@@ -403,14 +403,22 @@ def handle_detect_constellation_gaps(ecosystem_id: Optional[str] = None) -> dict
 
 
 def handle_export_spec_markdown(spec_id: str, output_path: Optional[str] = None) -> dict:
-    """Exporta una spec como archivo Markdown.
+    """Exporta una spec como archivo Markdown con contenido completo.
+
+    Genera un documento estructurado con capas, decisiones expandidas,
+    constraints detallados, artefactos y dependencias.
+
+    IMPORTANTE: Siempre retorna el campo 'markdown' en la respuesta para que
+    el llamador pueda escribir el archivo con sus propias herramientas si el
+    MCP no tiene acceso directo al filesystem del host (ej: Docker).
 
     Args:
         spec_id: ID de la spec a exportar.
-        output_path: Ruta de salida opcional. Si None, retorna markdown como string.
+        output_path: Ruta de salida opcional. Si se proporciona, intenta guardar
+                     el archivo ahí además de retornar el markdown.
 
     Returns:
-        Status con el markdown generado o la ruta donde se guardó.
+        Status con el markdown generado y opcionalmente la ruta donde se guardó.
     """
     engine = get_spec_engine()
     if not engine:
@@ -420,21 +428,127 @@ def handle_export_spec_markdown(spec_id: str, output_path: Optional[str] = None)
     if not spec:
         return {"status": "error", "message": f"Spec '{spec_id}' no encontrada."}
 
+    markdown = _render_spec_to_markdown(spec)
+
+    # Intentar escribir archivo si se proporcionó output_path
+    if output_path:
+        write_result = _try_write_output(output_path, markdown)
+        return {
+            "status": "success",
+            "spec_id": spec_id,
+            "markdown": markdown,
+            "output_path": write_result.get("path"),
+            "file_written": write_result["written"],
+            "write_warning": write_result.get("warning"),
+            "message": (
+                f"Spec '{spec_id}' exportada. "
+                f"{'Archivo guardado en ' + write_result['path'] + '.' if write_result['written'] else 'ADVERTENCIA: No se pudo escribir el archivo — use el campo markdown para guardarlo manualmente.'}"
+            ),
+        }
+
+    return {
+        "status": "success",
+        "spec_id": spec_id,
+        "markdown": markdown,
+        "message": f"Spec '{spec_id}' exportada como markdown.",
+    }
+
+
+def _try_write_output(output_path: str, content: str) -> dict:
+    """Intenta escribir el contenido en la ruta indicada.
+
+    Valida accesibilidad y permisos antes de escribir. Maneja el caso
+    donde el MCP corre en Docker y el path del host no es accesible.
+
+    Args:
+        output_path: Ruta absoluta o relativa donde escribir.
+        content: Contenido markdown a escribir.
+
+    Returns:
+        Dict con 'written' (bool), 'path' (str), y opcionalmente 'warning' (str).
+    """
+    from pathlib import Path
+
+    out = Path(output_path)
+
+    try:
+        # Verificar si el directorio padre existe o se puede crear
+        out.parent.mkdir(parents=True, exist_ok=True)
+
+        # Verificar que podemos escribir en el directorio
+        if not out.parent.exists():
+            return {
+                "written": False,
+                "path": str(out),
+                "warning": (
+                    f"No se pudo crear el directorio '{out.parent}'. "
+                    "Si el MCP corre en Docker, el path del host no es accesible. "
+                    "Use el campo 'markdown' de la respuesta para guardar el archivo manualmente."
+                ),
+            }
+
+        out.write_text(content, encoding="utf-8")
+
+        # Verificar que efectivamente se escribió
+        if out.exists() and out.stat().st_size > 0:
+            return {"written": True, "path": str(out)}
+        else:
+            return {
+                "written": False,
+                "path": str(out),
+                "warning": "write_text no lanzó error pero el archivo no se encuentra o está vacío.",
+            }
+
+    except PermissionError:
+        return {
+            "written": False,
+            "path": str(out),
+            "warning": (
+                f"Sin permisos para escribir en '{out}'. "
+                "Use el campo 'markdown' de la respuesta para guardar el archivo manualmente."
+            ),
+        }
+    except OSError as e:
+        return {
+            "written": False,
+            "path": str(out),
+            "warning": (
+                f"Error de filesystem al escribir: {e}. "
+                "Si el MCP corre en Docker, rutas absolutas del host no son accesibles desde el container. "
+                "Use el campo 'markdown' de la respuesta para guardar el archivo manualmente."
+            ),
+        }
+
+
+def _render_spec_to_markdown(spec) -> str:
+    """Genera el markdown completo de una spec con contenido expandido.
+
+    Renderiza todas las capas con sus decisiones, constraints y artefactos.
+    Si el campo 'details' tiene contenido expandido por ID, lo incluye
+    como sub-sección debajo de cada item para máximo detalle.
+
+    Args:
+        spec: ProjectSpec a renderizar.
+
+    Returns:
+        String con el markdown completo.
+    """
     from src.models.sdd import SDD_LAYER_META
 
-    # Generar Markdown
     lines: list[str] = []
-    lines.append(f"# {spec.project_name} — Specification v{spec.version}")
+    lines.append(f"# {spec.project_name} — Software Design Document v{spec.version}")
     lines.append("")
     lines.append(f"**Status:** {spec.status}  ")
     approvers = ", ".join(spec.approved_by) if spec.approved_by else "Pendiente de aprobación"
     lines.append(f"**Aprobado por:** {approvers}")
     lines.append("")
+    lines.append("---")
+    lines.append("")
     lines.append("## Capas")
     lines.append("")
 
     for layer_value, content in spec.layers.items():
-        if not content.summary and not content.decisions and not content.constraints:
+        if not content.summary and not content.decisions and not content.constraints and not content.artifacts:
             continue
 
         meta = SDD_LAYER_META.get(layer_value, {})
@@ -442,27 +556,56 @@ def handle_export_spec_markdown(spec_id: str, output_path: Optional[str] = None)
         layer_title = layer_value.replace("_", " ").capitalize()
 
         lines.append(f"### {layer_title} ({category})")
+        lines.append("")
+
+        # Summary
         if content.summary:
             lines.append(content.summary)
             lines.append("")
 
+        # Decisiones con detalle expandido
         if content.decisions:
-            lines.append("**Decisiones:**")
+            lines.append("#### Decisiones")
+            lines.append("")
             for d in content.decisions:
-                lines.append(f"- {d}")
+                lines.append(f"- **{d}**")
+                # Buscar detalle expandido por ID (ej: "DN-001" extraído del string)
+                detail_text = _find_detail_for_item(d, content.details)
+                if detail_text:
+                    # Indentar el detalle como sub-contenido
+                    for detail_line in detail_text.strip().split("\n"):
+                        lines.append(f"  {detail_line}")
+                    lines.append("")
             lines.append("")
 
+        # Restricciones con detalle expandido
         if content.constraints:
-            lines.append("**Restricciones:**")
+            lines.append("#### Restricciones")
+            lines.append("")
             for c in content.constraints:
-                lines.append(f"- {c}")
+                lines.append(f"- **{c}**")
+                detail_text = _find_detail_for_item(c, content.details)
+                if detail_text:
+                    for detail_line in detail_text.strip().split("\n"):
+                        lines.append(f"  {detail_line}")
+                    lines.append("")
             lines.append("")
 
+        # Artefactos con detalle expandido
         if content.artifacts:
-            lines.append("**Artefactos:**")
-            for a in content.artifacts:
-                lines.append(f"- {a}")
+            lines.append("#### Artefactos")
             lines.append("")
+            for a in content.artifacts:
+                lines.append(f"- **{a}**")
+                detail_text = _find_detail_for_item(a, content.details)
+                if detail_text:
+                    for detail_line in detail_text.strip().split("\n"):
+                        lines.append(f"  {detail_line}")
+                    lines.append("")
+            lines.append("")
+
+        lines.append("---")
+        lines.append("")
 
     # Reglas aplicadas
     if spec.rules_applied:
@@ -472,7 +615,7 @@ def handle_export_spec_markdown(spec_id: str, output_path: Optional[str] = None)
         for rule_id in spec.rules_applied:
             rule = catalog.get_rule(rule_id) if catalog else None
             if rule:
-                lines.append(f"- {rule.rule_id}: {rule.name} (v{rule.version})")
+                lines.append(f"- **{rule.rule_id}**: {rule.name} (v{rule.version})")
             else:
                 lines.append(f"- {rule_id}")
         lines.append("")
@@ -482,31 +625,50 @@ def handle_export_spec_markdown(spec_id: str, output_path: Optional[str] = None)
         lines.append("## Dependencias")
         lines.append("")
         for dep in spec.dependencies:
-            lines.append(f"- → {dep.target_spec_id} ({dep.dependency_type}, {dep.maturity})")
+            lines.append(f"- → **{dep.target_spec_id}** ({dep.dependency_type}, {dep.maturity})")
             if dep.description:
                 lines.append(f"  {dep.description}")
         lines.append("")
 
-    markdown = "\n".join(lines)
+    return "\n".join(lines)
 
-    if output_path:
-        from pathlib import Path
-        out = Path(output_path)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(markdown, encoding="utf-8")
-        return {
-            "status": "success",
-            "spec_id": spec_id,
-            "output_path": str(out),
-            "message": f"Spec '{spec_id}' exportada a {out}.",
-        }
 
-    return {
-        "status": "success",
-        "spec_id": spec_id,
-        "markdown": markdown,
-        "message": f"Spec '{spec_id}' exportada como markdown.",
-    }
+def _find_detail_for_item(item_text: str, details: dict[str, str]) -> Optional[str]:
+    """Busca el detalle expandido para un item en el diccionario de details.
+
+    Estrategia de matching:
+    1. Match exacto por clave (ej: "DN-001: Pipeline parametrizable" → busca "DN-001: Pipeline parametrizable")
+    2. Match por prefijo ID (ej: si el item empieza con "DN-001:", busca clave "DN-001")
+    3. Match parcial (si alguna clave del dict está contenida al inicio del item)
+
+    Args:
+        item_text: Texto del item (decisión, constraint o artifact).
+        details: Diccionario de detalles expandidos.
+
+    Returns:
+        Texto detallado o None si no se encuentra.
+    """
+    if not details:
+        return None
+
+    # 1. Match exacto
+    if item_text in details:
+        return details[item_text]
+
+    # 2. Match por prefijo ID (ej: "DN-001: texto largo" → buscar clave "DN-001")
+    import re
+    id_match = re.match(r"^([A-Z]{1,5}-\d{1,4})", item_text)
+    if id_match:
+        item_id = id_match.group(1)
+        if item_id in details:
+            return details[item_id]
+
+    # 3. Match parcial — clave contenida al inicio del item
+    for key in details:
+        if item_text.startswith(key):
+            return details[key]
+
+    return None
 
 
 def handle_import_spec(source_path: str, as_reference: bool = True) -> dict:

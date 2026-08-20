@@ -33,6 +33,14 @@ from src.engine.ecosystem_visualizer import (
     route_constellation_spec_detail,
     route_constellation_gaps,
 )
+from src.engine.spec_visualizer import (
+    route_spec_index,
+    route_api_specs,
+    route_api_spec_detail,
+    route_api_spec_update_layer,
+    route_api_spec_refine,
+    route_api_spec_impact,
+)
 
 logger = logging.getLogger("mcp_hu.engine.visualizer")
 
@@ -283,6 +291,13 @@ app = Starlette(routes=[
     Route("/api/constellation/{ecosystem_id}", route_constellation_graph),
     Route("/api/constellation/{ecosystem_id}/spec/{spec_id}", route_constellation_spec_detail),
     Route("/api/constellation/{ecosystem_id}/gaps", route_constellation_gaps),
+    # ─── Spec SDD Visualizer (pantalla dedicada) ──────────────────────────────
+    Route("/spec", route_spec_index),
+    Route("/api/specs", route_api_specs),
+    Route("/api/spec/{spec_id}", route_api_spec_detail),
+    Route("/api/spec/{spec_id}/layer/{layer}", route_api_spec_update_layer, methods=["PUT"]),
+    Route("/api/spec/{spec_id}/refine", route_api_spec_refine, methods=["POST"]),
+    Route("/api/spec/{spec_id}/impact", route_api_spec_impact, methods=["POST"]),
 ])
 
 # Montar archivos estáticos (vendor scripts bundleados en Docker)
