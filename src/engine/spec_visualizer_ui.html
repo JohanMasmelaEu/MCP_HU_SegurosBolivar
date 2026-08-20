@@ -72,21 +72,21 @@ html.light .sidebar-select option{background:#fff;color:#1c1c1e}
 .spec-title{font-size:20px;font-weight:700;margin-bottom:4px}
 .spec-subtitle{font-size:12px;color:var(--text-secondary)}
 
-/* === HU Panel (Red Area - Spec-level associated elements) === */
-.hu-panel{margin-bottom:24px;padding:16px;background:var(--surface);border:1px solid var(--surface-border);border-radius:var(--radius-md);border-left:3px solid var(--accent-pink)}
-.hu-panel-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.hu-panel-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-pink)}
-.hu-panel-count{font-size:10px;background:rgba(255,55,95,.12);padding:2px 8px;border-radius:10px;font-weight:600;color:var(--accent-pink)}
+/* === HU Panel (integrated, subtle) === */
+.hu-panel{margin-bottom:24px;padding:14px 16px;background:var(--surface-active);border:1px solid var(--surface-border);border-radius:var(--radius-md)}
+.hu-panel-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hu-panel-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary)}
+.hu-panel-count{font-size:10px;background:rgba(255,255,255,.06);padding:2px 8px;border-radius:10px;font-weight:600;color:var(--text-tertiary)}
 .hu-panel-empty{font-size:12px;color:var(--text-tertiary);font-style:italic;padding:8px 0}
-.hu-list{list-style:none;display:flex;flex-wrap:wrap;gap:8px}
-.hu-item{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--radius-sm);background:rgba(255,255,255,.03);border:1px solid var(--surface-border);font-size:12px;color:var(--text-primary);text-decoration:none;transition:all .2s;cursor:pointer}
-.hu-item:hover{border-color:var(--accent-pink);background:rgba(255,55,95,.06);transform:translateY(-1px);box-shadow:var(--neo-raised)}
-.hu-item-id{font-size:10px;font-weight:700;color:var(--accent-pink);background:rgba(255,55,95,.1);padding:2px 6px;border-radius:4px}
-.hu-item-title{font-size:12px;color:var(--text-primary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hu-item-status{font-size:9px;font-weight:600;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:rgba(48,209,88,.1);color:var(--accent-green)}
-.hu-item-status.analyzed{background:rgba(10,132,255,.1);color:var(--accent-blue)}
-.hu-item-status.refined{background:rgba(191,90,242,.1);color:var(--accent-purple)}
-.hu-item-ext{width:12px;height:12px;color:var(--text-tertiary);flex-shrink:0}
+.hu-list{list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+.hu-item{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:var(--radius-sm);background:rgba(255,255,255,.03);border:1px solid var(--surface-border);font-size:11px;color:var(--text-primary);text-decoration:none;transition:all .2s;cursor:pointer}
+.hu-item:hover{border-color:var(--accent-blue);background:rgba(10,132,255,.06);transform:translateY(-1px);box-shadow:var(--neo-raised)}
+.hu-item-id{font-size:10px;font-weight:600;color:var(--accent-teal);background:rgba(100,210,255,.08);padding:2px 6px;border-radius:4px}
+.hu-item-title{font-size:11px;color:var(--text-primary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hu-item-status{font-size:9px;font-weight:600;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:rgba(48,209,88,.08);color:var(--accent-green)}
+.hu-item-status.analyzed{background:rgba(10,132,255,.08);color:var(--accent-blue)}
+.hu-item-status.refined{background:rgba(191,90,242,.08);color:var(--accent-purple)}
+.hu-item-ext{width:11px;height:11px;color:var(--text-tertiary);flex-shrink:0}
 
 /* === Layer Section === */
 .layer-section{display:none;animation:fadeIn .25s ease}
@@ -118,7 +118,9 @@ html.light .sidebar-select option{background:#fff;color:#1c1c1e}
 
 /* === Master-Detail (Green Area) === */
 .master-detail{display:flex;gap:0;border:1px solid var(--surface-border);border-top:none;border-radius:0 0 var(--radius-md) var(--radius-md);min-height:380px;overflow:hidden;background:var(--surface)}
-.master-panel{width:320px;min-width:280px;border-right:1px solid var(--surface-border);overflow-y:auto;max-height:550px}
+.master-panel{width:280px;min-width:240px;border-right:1px solid var(--surface-border);overflow-y:auto;max-height:550px}
+body.edit-mode .master-panel{width:240px;min-width:200px}
+body.edit-mode .detail-panel{max-height:none}
 .master-panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--surface-border);position:sticky;top:0;background:var(--surface);z-index:5}
 .master-panel-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary)}
 .section-add-btn{display:none;align-items:center;gap:4px;padding:3px 10px;border-radius:14px;font-size:10px;font-weight:600;color:var(--accent-green);background:rgba(48,209,88,.1);border:1px solid rgba(48,209,88,.2);cursor:pointer;transition:all .2s}
@@ -149,10 +151,21 @@ body.edit-mode .section-add-btn{display:flex}
 .detail-title{font-size:15px;font-weight:600;color:var(--text-primary);line-height:1.4}
 .detail-body{font-size:13px;line-height:1.75;color:var(--text-secondary);white-space:pre-wrap;padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--surface-border);border-radius:var(--radius-sm)}
 .detail-no-content{font-size:12px;color:var(--text-tertiary);font-style:italic;padding:14px 16px;background:rgba(255,255,255,.02);border:1px solid var(--surface-border);border-radius:var(--radius-sm)}
+/* Two-column edit layout */
+.detail-two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;height:100%}
+.detail-col-read{display:flex;flex-direction:column;overflow-y:auto}
+.detail-col-read .detail-id{margin-bottom:10px}
+.detail-col-read .detail-title{font-size:16px;margin-bottom:14px}
+.detail-col-read .detail-text-plain{font-size:13px;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap}
+.detail-col-edit{display:flex;flex-direction:column;min-height:0}
+.detail-col-edit .edit-row{margin-bottom:12px;display:flex;flex-direction:column}
+.detail-col-edit .edit-row:last-of-type{flex:1;display:flex;flex-direction:column}
+.detail-col-edit .edit-row:last-of-type textarea{flex:1}
 
-/* Edit form in detail */
+/* Edit form in detail (legacy non-edit-mode view) */
 .detail-edit-form{display:none;margin-top:16px}
 body.edit-mode .detail-edit-form{display:block}
+body.edit-mode .detail-body,body.edit-mode .detail-no-content{display:none}
 .edit-row{margin-bottom:10px}
 .edit-label{font-size:10px;color:var(--text-tertiary);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
 .edit-input{width:100%;padding:9px 12px;font-size:12px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);color:var(--text-primary);border-radius:var(--radius-sm);font-family:inherit;outline:none;transition:border-color .2s}
@@ -211,14 +224,17 @@ html.light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12)}
 /* Refine Overlay */
 .refine-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center}
 .refine-overlay.visible{display:flex}
-.refine-panel{width:580px;max-width:92vw;max-height:85vh;overflow-y:auto;background:rgba(28,28,30,.95);border:1px solid var(--surface-border-hover);border-radius:var(--radius-lg);padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.refine-title{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--text-primary)}
-.refine-subtitle{font-size:12px;color:var(--text-tertiary);margin-bottom:20px}
-.refine-input-area{margin-bottom:20px}
+.refine-panel{width:900px;max-width:94vw;max-height:92vh;overflow-y:auto;background:rgba(28,28,30,.95);border:1px solid var(--surface-border-hover);border-radius:var(--radius-lg);padding:28px 32px;box-shadow:0 20px 60px rgba(0,0,0,.6);display:flex;flex-direction:column}
+.refine-title{font-size:16px;font-weight:700;margin-bottom:4px;color:var(--text-primary)}
+.refine-subtitle{font-size:12px;color:var(--text-tertiary);margin-bottom:16px}
+.refine-body{display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1;min-height:0}
+.refine-body.single-col{grid-template-columns:1fr}
+.refine-col{display:flex;flex-direction:column;min-height:0}
+.refine-input-area{display:flex;flex-direction:column;flex:1;min-height:0}
 .refine-input-area label{display:block;font-size:11px;color:var(--text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
-.refine-input-area textarea{width:100%;min-height:90px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;font-size:13px;line-height:1.6;resize:vertical;outline:none}
+.refine-input-area textarea{width:100%;flex:1;min-height:120px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);border-radius:var(--radius-md);color:var(--text-primary);font-family:inherit;font-size:13px;line-height:1.6;resize:vertical;outline:none}
 .refine-input-area textarea:focus{border-color:var(--accent-blue)}
-.refine-actions{display:flex;gap:10px;margin-bottom:20px}
+.refine-actions{display:flex;gap:10px;margin-top:16px}
 .btn-refine{padding:8px 18px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
 .btn-refine.primary{background:rgba(10,132,255,.2);color:var(--accent-blue)}
 .btn-refine.primary:hover{background:rgba(10,132,255,.3)}
@@ -227,15 +243,16 @@ html.light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12)}
 .btn-refine.ghost{background:transparent;color:var(--text-tertiary);border:1px solid var(--surface-border)}
 .btn-refine.ghost:hover{border-color:var(--surface-border-hover);color:var(--text-secondary)}
 .btn-refine:disabled{opacity:.4;cursor:not-allowed}
-.refine-preview{display:none;animation:fadeIn .2s ease}
-.refine-preview.visible{display:block}
+.refine-preview{display:none;flex-direction:column;flex:1;min-height:0;animation:fadeIn .2s ease}
+.refine-preview.visible{display:flex}
 .refine-preview-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-purple);margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .refine-preview-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent-purple)}
-.refine-preview-card{background:rgba(191,90,242,.04);border:1px solid rgba(191,90,242,.15);border-radius:var(--radius-md);padding:16px;margin-bottom:16px}
-.refine-preview-id{display:inline-block;font-size:11px;font-weight:700;color:var(--accent-blue);background:rgba(10,132,255,.1);padding:2px 10px;border-radius:6px;margin-bottom:8px}
+.refine-preview-card{background:rgba(191,90,242,.04);border:1px solid rgba(191,90,242,.15);border-radius:var(--radius-md);padding:16px;flex:1;display:flex;flex-direction:column;min-height:0}
+.refine-preview-id{display:inline-block;font-size:11px;font-weight:700;color:var(--accent-blue);background:rgba(10,132,255,.1);padding:2px 10px;border-radius:6px;margin-bottom:8px;align-self:flex-start}
 .refine-preview-title{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:10px}
-.refine-preview-editable{width:100%;min-height:100px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:var(--text-secondary);font-family:inherit;font-size:12px;line-height:1.7;resize:vertical;outline:none}
+.refine-preview-editable{width:100%;flex:1;min-height:80px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:var(--text-secondary);font-family:inherit;font-size:12px;line-height:1.7;resize:vertical;outline:none}
 .refine-preview-editable:focus{border-color:var(--accent-purple)}
+@media(max-width:700px){.refine-body{grid-template-columns:1fr}.refine-panel{width:96vw}}
 
 /* Confirm Overlay */
 .confirm-overlay{position:fixed;inset:0;z-index:310;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center}
@@ -362,23 +379,29 @@ html.light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12)}
   <div class="refine-panel">
     <div class="refine-title" id="refine-panel-title">Formalizar entrada</div>
     <div class="refine-subtitle">Escribe tu idea en lenguaje natural. El sistema la tipificara como entrada formal del SDD.</div>
-    <div class="refine-input-area"><label>Tu input (lenguaje natural)</label><textarea id="refine-raw-input" placeholder="Ej: necesito que el sistema valide documentos duplicados..."></textarea></div>
-    <div class="refine-actions">
-      <button class="btn-refine primary" id="btn-do-refine" onclick="doRefine()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Formalizar</button>
-      <button class="btn-refine ghost" onclick="closeRefine()">Cancelar</button>
-    </div>
-    <div class="refine-preview" id="refine-preview">
-      <div class="refine-preview-label">Vista previa formalizada</div>
-      <div class="refine-preview-card">
-        <span class="refine-preview-id" id="refine-result-id"></span>
-        <div class="refine-preview-title" id="refine-result-title"></div>
-        <label style="font-size:10px;color:var(--text-tertiary);margin-bottom:4px;display:block">DETALLE (editable)</label>
-        <textarea class="refine-preview-editable" id="refine-result-detail"></textarea>
+    <div class="refine-body single-col" id="refine-body">
+      <div class="refine-col">
+        <div class="refine-input-area"><label>Tu input (lenguaje natural)</label><textarea id="refine-raw-input" placeholder="Ej: necesito que el sistema valide documentos duplicados..."></textarea></div>
+        <div class="refine-actions">
+          <button class="btn-refine primary" id="btn-do-refine" onclick="doRefine()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Formalizar</button>
+          <button class="btn-refine ghost" onclick="closeRefine()">Cancelar</button>
+        </div>
       </div>
-      <div class="refine-actions">
-        <button class="btn-refine success" onclick="acceptRefine()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Aceptar y guardar</button>
-        <button class="btn-refine primary" onclick="doRefine()">Reformalizar</button>
-        <button class="btn-refine ghost" onclick="closeRefine()">Descartar</button>
+      <div class="refine-col">
+        <div class="refine-preview" id="refine-preview">
+          <div class="refine-preview-label">Vista previa formalizada</div>
+          <div class="refine-preview-card">
+            <span class="refine-preview-id" id="refine-result-id"></span>
+            <div class="refine-preview-title" id="refine-result-title"></div>
+            <label style="font-size:10px;color:var(--text-tertiary);margin-bottom:4px;display:block">DETALLE (editable)</label>
+            <textarea class="refine-preview-editable" id="refine-result-detail"></textarea>
+          </div>
+          <div class="refine-actions">
+            <button class="btn-refine success" onclick="acceptRefine()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>Aceptar y guardar</button>
+            <button class="btn-refine primary" onclick="doRefine()">Reformalizar</button>
+            <button class="btn-refine ghost" onclick="closeRefine()">Descartar</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -400,7 +423,7 @@ async function loadSpec(specId){if(!specId)return;currentSpecId=specId;selectedI
 async function loadStories(specId){var c=document.getElementById('hu-list-container');if(!c)return;try{var r=await fetch('/api/spec/'+encodeURIComponent(specId)+'/stories');var d=await r.json();var stories=d.stories||[];var countEl=document.getElementById('hu-panel-count');if(countEl)countEl.textContent=stories.length;if(!stories.length){c.innerHTML='<p class="hu-panel-empty">No hay HUs asociadas a esta spec.</p>';return}var h='<ul class="hu-list">';stories.forEach(function(s){var sc=s.status==='analyzed'?' analyzed':s.status==='refined'?' refined':'';h+='<a class="hu-item" href="/story?id='+esc(s.id)+'" target="_blank" title="'+escAttr(s.title)+'">'+'<span class="hu-item-id">'+esc(s.id)+'</span>'+'<span class="hu-item-title">'+esc(s.title)+'</span>'+'<span class="hu-item-status'+sc+'">'+esc(s.status)+'</span>'+'<svg class="hu-item-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>'+'</a>'});h+='</ul>';c.innerHTML=h}catch(e){c.innerHTML='<p class="hu-panel-empty">Error: '+esc(e.message)+'</p>'}}
 
 function applyRoleFilter(role){currentRole=role;var h=document.getElementById('role-hint');if(role&&ROLE_HINTS[role]){h.textContent=ROLE_HINTS[role];h.classList.add('visible')}else{h.classList.remove('visible')}if(currentSpecId)loadSpec(currentSpecId)}
-function toggleEditMode(){editMode=!editMode;document.body.classList.toggle('edit-mode',editMode);document.getElementById('btn-edit-mode').classList.toggle('active',editMode);if(currentSpec)renderSpec()}
+function toggleEditMode(){editMode=!editMode;document.body.classList.toggle('edit-mode',editMode);document.getElementById('btn-edit-mode').classList.toggle('active',editMode);if(selectedItem){renderDetail(selectedItem.layerKey,selectedItem.section,selectedItem.idx)}else if(currentSpec){renderSpec()}}
 function toggleTheme(){var html=document.documentElement;var isL=html.classList.toggle('light');document.getElementById('theme-icon-dark').style.display=isL?'none':'';document.getElementById('theme-icon-light').style.display=isL?'':'none';document.getElementById('theme-label').textContent=isL?'Oscuro':'Claro';try{localStorage.setItem('sdd-theme',isL?'light':'dark')}catch(e){}}
 (function(){try{if(localStorage.getItem('sdd-theme')==='light'){document.documentElement.classList.add('light');document.addEventListener('DOMContentLoaded',function(){var d=document.getElementById('theme-icon-dark'),l=document.getElementById('theme-icon-light'),lb=document.getElementById('theme-label');if(d)d.style.display='none';if(l)l.style.display='';if(lb)lb.textContent='Oscuro'})}}catch(e){}})();
 
@@ -429,8 +452,8 @@ if((spec.rules_applied||[]).length)addNavItem(navEl,'rules','Reglas','var(--acce
 var main=document.getElementById('main-content');
 var html='<div class="spec-header"><h1 class="spec-title">'+esc(spec.project_name||spec.spec_id)+'</h1><p class="spec-subtitle">Software Design Document &mdash; '+esc(spec.spec_id)+'</p></div>';
 
-// HU Panel (Red Area)
-html+='<div class="hu-panel"><div class="hu-panel-header"><span class="hu-panel-title">Elementos Asociados (HU)</span><span class="hu-panel-count" id="hu-panel-count">...</span></div><div id="hu-list-container"><p class="hu-panel-empty">Cargando historias...</p></div></div>';
+// HU Panel
+html+='<div class="hu-panel"><div class="hu-panel-header"><span class="hu-panel-title">Historias de Usuario</span><span class="hu-panel-count" id="hu-panel-count">...</span></div><div id="hu-list-container"><p class="hu-panel-empty">Cargando historias...</p></div></div>';
 
 // Layer sections
 nonEmpty.forEach(function(key,idx){html+=renderLayer(key,layers[key],idx===0)});
@@ -490,13 +513,25 @@ function renderDetail(layerKey,sectionKey,idx){var el=document.getElementById('d
 var layers=currentSpec.layers||{};var content=layers[layerKey]||{};var items=content[sectionKey]||[];var details=content.details||{};var item=items[idx];
 if(!item){el.innerHTML='<div class="detail-empty"><p>Elemento no encontrado</p></div>';return}
 var p=parseId(item);var detail=findDetail(item,details);var tc=sectionKey==='constraints'?' constraints':sectionKey==='artifacts'?' artifacts':'';
-var html='<div class="detail-header">';
+var html='';
+if(editMode){
+html+='<div class="detail-two-col">';
+html+='<div class="detail-col-read">';
+if(p.id)html+='<span class="detail-id'+tc+'">'+esc(p.id)+'</span>';
+html+='<h3 class="detail-title">'+esc(p.text)+'</h3>';
+if(detail){html+='<div class="detail-text-plain">'+esc(detail)+'</div>'}else{html+='<div class="detail-text-plain" style="color:var(--text-tertiary);font-style:italic">Sin detalle expandido.</div>'}
+html+='</div>';
+html+='<div class="detail-col-edit">';
+html+='<div class="edit-row"><div class="edit-label">Titulo</div><input type="text" class="edit-input" id="edit-title-'+layerKey+'-'+sectionKey+'-'+idx+'" value="'+escAttr(item)+'"></div>';
+html+='<div class="edit-row"><div class="edit-label">Detalle expandido</div><textarea class="edit-input" id="edit-detail-'+layerKey+'-'+sectionKey+'-'+idx+'" placeholder="Describe en detalle...">'+esc(detail||'')+'</textarea></div>';
+html+='<div class="edit-actions"><button class="btn-save" onclick="saveItem(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Guardar</button><button class="btn-formalize" onclick="refineExisting(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Formalizar</button><button class="btn-delete" onclick="deleteItem(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Eliminar</button></div>';
+html+='</div></div>';
+}else{
+html+='<div class="detail-header">';
 if(p.id)html+='<span class="detail-id'+tc+'">'+esc(p.id)+'</span>';
 html+='<h3 class="detail-title">'+esc(p.text)+'</h3></div>';
 if(detail){html+='<div class="detail-body">'+esc(detail)+'</div>'}else{html+='<div class="detail-no-content">Sin detalle expandido. Activa modo edicion para agregar contexto.</div>'}
-html+='<div class="detail-edit-form"><div class="edit-row"><div class="edit-label">Titulo</div><input type="text" class="edit-input" id="edit-title-'+layerKey+'-'+sectionKey+'-'+idx+'" value="'+escAttr(item)+'"></div>';
-html+='<div class="edit-row"><div class="edit-label">Detalle expandido</div><textarea class="edit-input" id="edit-detail-'+layerKey+'-'+sectionKey+'-'+idx+'" placeholder="Describe en detalle...">'+esc(detail||'')+'</textarea></div>';
-html+='<div class="edit-actions"><button class="btn-save" onclick="saveItem(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Guardar</button><button class="btn-formalize" onclick="refineExisting(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Formalizar</button><button class="btn-delete" onclick="deleteItem(\''+layerKey+'\',\''+sectionKey+'\','+idx+')">Eliminar</button></div></div>';
+}
 el.innerHTML=html}
 
 function showAddForm(layerKey,sectionKey){selectedItem=null;var el=document.getElementById('detail-'+layerKey);if(!el)return;
@@ -543,14 +578,14 @@ proposeChange(layerKey,content,'Eliminar item de "'+sectionKey+'" en capa "'+lay
 
 /* Refine */
 function openRefine(layerKey,sectionKey){refineContext={layerKey:layerKey,section:sectionKey};lastRefinedResult=null;var labels={decisions:'Decision',constraints:'Restriccion',artifacts:'Artefacto'};var ll=(LAYER_META[layerKey]||{}).label||layerKey;
-document.getElementById('refine-panel-title').textContent='Formalizar '+(labels[sectionKey]||'entrada')+' — '+ll;document.getElementById('refine-raw-input').value='';document.getElementById('refine-preview').classList.remove('visible');document.getElementById('refine-overlay').classList.add('visible');setTimeout(function(){document.getElementById('refine-raw-input').focus()},100)}
+document.getElementById('refine-panel-title').textContent='Formalizar '+(labels[sectionKey]||'entrada')+' — '+ll;document.getElementById('refine-raw-input').value='';document.getElementById('refine-preview').classList.remove('visible');document.getElementById('refine-body').classList.add('single-col');document.getElementById('refine-overlay').classList.add('visible');setTimeout(function(){document.getElementById('refine-raw-input').focus()},100)}
 
 async function doRefine(){if(!refineContext||!currentSpecId)return;var raw=document.getElementById('refine-raw-input').value.trim();if(!raw){toast('Escribe algo','error');return}
 var btn=document.getElementById('btn-do-refine');btn.disabled=true;btn.innerHTML='<span class="refine-spinner"></span> Formalizando...';
 try{var layers=(currentSpec&&currentSpec.layers)?currentSpec.layers:{};var lc=layers[refineContext.layerKey]||{};var ei=lc[refineContext.section]||[];var ids=[];ei.forEach(function(i){var m=i.match(/^([A-Z]{1,5}-\d{1,4})/);if(m)ids.push(m[1])});
 var r=await fetch('/api/spec/'+encodeURIComponent(currentSpecId)+'/refine',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({layer:refineContext.layerKey,section:refineContext.section,raw_input:raw,context:{existing_ids:ids,summary:lc.summary||''}})});
 var d=await r.json();if(d.error){toast(d.error,'error');return}
-lastRefinedResult=d.refined;document.getElementById('refine-result-id').textContent=d.refined.id;document.getElementById('refine-result-title').textContent=d.refined.title;document.getElementById('refine-result-detail').value=d.refined.detail;document.getElementById('refine-preview').classList.add('visible')}catch(e){toast('Error: '+e.message,'error')}finally{btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Formalizar'}}
+lastRefinedResult=d.refined;document.getElementById('refine-result-id').textContent=d.refined.id;document.getElementById('refine-result-title').textContent=d.refined.title;document.getElementById('refine-result-detail').value=d.refined.detail;document.getElementById('refine-preview').classList.add('visible');document.getElementById('refine-body').classList.remove('single-col')}catch(e){toast('Error: '+e.message,'error')}finally{btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Formalizar'}}
 
 async function acceptRefine(){if(!refineContext||!lastRefinedResult||!currentSpecId||!currentSpec)return;
 var layers=currentSpec.layers||{};var content=JSON.parse(JSON.stringify(layers[refineContext.layerKey]||{}));var items=content[refineContext.section]||[];var details=content.details||{};
@@ -567,7 +602,7 @@ function closeRefine(){document.getElementById('refine-overlay').classList.remov
 function refineExisting(layerKey,sectionKey,idx){refineContext={layerKey:layerKey,section:sectionKey,replaceIdx:idx};lastRefinedResult=null;var labels={decisions:'Decision',constraints:'Restriccion',artifacts:'Artefacto'};var ll=(LAYER_META[layerKey]||{}).label||layerKey;
 document.getElementById('refine-panel-title').textContent='Re-formalizar '+(labels[sectionKey]||'entrada')+' — '+ll;
 var cid=layerKey+'-'+sectionKey+'-'+idx;var te=document.getElementById('edit-title-'+cid);var de=document.getElementById('edit-detail-'+cid);var pf=(te?te.value:'')+(de&&de.value?'\n\n'+de.value:'');
-document.getElementById('refine-raw-input').value=pf;document.getElementById('refine-preview').classList.remove('visible');document.getElementById('refine-overlay').classList.add('visible');setTimeout(function(){document.getElementById('refine-raw-input').focus()},100)}
+document.getElementById('refine-raw-input').value=pf;document.getElementById('refine-preview').classList.remove('visible');document.getElementById('refine-body').classList.add('single-col');document.getElementById('refine-overlay').classList.add('visible');setTimeout(function(){document.getElementById('refine-raw-input').focus()},100)}
 
 async function putLayer(layerKey,content){try{var r=await fetch('/api/spec/'+encodeURIComponent(currentSpecId)+'/layer/'+encodeURIComponent(layerKey),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(content)});var d=await r.json();if(d.error){toast(d.error,'error');return}toast('Capa "'+layerKey+'" indexada','success');await loadSpec(currentSpecId)}catch(e){toast('Error: '+e.message,'error')}}
 

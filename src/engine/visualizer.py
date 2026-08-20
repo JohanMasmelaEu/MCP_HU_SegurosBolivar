@@ -35,6 +35,7 @@ from src.engine.ecosystem_visualizer import (
 )
 from src.engine.spec_visualizer import (
     route_spec_index,
+    route_story_index,
     route_api_specs,
     route_api_spec_detail,
     route_api_spec_update_layer,
@@ -294,6 +295,7 @@ app = Starlette(routes=[
     Route("/api/constellation/{ecosystem_id}/gaps", route_constellation_gaps),
     # ─── Spec SDD Visualizer (pantalla dedicada) ──────────────────────────────
     Route("/spec", route_spec_index),
+    Route("/story", route_story_index),
     Route("/api/specs", route_api_specs),
     Route("/api/spec/{spec_id}", route_api_spec_detail),
     Route("/api/spec/{spec_id}/layer/{layer}", route_api_spec_update_layer, methods=["PUT"]),

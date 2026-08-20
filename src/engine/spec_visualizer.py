@@ -23,6 +23,7 @@ from src.models.sdd import LayerContent, SDDLayer
 logger = logging.getLogger("mcp_hu.engine.spec_visualizer")
 
 HTML_PATH = Path(__file__).parent / "spec_visualizer_ui.html"
+STORY_DETAIL_HTML_PATH = Path(__file__).parent / "story_detail_ui.html"
 
 
 # ─── ROUTE HANDLERS ──────────────────────────────────────────────────────────────
@@ -628,3 +629,20 @@ async def route_api_spec_stories(request: Request) -> JSONResponse:
     except RuntimeError as exc:
         logger.warning("No se pudo cargar stories: %s", exc)
         return JSONResponse({"stories": [], "warning": str(exc)})
+
+
+async def route_story_index(request: Request) -> HTMLResponse:
+    """Sirve la UI HTML de detalle de una Historia de Usuario.
+
+    GET /story?id=HU-XXX
+    Renderiza la pagina de detalle completo de la HU. El frontend
+    usa el query param 'id' para cargar datos desde /api/story/{id}.
+    """
+    try:
+        html = STORY_DETAIL_HTML_PATH.read_text(encoding="utf-8")
+        return HTMLResponse(content=html, status_code=200)
+    except FileNotFoundError:
+        return HTMLResponse(
+            content="<h1>Story Detail UI not found</h1>",
+            status_code=500,
+        )
