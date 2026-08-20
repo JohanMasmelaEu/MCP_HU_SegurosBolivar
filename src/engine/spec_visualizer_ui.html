@@ -67,7 +67,7 @@ html.light .sidebar-select option{background:#fff;color:#1c1c1e}
 .meta-value{font-size:11px;color:var(--text-primary);font-weight:500;text-align:right;max-width:140px;overflow:hidden;text-overflow:ellipsis}
 
 /* Main */
-.main{margin-left:270px;flex:1;padding:28px 36px;max-width:1200px}
+.main{margin-left:270px;flex:1;padding:28px 48px}
 .spec-header{margin-bottom:20px}
 .spec-title{font-size:20px;font-weight:700;margin-bottom:4px}
 .spec-subtitle{font-size:12px;color:var(--text-secondary)}
@@ -78,15 +78,34 @@ html.light .sidebar-select option{background:#fff;color:#1c1c1e}
 .hu-panel-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary)}
 .hu-panel-count{font-size:10px;background:rgba(255,255,255,.06);padding:2px 8px;border-radius:10px;font-weight:600;color:var(--text-tertiary)}
 .hu-panel-empty{font-size:12px;color:var(--text-tertiary);font-style:italic;padding:8px 0}
-.hu-list{list-style:none;display:flex;flex-wrap:wrap;gap:6px}
-.hu-item{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:var(--radius-sm);background:rgba(255,255,255,.03);border:1px solid var(--surface-border);font-size:11px;color:var(--text-primary);text-decoration:none;transition:all .2s;cursor:pointer}
-.hu-item:hover{border-color:var(--accent-blue);background:rgba(10,132,255,.06);transform:translateY(-1px);box-shadow:var(--neo-raised)}
-.hu-item-id{font-size:10px;font-weight:600;color:var(--accent-teal);background:rgba(100,210,255,.08);padding:2px 6px;border-radius:4px}
-.hu-item-title{font-size:11px;color:var(--text-primary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hu-item-status{font-size:9px;font-weight:600;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:rgba(48,209,88,.08);color:var(--accent-green)}
+.hu-filter-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hu-filter-input{flex:1;max-width:320px;padding:7px 12px 7px 32px;font-size:12px;background:rgba(255,255,255,.04);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:var(--text-primary);outline:none;transition:border-color .2s;font-family:inherit}
+.hu-filter-input:focus{border-color:var(--accent-blue)}
+.hu-filter-input::placeholder{color:var(--text-tertiary)}
+.hu-filter-wrap{position:relative;flex:1;max-width:320px}
+.hu-filter-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-tertiary);pointer-events:none}
+.hu-table{width:100%;border-collapse:collapse}
+.hu-table-head{display:flex;padding:6px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);border-bottom:1px solid var(--surface-border);gap:12px}
+.hu-table-head span:nth-child(1){width:80px;flex-shrink:0}
+.hu-table-head span:nth-child(2){flex:1}
+.hu-table-head span:nth-child(3){width:80px;flex-shrink:0;text-align:center}
+.hu-table-head span:nth-child(4){width:28px;flex-shrink:0}
+.hu-table-body{list-style:none}
+.hu-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);text-decoration:none;transition:all .15s;cursor:pointer}
+.hu-item:last-child{border-bottom:none}
+.hu-item:hover{background:rgba(10,132,255,.06)}
+.hu-item-id{width:80px;flex-shrink:0;font-size:10px;font-weight:600;color:var(--accent-teal);background:rgba(100,210,255,.08);padding:2px 6px;border-radius:4px;text-align:center}
+.hu-item-title{flex:1;font-size:12px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hu-item-status{width:80px;flex-shrink:0;font-size:9px;font-weight:600;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:rgba(48,209,88,.08);color:var(--accent-green);text-align:center}
 .hu-item-status.analyzed{background:rgba(10,132,255,.08);color:var(--accent-blue)}
 .hu-item-status.refined{background:rgba(191,90,242,.08);color:var(--accent-purple)}
-.hu-item-ext{width:11px;height:11px;color:var(--text-tertiary);flex-shrink:0}
+.hu-item-ext{width:14px;height:14px;color:var(--text-tertiary);flex-shrink:0}
+.hu-pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 12px 0;border-top:1px solid var(--surface-border);margin-top:4px}
+.hu-pagination-info{font-size:11px;color:var(--text-tertiary)}
+.hu-pagination-btns{display:flex;gap:6px}
+.hu-pagination-btn{padding:4px 12px;font-size:11px;font-weight:600;border:1px solid var(--surface-border);border-radius:var(--radius-sm);background:transparent;color:var(--text-secondary);cursor:pointer;transition:all .2s}
+.hu-pagination-btn:hover:not(:disabled){border-color:var(--accent-blue);color:var(--accent-blue)}
+.hu-pagination-btn:disabled{opacity:.3;cursor:not-allowed}
 
 /* === Layer Section === */
 .layer-section{display:none;animation:fadeIn .25s ease}
@@ -420,7 +439,12 @@ async function loadSpecList(){try{var r=await fetch('/api/specs');var d=await r.
 
 async function loadSpec(specId){if(!specId)return;currentSpecId=specId;selectedItem=null;var main=document.getElementById('main-content');main.innerHTML='<div class="loading"><div class="loading-spinner"></div>Cargando spec...</div>';try{var url='/api/spec/'+encodeURIComponent(specId);if(currentRole)url+='?role='+encodeURIComponent(currentRole);var r=await fetch(url);var d=await r.json();if(d.error){showError(d.error);return}currentSpec=d;renderSpec();loadStories(specId);history.replaceState(null,'','/spec?spec_id='+encodeURIComponent(specId))}catch(e){showError('Error: '+e.message)}}
 
-async function loadStories(specId){var c=document.getElementById('hu-list-container');if(!c)return;try{var r=await fetch('/api/spec/'+encodeURIComponent(specId)+'/stories');var d=await r.json();var stories=d.stories||[];var countEl=document.getElementById('hu-panel-count');if(countEl)countEl.textContent=stories.length;if(!stories.length){c.innerHTML='<p class="hu-panel-empty">No hay HUs asociadas a esta spec.</p>';return}var h='<ul class="hu-list">';stories.forEach(function(s){var sc=s.status==='analyzed'?' analyzed':s.status==='refined'?' refined':'';h+='<a class="hu-item" href="/story?id='+esc(s.id)+'" target="_blank" title="'+escAttr(s.title)+'">'+'<span class="hu-item-id">'+esc(s.id)+'</span>'+'<span class="hu-item-title">'+esc(s.title)+'</span>'+'<span class="hu-item-status'+sc+'">'+esc(s.status)+'</span>'+'<svg class="hu-item-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>'+'</a>'});h+='</ul>';c.innerHTML=h}catch(e){c.innerHTML='<p class="hu-panel-empty">Error: '+esc(e.message)+'</p>'}}
+var _huAllStories=[];var _huFilteredStories=[];var _huPage=0;var _huPageSize=4;
+async function loadStories(specId){var c=document.getElementById('hu-list-container');if(!c)return;_huAllStories=[];_huFilteredStories=[];_huPage=0;var inp=document.getElementById('hu-filter-input');if(inp)inp.value='';try{var r=await fetch('/api/spec/'+encodeURIComponent(specId)+'/stories');var d=await r.json();var stories=d.stories||[];var countEl=document.getElementById('hu-panel-count');if(countEl)countEl.textContent=stories.length;if(!stories.length){c.innerHTML='<p class="hu-panel-empty">No hay HUs asociadas a esta spec.</p>';document.getElementById('hu-pagination').style.display='none';return}_huAllStories=stories;_huFilteredStories=stories;renderHUPage()}catch(e){c.innerHTML='<p class="hu-panel-empty">Error: '+esc(e.message)+'</p>'}}
+function filterHUList(){var inp=document.getElementById('hu-filter-input');var q=(inp?inp.value:'').toLowerCase().trim();_huPage=0;if(!q){_huFilteredStories=_huAllStories}else{_huFilteredStories=_huAllStories.filter(function(s){return s.id.toLowerCase().indexOf(q)!==-1||s.title.toLowerCase().indexOf(q)!==-1})}renderHUPage()}
+function huPagePrev(){if(_huPage>0){_huPage--;renderHUPage()}}
+function huPageNext(){var maxPage=Math.ceil(_huFilteredStories.length/_huPageSize)-1;if(_huPage<maxPage){_huPage++;renderHUPage()}}
+function renderHUPage(){var c=document.getElementById('hu-list-container');if(!c)return;var total=_huFilteredStories.length;var maxPage=Math.max(0,Math.ceil(total/_huPageSize)-1);if(_huPage>maxPage)_huPage=maxPage;var start=_huPage*_huPageSize;var end=Math.min(start+_huPageSize,total);var page=_huFilteredStories.slice(start,end);var h='<div class="hu-table-head"><span>ID</span><span>Titulo</span><span>Estado</span><span></span></div>';h+='<ul class="hu-table-body">';if(!page.length){h+='<li style="padding:12px;font-size:12px;color:var(--text-tertiary);font-style:italic">Sin resultados</li>'}else{page.forEach(function(s){var sc=s.status==='analyzed'?' analyzed':s.status==='refined'?' refined':'';h+='<a class="hu-item" href="/story?id='+esc(s.id)+'" target="_blank" title="'+escAttr(s.title)+'">'+'<span class="hu-item-id">'+esc(s.id)+'</span>'+'<span class="hu-item-title">'+esc(s.title)+'</span>'+'<span class="hu-item-status'+sc+'">'+esc(s.status)+'</span>'+'<svg class="hu-item-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>'+'</a>'})}h+='</ul>';c.innerHTML=h;var pag=document.getElementById('hu-pagination');var info=document.getElementById('hu-pagination-info');var btnP=document.getElementById('hu-btn-prev');var btnN=document.getElementById('hu-btn-next');if(total>_huPageSize){pag.style.display='flex';info.textContent=(start+1)+' - '+end+' de '+total;btnP.disabled=_huPage===0;btnN.disabled=_huPage>=maxPage}else{pag.style.display='none'}}
 
 function applyRoleFilter(role){currentRole=role;var h=document.getElementById('role-hint');if(role&&ROLE_HINTS[role]){h.textContent=ROLE_HINTS[role];h.classList.add('visible')}else{h.classList.remove('visible')}if(currentSpecId)loadSpec(currentSpecId)}
 function toggleEditMode(){editMode=!editMode;document.body.classList.toggle('edit-mode',editMode);document.getElementById('btn-edit-mode').classList.toggle('active',editMode);if(selectedItem){renderDetail(selectedItem.layerKey,selectedItem.section,selectedItem.idx)}else if(currentSpec){renderSpec()}}
@@ -453,7 +477,7 @@ var main=document.getElementById('main-content');
 var html='<div class="spec-header"><h1 class="spec-title">'+esc(spec.project_name||spec.spec_id)+'</h1><p class="spec-subtitle">Software Design Document &mdash; '+esc(spec.spec_id)+'</p></div>';
 
 // HU Panel
-html+='<div class="hu-panel"><div class="hu-panel-header"><span class="hu-panel-title">Historias de Usuario</span><span class="hu-panel-count" id="hu-panel-count">...</span></div><div id="hu-list-container"><p class="hu-panel-empty">Cargando historias...</p></div></div>';
+html+='<div class="hu-panel"><div class="hu-panel-header"><span class="hu-panel-title">Historias de Usuario</span><span class="hu-panel-count" id="hu-panel-count">...</span></div><div class="hu-filter-row"><div class="hu-filter-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" class="hu-filter-input" id="hu-filter-input" placeholder="Buscar por ID o nombre..." oninput="filterHUList()"></div></div><div id="hu-list-container"><p class="hu-panel-empty">Cargando historias...</p></div><div class="hu-pagination" id="hu-pagination" style="display:none"><span class="hu-pagination-info" id="hu-pagination-info"></span><div class="hu-pagination-btns"><button class="hu-pagination-btn" id="hu-btn-prev" onclick="huPagePrev()" disabled>&laquo; Anterior</button><button class="hu-pagination-btn" id="hu-btn-next" onclick="huPageNext()">Siguiente &raquo;</button></div></div></div>';
 
 // Layer sections
 nonEmpty.forEach(function(key,idx){html+=renderLayer(key,layers[key],idx===0)});

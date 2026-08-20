@@ -1675,6 +1675,9 @@ async function init() {
     selector.value = currentEcosystemId;
     _updateEcoMeta(ecosystems);
     loadMacroGraph();
+    if (window.location.hash === '#constellation') {
+      showConstellation(null);
+    }
   } catch (err) {
     showEmptyState('Error al conectar con el servidor: ' + err.message);
   }

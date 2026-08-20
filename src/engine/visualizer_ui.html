@@ -849,7 +849,9 @@ body::before {
 <script>
 /* ===== Theme Toggle ===== */
 (function(){try{if(localStorage.getItem('sdd-theme')==='light'){document.documentElement.classList.add('light')}}catch(e){}})();
-function toggleTheme(){var isL=document.documentElement.classList.toggle('light');try{localStorage.setItem('sdd-theme',isL?'light':'dark')}catch(e){}}
+function toggleTheme(){var isL=document.documentElement.classList.toggle('light');try{localStorage.setItem('sdd-theme',isL?'light':'dark')}catch(e){}if(cy)updateCyTheme(isL)}
+function isLightMode(){return document.documentElement.classList.contains('light')}
+function updateCyTheme(isL){if(!cy)return;var textColor=isL?'rgba(0,0,0,0.8)':'rgba(255,255,255,0.85)';var outlineColor=isL?'rgba(255,255,255,0.9)':'rgba(0,0,0,0.8)';var entityText=isL?'rgba(0,100,180,0.9)':'rgba(100,210,255,0.8)';var entityOutline=isL?'rgba(255,255,255,0.7)':'rgba(0,0,0,0.6)';var flowText=isL?'rgba(140,60,200,0.9)':'rgba(191,90,242,0.8)';var flowOutline=isL?'rgba(255,255,255,0.7)':'rgba(0,0,0,0.6)';var relatedLine=isL?'rgba(0,0,0,0.1)':'rgba(255,255,255,0.08)';var highlightBorder=isL?'#000':'#fff';cy.style().selector('node[type="story"]').style({'color':textColor,'text-outline-color':outlineColor}).selector('node[type="entity"]').style({'color':entityText,'text-outline-color':entityOutline}).selector('node[type="flow"]').style({'color':flowText,'text-outline-color':flowOutline}).selector('edge[relation="related_to"]').style({'line-color':relatedLine}).selector('.highlighted').style({'border-color':highlightBorder}).update()}
 
 /* ===== Global State ===== */
 let cy, allData = {nodes:[],edges:[]}, showEntities = true, showFlows = false, showRelations = true, currentLayout = 'dagre';
@@ -1034,6 +1036,7 @@ function renderGraph() {
   startNeuralPulse();
   bindCyEvents();
   applyLayerVisibility();
+  if(isLightMode())updateCyTheme(true);
 }
 /* ===== Cytoscape Event Bindings ===== */
 function bindCyEvents() {

@@ -1,5 +1,19 @@
 # Changelog — MCP_HU_SegurosBolivar
 
+## [No publicado]
+
+### Corregido
+- Se corrigió navegación directa a Constelación desde el spec visualizer y HU visualizer — al navegar a `/ecosystem#constellation` ahora se activa la vista de constelación automáticamente al cargar la página
+- Se eliminó botón "Volver" del detalle de HU (story_detail_ui) que no funcionaba al abrir en pestaña nueva
+- Se corrigió el tema claro en el HU visualizer — los nodos y edges del grafo Cytoscape ahora adaptan sus colores de texto y outline al cambiar a light mode
+
+### Cambiado
+- Se amplió el área de contenido principal del spec visualizer eliminando `max-width:1200px` y aumentando el padding lateral para aprovechar el espacio disponible en pantalla
+
+### Agregado
+- Se agregó filtro de búsqueda por ID o nombre en la sección de Historias de Usuario del spec visualizer
+- Se agregó paginación tipo tabla en la sección de HU mostrando 4 elementos por página con controles de navegación
+
 ## [2.0.0] — 2026-08-05
 
 ### Agregado
