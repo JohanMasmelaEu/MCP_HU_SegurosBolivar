@@ -3,6 +3,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import Optional
+from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
@@ -57,6 +58,34 @@ class AcceptanceCriterion(BaseModel):
     then: str = Field(description="Entonces [resultado esperado]")
 
 
+class QuestionStatus(str, Enum):
+    """Estado de una pregunta en una HU."""
+
+    OPEN = "open"
+    RESOLVED = "resolved"
+
+
+class QuestionResolution(BaseModel):
+    """Registro de resolucion de una pregunta."""
+
+    resolved_by: str = Field(description="Quien resolvio la pregunta")
+    resolved_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+    note: str = Field(default="", description="Nota o respuesta de resolucion")
+
+
+class Question(BaseModel):
+    """Pregunta estructurada con estado y historial de resolucion."""
+
+    id: str = Field(default_factory=lambda: str(uuid4())[:8], description="ID unico corto")
+    text: str = Field(description="Texto de la pregunta")
+    status: QuestionStatus = Field(default=QuestionStatus.OPEN)
+    expert: str = Field(default="negocio", description="Experto que origino la pregunta")
+    ac_reference: str = Field(default="", description="Referencia al criterio de aceptacion")
+    created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+    created_by: str = Field(default="system", description="Quien creo la pregunta")
+    resolution: Optional[QuestionResolution] = Field(default=None, description="Datos de resolucion")
+
+
 class ExpertSection(BaseModel):
     """Seccion de analisis de un experto individual."""
 
@@ -83,6 +112,7 @@ class StoryAnalysis(BaseModel):
     impacts: list[str] = Field(default_factory=list, description="IDs de HUs que esta HU impacta")
     total_gaps: int = 0
     total_questions: int = 0
+    structured_questions: list[Question] = Field(default_factory=list, description="Preguntas con estado y resolucion")
     status: str = Field(default="analyzed", description="analyzed | refined | completed")
     created_at: str = Field(default_factory=lambda: datetime.now().isoformat())
     updated_at: Optional[str] = None

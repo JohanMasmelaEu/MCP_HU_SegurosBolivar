@@ -133,6 +133,43 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-s
 .ac-inline-form .form-btn{padding:7px 12px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all .2s;white-space:nowrap}
 .ac-inline-form .form-btn.submit{background:rgba(10,132,255,.15);color:var(--accent-blue)}
 .ac-inline-form .form-btn.submit:hover{background:rgba(10,132,255,.25)}
+
+/* ─── Questions Section (consolidated) ─── */
+.questions-section{margin-top:16px}
+.questions-group{margin-bottom:16px}
+.questions-group-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;padding:4px 0}
+.questions-group-title.open-title{color:var(--accent-teal)}
+.questions-group-title.resolved-title{color:var(--accent-green)}
+.question-card{padding:12px 14px;border-radius:var(--radius-sm);border:1px solid var(--surface-border);margin-bottom:8px;transition:border-color .2s}
+.question-card.open{background:rgba(100,210,255,.03);border-color:rgba(100,210,255,.15)}
+.question-card.open:hover{border-color:rgba(100,210,255,.3)}
+.question-card.resolved{background:rgba(48,209,88,.02);border-color:rgba(48,209,88,.1);opacity:.85}
+.question-body{display:flex;flex-direction:column;gap:6px}
+.question-text{font-size:13px;color:var(--text-primary);line-height:1.5}
+.question-text.resolved-text{text-decoration:line-through;opacity:.7}
+.question-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:10px;color:var(--text-tertiary)}
+.question-expert{padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--surface-border);font-weight:600;text-transform:capitalize}
+.question-ac-ref{font-style:italic;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.question-actions{margin-top:8px;display:flex;gap:8px}
+.question-resolve-btn{padding:5px 14px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;border:1px solid rgba(48,209,88,.3);background:rgba(48,209,88,.08);color:var(--accent-green);cursor:pointer;transition:all .2s}
+.question-resolve-btn:hover{background:rgba(48,209,88,.15);border-color:rgba(48,209,88,.5)}
+.question-resolution{margin-top:8px;padding:8px 12px;border-radius:var(--radius-sm);background:rgba(48,209,88,.04);border:1px solid rgba(48,209,88,.1)}
+.resolution-header{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--accent-green)}
+.resolution-by{font-weight:600}
+.resolution-date{color:var(--text-tertiary);font-size:10px}
+.resolution-note{margin-top:6px;font-size:12px;color:var(--text-secondary);line-height:1.5;padding-left:20px}
+.resolve-form{display:none;margin-top:8px;padding:10px 12px;background:rgba(48,209,88,.03);border:1px solid rgba(48,209,88,.2);border-radius:var(--radius-sm);flex-direction:column;gap:8px}
+.resolve-form.visible{display:flex}
+.resolve-input{padding:7px 10px;font-size:12px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;outline:none;transition:border-color .2s}
+.resolve-input:focus{border-color:var(--accent-green)}
+.resolve-textarea{padding:7px 10px;font-size:12px;background:rgba(255,255,255,.03);border:1px solid var(--surface-border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;line-height:1.4;resize:none;height:60px;outline:none;transition:border-color .2s}
+.resolve-textarea:focus{border-color:var(--accent-green)}
+.resolve-form-actions{display:flex;gap:8px}
+.resolve-form-actions .form-btn{padding:6px 12px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all .2s}
+.resolve-form-actions .form-btn.submit{background:rgba(48,209,88,.15);color:var(--accent-green)}
+.resolve-form-actions .form-btn.submit:hover{background:rgba(48,209,88,.25)}
+.resolve-form-actions .form-btn.cancel{background:rgba(255,255,255,.04);color:var(--text-tertiary)}
+.resolve-form-actions .form-btn.cancel:hover{background:rgba(255,255,255,.08);color:var(--text-secondary)}
 </style>
 </head>
 <body>
@@ -348,12 +385,128 @@ function renderStory(s){
 
   // Feedback form (inline per AC - no standalone section needed)
 
+  // ─── Seccion consolidada de Preguntas (al final) ────────────────────────────
+  var questions = s.structured_questions || [];
+  // Fallback: si no hay structured_questions, construir desde expert_analysis
+  if (!questions.length && s.expert_analysis) {
+    s.expert_analysis.forEach(function(e) {
+      (e.questions || []).forEach(function(q) {
+        questions.push({ id: '', text: q, status: 'open', expert: e.expert, ac_reference: '', created_at: s.created_at || '', created_by: 'system', resolution: null });
+      });
+    });
+  }
+  if (questions.length) {
+    var openQ = questions.filter(function(q) { return q.status === 'open'; });
+    var resolvedQ = questions.filter(function(q) { return q.status === 'resolved'; });
+
+    h += '<div class="section questions-section">';
+    h += '<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>Preguntas (' + questions.length + ')</div>';
+
+    // Abiertas
+    if (openQ.length) {
+      h += '<div class="questions-group">';
+      h += '<div class="questions-group-title open-title">Pendientes (' + openQ.length + ')</div>';
+      openQ.forEach(function(q) {
+        h += '<div class="question-card open" data-qid="' + esc(q.id) + '">';
+        h += '<div class="question-body">';
+        h += '<div class="question-text">' + esc(q.text) + '</div>';
+        h += '<div class="question-meta">';
+        h += '<span class="question-expert">' + esc(q.expert) + '</span>';
+        if (q.ac_reference) h += '<span class="question-ac-ref">Ref: ' + esc(q.ac_reference).substring(0, 40) + '</span>';
+        h += '<span class="question-date">' + esc((q.created_at || '').substring(0, 10)) + '</span>';
+        if (q.created_by && q.created_by !== 'system') h += '<span class="question-author">por ' + esc(q.created_by) + '</span>';
+        h += '</div></div>';
+        if (q.id) {
+          h += '<div class="question-actions">';
+          h += '<button class="question-resolve-btn" onclick="showResolveForm(\'' + esc(q.id) + '\')">Resolver</button>';
+          h += '</div>';
+        }
+        h += '</div>';
+        // Formulario de resolucion (oculto)
+        if (q.id) {
+          h += '<div class="resolve-form" id="resolve-form-' + esc(q.id) + '">';
+          h += '<input type="text" class="resolve-input" id="resolve-by-' + esc(q.id) + '" placeholder="Tu nombre..." />';
+          h += '<textarea class="resolve-textarea" id="resolve-note-' + esc(q.id) + '" placeholder="Respuesta o nota de resolucion..."></textarea>';
+          h += '<div class="resolve-form-actions">';
+          h += '<button class="form-btn submit" onclick="submitResolve(\'' + esc(q.id) + '\')">Confirmar</button>';
+          h += '<button class="form-btn cancel" onclick="hideResolveForm(\'' + esc(q.id) + '\')">Cancelar</button>';
+          h += '</div></div>';
+        }
+      });
+      h += '</div>';
+    }
+
+    // Resueltas
+    if (resolvedQ.length) {
+      h += '<div class="questions-group">';
+      h += '<div class="questions-group-title resolved-title">Resueltas (' + resolvedQ.length + ')</div>';
+      resolvedQ.forEach(function(q) {
+        h += '<div class="question-card resolved">';
+        h += '<div class="question-body">';
+        h += '<div class="question-text resolved-text">' + esc(q.text) + '</div>';
+        h += '<div class="question-meta">';
+        h += '<span class="question-expert">' + esc(q.expert) + '</span>';
+        h += '<span class="question-date">' + esc((q.created_at || '').substring(0, 10)) + '</span>';
+        h += '</div></div>';
+        if (q.resolution) {
+          h += '<div class="question-resolution">';
+          h += '<div class="resolution-header">';
+          h += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>';
+          h += '<span class="resolution-by">' + esc(q.resolution.resolved_by) + '</span>';
+          h += '<span class="resolution-date">' + esc((q.resolution.resolved_at || '').substring(0, 10)) + '</span>';
+          h += '</div>';
+          if (q.resolution.note) h += '<div class="resolution-note">' + esc(q.resolution.note) + '</div>';
+          h += '</div>';
+        }
+        h += '</div>';
+      });
+      h += '</div>';
+    }
+
+    h += '</div>';
+  }
+
   _currentStory=s;
   document.getElementById('main-content').innerHTML=h;
 }
 
 var _currentStory=null;
 var _acFormState={};
+
+function showResolveForm(qid) {
+  var form = document.getElementById('resolve-form-' + qid);
+  if (form) { form.classList.add('visible'); form.querySelector('input').focus(); }
+}
+
+function hideResolveForm(qid) {
+  var form = document.getElementById('resolve-form-' + qid);
+  if (form) form.classList.remove('visible');
+}
+
+async function submitResolve(qid) {
+  var params = new URLSearchParams(window.location.search);
+  var storyId = params.get('id');
+  if (!storyId) return;
+
+  var resolvedBy = document.getElementById('resolve-by-' + qid).value.trim();
+  var note = document.getElementById('resolve-note-' + qid).value.trim();
+
+  if (!resolvedBy) { document.getElementById('resolve-by-' + qid).focus(); return; }
+
+  try {
+    var r = await fetch('/api/story/' + encodeURIComponent(storyId) + '/question/' + encodeURIComponent(qid) + '/resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resolved_by: resolvedBy, note: note })
+    });
+    var d = await r.json();
+    if (d.error) { alert(d.error); return; }
+    // Recargar para reflejar cambios
+    loadStory();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
 
 function showACForm(idx,type,acRef){
   document.querySelectorAll('.ac-inline-form.visible').forEach(function(f){f.classList.remove('visible')});

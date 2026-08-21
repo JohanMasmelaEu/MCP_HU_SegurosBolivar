@@ -281,6 +281,15 @@ async def route_story_feedback(request: Request):
     if feedback_type == "question":
         target_expert.questions.append(full_text)
         story.total_questions += 1
+        # Crear Question estructurada
+        from src.models.story import Question
+        question = Question(
+            text=text,
+            expert=target_expert.expert.value,
+            ac_reference=ac_ref,
+            created_by=body.get("created_by", "user"),
+        )
+        story.structured_questions.append(question)
     else:
         target_expert.gaps.append(full_text)
         story.total_gaps += 1
@@ -296,6 +305,70 @@ async def route_story_feedback(request: Request):
         "text": full_text,
         "total_gaps": story.total_gaps,
         "total_questions": story.total_questions,
+        "question_id": question.id if feedback_type == "question" else None,
+    })
+
+
+async def route_resolve_question(request: Request):
+    """API: resuelve una pregunta de una HU.
+
+    POST /api/story/{story_id}/question/{question_id}/resolve
+    Body JSON:
+    {
+        "resolved_by": "nombre de quien resuelve",
+        "note": "respuesta o nota de resolucion"
+    }
+    """
+    story_id = request.path_params["story_id"]
+    question_id = request.path_params["question_id"]
+    memory = get_memory()
+    story = memory.get_story(story_id)
+    if not story:
+        return JSONResponse({"error": f"HU '{story_id}' no encontrada"}, status_code=404)
+
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Body JSON invalido."}, status_code=400)
+
+    resolved_by = body.get("resolved_by", "").strip()
+    note = body.get("note", "").strip()
+
+    if not resolved_by:
+        return JSONResponse({"error": "resolved_by es requerido."}, status_code=400)
+
+    # Buscar la pregunta en structured_questions
+    target_question = None
+    for q in story.structured_questions:
+        if q.id == question_id:
+            target_question = q
+            break
+
+    if not target_question:
+        return JSONResponse({"error": f"Pregunta '{question_id}' no encontrada."}, status_code=404)
+
+    if target_question.status.value == "resolved":
+        return JSONResponse({"error": "La pregunta ya esta resuelta."}, status_code=400)
+
+    # Resolver
+    from src.models.story import QuestionResolution, QuestionStatus
+    target_question.status = QuestionStatus.RESOLVED
+    target_question.resolution = QuestionResolution(
+        resolved_by=resolved_by,
+        note=note,
+    )
+
+    from datetime import datetime
+    story.updated_at = datetime.now().isoformat()
+    memory.save_story(story)
+
+    return JSONResponse({
+        "status": "success",
+        "story_id": story_id,
+        "question_id": question_id,
+        "resolved_by": resolved_by,
+        "resolved_at": target_question.resolution.resolved_at,
+        "note": note,
     })
 
 
@@ -391,6 +464,7 @@ app = Starlette(routes=[
     Route("/api/graph", route_graph),
     Route("/api/story/{story_id}", route_story),
     Route("/api/story/{story_id}/feedback", route_story_feedback, methods=["POST"]),
+    Route("/api/story/{story_id}/question/{question_id}/resolve", route_resolve_question, methods=["POST"]),
     Route("/api/neighbors/{story_id}", route_neighbors),
     Route("/api/workspaces", route_workspaces),
     Route("/api/workspaces/switch", route_switch_workspace, methods=["POST"]),
