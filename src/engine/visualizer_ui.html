@@ -649,12 +649,12 @@ body::before {
 /* ─── Legend (Collapsible) ─── */
 #legend {
   position: fixed; bottom: 16px; left: 16px; z-index: 90;
-  padding: 10px 14px; font-size: 10px; min-width: 180px;
+  padding: 10px 14px; font-size: 10px;
   background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
   border: 1px solid rgba(255,255,255,0.06);
   backdrop-filter: blur(30px) saturate(1.4); -webkit-backdrop-filter: blur(30px) saturate(1.4);
   border-radius: var(--radius-lg); box-shadow: 0 4px 16px -4px rgba(0,0,0,0.3);
-  opacity: 0.75; transition: opacity 0.25s ease, transform 0.2s ease; cursor: pointer;
+  opacity: 0.85; transition: opacity 0.25s ease, transform 0.2s ease; cursor: pointer;
 }
 #legend:hover { opacity: 1; transform: translateY(-2px); }
 .legend-header {
@@ -729,6 +729,70 @@ body::before {
 .legend-toggle-btn:focus-visible {
   outline: 2px solid var(--accent-blue);
   outline-offset: 2px;
+}
+
+/* ─── Conventions Table ─── */
+.conventions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.conventions-table th {
+  text-align: left;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-tertiary);
+  padding: 4px 6px 6px;
+  border-bottom: 1px solid var(--surface-border);
+}
+.conventions-table td {
+  padding: 4px 6px;
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+.conventions-table td:first-child {
+  width: 24px;
+  text-align: center;
+}
+.conventions-table td:nth-child(2) {
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 9.5px;
+}
+.conventions-table td:nth-child(3) {
+  font-size: 9.5px;
+  color: var(--text-secondary);
+}
+.conventions-table td strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.conventions-section-header td {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent-blue);
+  padding: 8px 6px 3px;
+  border-bottom: none;
+}
+.conventions-table tbody tr:hover:not(.conventions-section-header) {
+  background: rgba(255,255,255,0.03);
+}
+html.light .conventions-table tbody tr:hover:not(.conventions-section-header) {
+  background: rgba(0,0,0,0.02);
+}
+#legend {
+  max-width: 380px;
+  min-width: 320px;
+}
+.legend-content {
+  max-height: 400px;
+  overflow-y: auto;
 }
 </style>
 </head>
@@ -831,19 +895,38 @@ body::before {
   </div>
 </div>
 
-<div id="legend" class="glass-panel" role="region" aria-label="Leyenda del grafo">
+<div id="legend" class="glass-panel" role="region" aria-label="Convenciones del grafo">
   <div class="legend-header expanded" onclick="toggleLegend()">
-    <span class="legend-title">Leyenda</span>
-    <button class="legend-toggle-btn" id="legend-toggle-btn" aria-label="Colapsar leyenda" aria-expanded="true">&#9660;</button>
+    <span class="legend-title">Convenciones</span>
+    <button class="legend-toggle-btn" id="legend-toggle-btn" aria-label="Colapsar convenciones" aria-expanded="true">&#9660;</button>
   </div>
   <div class="legend-content" id="legend-content">
-    <div class="row"><span class="dot" style="color:#ff9f0a;background:#ff9f0a"></span> HU analizada</div>
-    <div class="row"><span class="dot" style="color:#0a84ff;background:#0a84ff"></span> HU refinada</div>
-    <div class="row"><span class="dot" style="color:#30d158;background:#30d158"></span> HU completada</div>
-    <div class="row"><span class="dot-diamond" style="background:#64d2ff"></span> Entidad</div>
-    <div class="row"><span class="dot" style="background:#bf5af2;color:#bf5af2"></span> Flujo</div>
-    <div class="row"><span class="line" style="background:#ff453a"></span> depends_on</div>
-    <div class="row"><span class="line" style="background:#30d158"></span> impacts</div>
+    <table class="conventions-table">
+      <thead>
+        <tr><th>Elemento</th><th>Representacion</th><th>Significado</th></tr>
+      </thead>
+      <tbody>
+        <tr class="conventions-section-header"><td colspan="3">Nodos (HU)</td></tr>
+        <tr><td><span class="dot" style="color:#ff9f0a;background:#ff9f0a"></span></td><td>Circulo naranja</td><td>HU analizada — pendiente de refinamiento</td></tr>
+        <tr><td><span class="dot" style="color:#0a84ff;background:#0a84ff"></span></td><td>Circulo azul</td><td>HU refinada — lista para desarrollo</td></tr>
+        <tr><td><span class="dot" style="color:#30d158;background:#30d158"></span></td><td>Circulo verde</td><td>HU completada — implementada y validada</td></tr>
+        <tr class="conventions-section-header"><td colspan="3">Nodos secundarios</td></tr>
+        <tr><td><span class="dot-diamond" style="background:#64d2ff"></span></td><td>Diamante teal</td><td>Entidad de dominio detectada en las HU</td></tr>
+        <tr><td><span class="dot" style="background:#bf5af2;color:#bf5af2;border-radius:3px"></span></td><td>Rectangulo purpura</td><td>Flujo funcional entre historias</td></tr>
+        <tr><td><span class="dot" style="background:#ff9f0a;color:#ff9f0a;border-radius:2px;transform:rotate(0deg)"></span></td><td>Pentagono naranja</td><td>Item SDD — elemento del spec vinculado</td></tr>
+        <tr class="conventions-section-header"><td colspan="3">Relaciones (Edges)</td></tr>
+        <tr><td><span class="line" style="background:#ff453a"></span></td><td>Linea roja solida</td><td><strong>depends_on</strong> — HU depende de otra para iniciar</td></tr>
+        <tr><td><span class="line" style="background:#30d158"></span></td><td>Linea verde solida</td><td><strong>impacts</strong> — cambio en una HU afecta a otra</td></tr>
+        <tr><td><span class="line" style="background:rgba(100,210,255,0.5);border-style:dotted"></span></td><td>Linea teal punteada</td><td>HU contiene esa entidad (auxiliar)</td></tr>
+        <tr><td><span class="line" style="background:rgba(191,90,242,0.5);border-style:dotted"></span></td><td>Linea purpura punteada</td><td>HU participa en ese flujo (auxiliar)</td></tr>
+        <tr><td><span class="line" style="background:rgba(255,159,10,0.6);border-style:dashed"></span></td><td>Linea naranja discontinua</td><td><strong>implements</strong> — HU implementa item SDD</td></tr>
+        <tr><td><span class="line" style="background:rgba(255,255,255,0.2);border-style:dashed"></span></td><td>Linea gris tenue</td><td><strong>related_to</strong> — relacion debil inferida</td></tr>
+        <tr class="conventions-section-header"><td colspan="3">Interacciones</td></tr>
+        <tr><td>&#128065;</td><td>Click en HU</td><td>Muestra detalle + resalta vecinos</td></tr>
+        <tr><td>&#9881;</td><td>Capas (toolbar)</td><td>Mostrar/ocultar entidades, flujos, relaciones</td></tr>
+        <tr><td>&#128269;</td><td>Filtro entidad</td><td>Aisla una entidad y sus HU conectadas</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 <script>
@@ -851,7 +934,50 @@ body::before {
 (function(){try{if(localStorage.getItem('sdd-theme')==='light'){document.documentElement.classList.add('light')}}catch(e){}})();
 function toggleTheme(){var isL=document.documentElement.classList.toggle('light');try{localStorage.setItem('sdd-theme',isL?'light':'dark')}catch(e){}if(cy)updateCyTheme(isL)}
 function isLightMode(){return document.documentElement.classList.contains('light')}
-function updateCyTheme(isL){if(!cy)return;var textColor=isL?'rgba(0,0,0,0.8)':'rgba(255,255,255,0.85)';var outlineColor=isL?'rgba(255,255,255,0.9)':'rgba(0,0,0,0.8)';var entityText=isL?'rgba(0,100,180,0.9)':'rgba(100,210,255,0.8)';var entityOutline=isL?'rgba(255,255,255,0.7)':'rgba(0,0,0,0.6)';var flowText=isL?'rgba(140,60,200,0.9)':'rgba(191,90,242,0.8)';var flowOutline=isL?'rgba(255,255,255,0.7)':'rgba(0,0,0,0.6)';var relatedLine=isL?'rgba(0,0,0,0.1)':'rgba(255,255,255,0.08)';var highlightBorder=isL?'#000':'#fff';cy.style().selector('node[type="story"]').style({'color':textColor,'text-outline-color':outlineColor}).selector('node[type="entity"]').style({'color':entityText,'text-outline-color':entityOutline}).selector('node[type="flow"]').style({'color':flowText,'text-outline-color':flowOutline}).selector('edge[relation="related_to"]').style({'line-color':relatedLine}).selector('.highlighted').style({'border-color':highlightBorder}).update()}
+function updateCyTheme(isL){if(!cy)return;
+  var textColor=isL?'rgba(0,0,0,0.88)':'rgba(255,255,255,0.92)';
+  var outlineColor=isL?'rgba(255,255,255,0.95)':'rgba(0,0,0,0.9)';
+  var entityText=isL?'rgba(0,90,160,0.95)':'rgba(100,210,255,0.9)';
+  var entityOutline=isL?'rgba(255,255,255,0.85)':'rgba(0,0,0,0.7)';
+  var entityBg=isL?'rgba(0,122,255,0.18)':'rgba(100,210,255,0.25)';
+  var entityBorder=isL?'rgba(0,122,255,0.5)':'rgba(100,210,255,0.5)';
+  var flowText=isL?'rgba(120,40,180,0.95)':'rgba(191,90,242,0.9)';
+  var flowOutline=isL?'rgba(255,255,255,0.85)':'rgba(0,0,0,0.7)';
+  var flowBg=isL?'rgba(175,82,222,0.18)':'rgba(191,90,242,0.25)';
+  var flowBorder=isL?'rgba(175,82,222,0.5)':'rgba(191,90,242,0.5)';
+  var sddText=isL?'rgba(180,100,0,0.95)':'rgba(255,159,10,0.9)';
+  var sddOutline=isL?'rgba(255,255,255,0.85)':'rgba(0,0,0,0.7)';
+  var sddBg=isL?'rgba(255,149,0,0.15)':'rgba(255,159,10,0.2)';
+  var sddBorder=isL?'rgba(255,149,0,0.45)':'rgba(255,159,10,0.4)';
+  var dependsColor=isL?'rgba(220,50,40,0.8)':'rgba(255,69,58,0.7)';
+  var dependsArrow=isL?'rgba(220,50,40,0.95)':'rgba(255,69,58,0.9)';
+  var dependsLabel=isL?'rgba(200,40,30,0.85)':'rgba(255,69,58,0.7)';
+  var dependsBg=isL?'rgba(255,255,255,0.7)':'rgba(0,0,0,0.5)';
+  var impactsColor=isL?'rgba(30,150,60,0.8)':'rgba(48,209,88,0.7)';
+  var impactsArrow=isL?'rgba(30,150,60,0.95)':'rgba(48,209,88,0.9)';
+  var impactsLabel=isL?'rgba(25,130,50,0.85)':'rgba(48,209,88,0.7)';
+  var impactsBg=isL?'rgba(255,255,255,0.7)':'rgba(0,0,0,0.5)';
+  var entityLine=isL?'rgba(0,122,255,0.12)':'rgba(100,210,255,0.12)';
+  var flowLine=isL?'rgba(175,82,222,0.12)':'rgba(191,90,242,0.12)';
+  var relatedLine=isL?'rgba(0,0,0,0.08)':'rgba(255,255,255,0.06)';
+  var implementsLine=isL?'rgba(200,120,0,0.5)':'rgba(255,159,10,0.5)';
+  var implementsArrow=isL?'rgba(200,120,0,0.7)':'rgba(255,159,10,0.7)';
+  var highlightBorder=isL?'#1a1a1a':'#fff';
+  var edgeLabelOutline=isL?'rgba(255,255,255,0.85)':'rgba(0,0,0,0.7)';
+  cy.style()
+    .selector('node[type="story"]').style({'color':textColor,'text-outline-color':outlineColor})
+    .selector('node[type="entity"]').style({'color':entityText,'text-outline-color':entityOutline,'background-color':entityBg,'border-color':entityBorder})
+    .selector('node[type="flow"]').style({'color':flowText,'text-outline-color':flowOutline,'background-color':flowBg,'border-color':flowBorder})
+    .selector('node[type="sdd_item"]').style({'color':sddText,'text-outline-color':sddOutline,'background-color':sddBg,'border-color':sddBorder})
+    .selector('edge[relation="depends_on"]').style({'line-color':dependsColor,'target-arrow-color':dependsArrow,'color':dependsLabel,'text-outline-color':edgeLabelOutline,'text-background-color':dependsBg})
+    .selector('edge[relation="impacts"]').style({'line-color':impactsColor,'target-arrow-color':impactsArrow,'color':impactsLabel,'text-outline-color':edgeLabelOutline,'text-background-color':impactsBg})
+    .selector('edge[relation="has_entity"]').style({'line-color':entityLine})
+    .selector('edge[relation="in_flow"]').style({'line-color':flowLine})
+    .selector('edge[relation="related_to"]').style({'line-color':relatedLine})
+    .selector('edge[relation="implements"]').style({'line-color':implementsLine,'target-arrow-color':implementsArrow})
+    .selector('.highlighted').style({'border-color':highlightBorder})
+    .update();
+}
 
 /* ===== Global State ===== */
 let cy, allData = {nodes:[],edges:[]}, showEntities = true, showFlows = false, showRelations = true, currentLayout = 'dagre';
@@ -923,14 +1049,15 @@ function getAllElements() {
 
 function layoutCfg(name) {
   if (name === 'dagre') return {
-    name: 'dagre', rankDir: 'TB', nodeSep: 100, edgeSep: 50, rankSep: 150,
-    animate: false, fit: true, padding: 80
+    name: 'dagre', rankDir: 'TB', nodeSep: 180, edgeSep: 80, rankSep: 220,
+    animate: false, fit: true, padding: 100,
+    ranker: 'tight-tree'
   };
   return {
     name: 'concentric',
     concentric: function(n) { return n.data('type') === 'story' ? 3 : n.data('type') === 'flow' ? 2 : 1; },
-    levelWidth: function() { return 1; }, minNodeSpacing: 100,
-    animate: false, fit: true, padding: 80
+    levelWidth: function() { return 2; }, minNodeSpacing: 160,
+    animate: false, fit: true, padding: 100
   };
 }
 /* ===== Render Graph ===== */
@@ -946,88 +1073,116 @@ function renderGraph() {
     style: [
       { selector: 'node[type="story"]', style: {
         'label': 'data(label)',
-        'text-valign': 'bottom', 'text-halign': 'center', 'text-margin-y': 12,
-        'font-size': '12px', 'font-weight': '500',
-        'color': 'rgba(255,255,255,0.85)',
-        'text-outline-color': 'rgba(0,0,0,0.8)', 'text-outline-width': 2,
+        'text-valign': 'bottom', 'text-halign': 'center', 'text-margin-y': 14,
+        'font-size': '13px', 'font-weight': '600',
+        'text-max-width': '120px', 'text-wrap': 'ellipsis',
+        'color': 'rgba(255,255,255,0.92)',
+        'text-outline-color': 'rgba(0,0,0,0.9)', 'text-outline-width': 2.5,
         'background-color': function(e) {
           var s = e.data('status');
           return s === 'completed' ? '#30d158' : s === 'refined' ? '#0a84ff' : '#ff9f0a';
         },
-        'background-opacity': 0.85,
-        'width': 50, 'height': 50,
-        'border-width': 2, 'border-opacity': 0.5,
+        'background-opacity': 0.9,
+        'width': 54, 'height': 54,
+        'border-width': 2.5, 'border-opacity': 0.7,
         'border-color': function(e) {
           var s = e.data('status');
           return s === 'completed' ? '#30d158' : s === 'refined' ? '#0a84ff' : '#ff9f0a';
         },
-        'shadow-blur': 24, 'shadow-opacity': 0.6,
+        'shadow-blur': 20, 'shadow-opacity': 0.5,
         'shadow-color': function(e) {
           var s = e.data('status');
           return s === 'completed' ? '#30d158' : s === 'refined' ? '#0a84ff' : '#ff9f0a';
         },
-        'overlay-opacity': 0, 'overlay-padding': 6,
+        'overlay-opacity': 0, 'overlay-padding': 8,
       }},
       { selector: 'node[type="entity"]', style: {
         'label': 'data(label)',
-        'font-size': '9px', 'color': 'rgba(100,210,255,0.8)',
-        'text-outline-color': 'rgba(0,0,0,0.6)', 'text-outline-width': 1,
-        'text-valign': 'bottom', 'text-margin-y': 5,
-        'background-color': 'rgba(100,210,255,0.2)',
-        'border-width': 1, 'border-color': 'rgba(100,210,255,0.4)',
-        'width': 12, 'height': 12, 'shape': 'diamond',
-        'shadow-blur': 8, 'shadow-opacity': 0.4, 'shadow-color': '#64d2ff',
+        'font-size': '11px', 'color': 'rgba(100,210,255,0.9)',
+        'text-outline-color': 'rgba(0,0,0,0.7)', 'text-outline-width': 1.5,
+        'text-valign': 'bottom', 'text-margin-y': 7,
+        'text-max-width': '90px', 'text-wrap': 'ellipsis',
+        'background-color': 'rgba(100,210,255,0.25)',
+        'border-width': 1.5, 'border-color': 'rgba(100,210,255,0.5)',
+        'width': 16, 'height': 16, 'shape': 'diamond',
+        'shadow-blur': 10, 'shadow-opacity': 0.35, 'shadow-color': '#64d2ff',
         'overlay-opacity': 0, 'overlay-padding': 4,
       }},
       { selector: 'node[type="flow"]', style: {
         'label': 'data(label)',
-        'font-size': '9px', 'color': 'rgba(191,90,242,0.8)',
-        'text-outline-color': 'rgba(0,0,0,0.6)', 'text-outline-width': 1,
-        'text-valign': 'bottom', 'text-margin-y': 5,
-        'background-color': 'rgba(191,90,242,0.2)',
-        'border-width': 1, 'border-color': 'rgba(191,90,242,0.4)',
-        'width': 14, 'height': 14, 'shape': 'round-rectangle',
-        'shadow-blur': 8, 'shadow-opacity': 0.3, 'shadow-color': '#bf5af2',
+        'font-size': '11px', 'color': 'rgba(191,90,242,0.9)',
+        'text-outline-color': 'rgba(0,0,0,0.7)', 'text-outline-width': 1.5,
+        'text-valign': 'bottom', 'text-margin-y': 7,
+        'text-max-width': '100px', 'text-wrap': 'ellipsis',
+        'background-color': 'rgba(191,90,242,0.25)',
+        'border-width': 1.5, 'border-color': 'rgba(191,90,242,0.5)',
+        'width': 18, 'height': 18, 'shape': 'round-rectangle',
+        'shadow-blur': 10, 'shadow-opacity': 0.3, 'shadow-color': '#bf5af2',
+        'overlay-opacity': 0, 'overlay-padding': 4,
+      }},
+      { selector: 'node[type="sdd_item"]', style: {
+        'label': 'data(label)',
+        'font-size': '10px', 'color': 'rgba(255,159,10,0.9)',
+        'text-outline-color': 'rgba(0,0,0,0.7)', 'text-outline-width': 1.5,
+        'text-valign': 'bottom', 'text-margin-y': 6,
+        'text-max-width': '90px', 'text-wrap': 'ellipsis',
+        'background-color': 'rgba(255,159,10,0.2)',
+        'border-width': 1, 'border-color': 'rgba(255,159,10,0.4)',
+        'width': 14, 'height': 14, 'shape': 'round-pentagon',
+        'shadow-blur': 8, 'shadow-opacity': 0.25, 'shadow-color': '#ff9f0a',
         'overlay-opacity': 0, 'overlay-padding': 4,
       }},
       { selector: 'edge[relation="depends_on"]', style: {
-        'line-color': 'rgba(255,69,58,0.6)',
-        'target-arrow-color': '#ff453a', 'target-arrow-shape': 'triangle', 'arrow-scale': 1,
-        'curve-style': 'unbundled-bezier',
-        'control-point-distances': [40], 'control-point-weights': [0.5],
-        'width': 2, 'opacity': 0.75,
-        'line-gradient-stop-colors': ['rgba(255,69,58,0.8)', 'rgba(255,69,58,0.3)'],
+        'line-color': 'rgba(255,69,58,0.7)',
+        'target-arrow-color': 'rgba(255,69,58,0.9)', 'target-arrow-shape': 'triangle', 'arrow-scale': 1.2,
+        'curve-style': 'bezier',
+        'width': 2.5, 'opacity': 0.85,
+        'label': 'depends',
+        'font-size': '9px', 'color': 'rgba(255,69,58,0.7)',
+        'text-rotation': 'autorotate', 'text-margin-y': -10,
+        'text-outline-color': 'rgba(0,0,0,0.7)', 'text-outline-width': 1.5,
+        'text-background-color': 'rgba(0,0,0,0.5)', 'text-background-opacity': 0.7,
+        'text-background-padding': '3px', 'text-background-shape': 'round-rectangle',
       }},
       { selector: 'edge[relation="impacts"]', style: {
-        'line-color': 'rgba(48,209,88,0.6)',
-        'target-arrow-color': '#30d158', 'target-arrow-shape': 'triangle', 'arrow-scale': 1,
-        'curve-style': 'unbundled-bezier',
-        'control-point-distances': [-40], 'control-point-weights': [0.5],
-        'width': 2, 'opacity': 0.75,
+        'line-color': 'rgba(48,209,88,0.7)',
+        'target-arrow-color': 'rgba(48,209,88,0.9)', 'target-arrow-shape': 'triangle', 'arrow-scale': 1.2,
+        'curve-style': 'bezier',
+        'width': 2.5, 'opacity': 0.85,
+        'label': 'impacts',
+        'font-size': '9px', 'color': 'rgba(48,209,88,0.7)',
+        'text-rotation': 'autorotate', 'text-margin-y': -10,
+        'text-outline-color': 'rgba(0,0,0,0.7)', 'text-outline-width': 1.5,
+        'text-background-color': 'rgba(0,0,0,0.5)', 'text-background-opacity': 0.7,
+        'text-background-padding': '3px', 'text-background-shape': 'round-rectangle',
       }},
       { selector: 'edge[relation="has_entity"]', style: {
-        'line-color': 'rgba(100,210,255,0.15)',
-        'curve-style': 'bezier', 'width': 0.7, 'opacity': 0.5, 'line-style': 'dotted',
+        'line-color': 'rgba(100,210,255,0.12)',
+        'curve-style': 'haystack', 'haystack-radius': 0.5,
+        'width': 0.8, 'opacity': 0.35, 'line-style': 'dotted',
       }},
       { selector: 'edge[relation="in_flow"]', style: {
-        'line-color': 'rgba(191,90,242,0.15)',
-        'curve-style': 'bezier', 'width': 0.7, 'opacity': 0.5, 'line-style': 'dotted',
+        'line-color': 'rgba(191,90,242,0.12)',
+        'curve-style': 'haystack', 'haystack-radius': 0.5,
+        'width': 0.8, 'opacity': 0.35, 'line-style': 'dotted',
       }},
       { selector: 'edge[relation="related_to"]', style: {
-        'line-color': 'rgba(255,255,255,0.08)',
-        'curve-style': 'bezier', 'width': 1, 'line-style': 'dashed', 'opacity': 0.3,
+        'line-color': 'rgba(255,255,255,0.06)',
+        'curve-style': 'haystack', 'haystack-radius': 0.3,
+        'width': 0.6, 'line-style': 'dashed', 'opacity': 0.2,
+      }},
+      { selector: 'edge[relation="implements"]', style: {
+        'line-color': 'rgba(255,159,10,0.5)',
+        'target-arrow-color': 'rgba(255,159,10,0.7)', 'target-arrow-shape': 'vee', 'arrow-scale': 0.8,
+        'curve-style': 'bezier',
+        'width': 1.5, 'opacity': 0.6, 'line-style': 'dashed',
       }},
       { selector: '.highlighted', style: {
-        'border-width': 3, 'border-color': '#fff', 'border-opacity': 1,
-        'shadow-blur': 40, 'shadow-opacity': 0.9, 'opacity': 1, 'z-index': 999,
+        'border-width': 3.5, 'border-color': '#fff', 'border-opacity': 1,
+        'shadow-blur': 44, 'shadow-opacity': 0.95, 'opacity': 1, 'z-index': 999,
       }},
-      { selector: 'node.faded', style: { 'opacity': 0.06 }},
-      { selector: 'edge.faded', style: { 'opacity': 0.06 }},
-      { selector: 'edge[relation="depends_on"].faded', style: { 'opacity': 0.06 }},
-      { selector: 'edge[relation="impacts"].faded', style: { 'opacity': 0.06 }},
-      { selector: 'edge[relation="has_entity"].faded', style: { 'opacity': 0.06 }},
-      { selector: 'edge[relation="in_flow"].faded', style: { 'opacity': 0.06 }},
-      { selector: 'edge[relation="related_to"].faded', style: { 'opacity': 0.06 }},
+      { selector: 'node.faded', style: { 'opacity': 0.05 }},
+      { selector: 'edge.faded', style: { 'opacity': 0.04 }},
     ],
     layout: layoutCfg(currentLayout),
     minZoom: 0.3, maxZoom: 3, wheelSensitivity: 0.2,
