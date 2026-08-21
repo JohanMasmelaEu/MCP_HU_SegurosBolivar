@@ -846,8 +846,8 @@ html.light .conventions-table tbody tr:hover:not(.conventions-section-header) {
     <div class="toolbar-group">
       <span class="toolbar-label">Vista</span>
       <div class="toggle-group" role="radiogroup" aria-label="Tipo de layout">
-        <button onclick="setLayout('dagre')" id="btn-dagre" class="active" role="radio" aria-checked="true">Jerarquico</button>
-        <button onclick="setLayout('concentric')" id="btn-concentric" role="radio" aria-checked="false">Concentrico</button>
+        <button onclick="setLayout('dagre')" id="btn-dagre" role="radio" aria-checked="false">Jerarquico</button>
+        <button onclick="setLayout('concentric')" id="btn-concentric" class="active" role="radio" aria-checked="true">Concentrico</button>
       </div>
     </div>
     <div class="toolbar-group" style="margin-left:auto">
@@ -957,9 +957,9 @@ function updateCyTheme(isL){if(!cy)return;
   var impactsArrow=isL?'rgba(30,150,60,0.95)':'rgba(48,209,88,0.9)';
   var impactsLabel=isL?'rgba(25,130,50,0.85)':'rgba(48,209,88,0.7)';
   var impactsBg=isL?'rgba(255,255,255,0.7)':'rgba(0,0,0,0.5)';
-  var entityLine=isL?'rgba(0,122,255,0.12)':'rgba(100,210,255,0.12)';
-  var flowLine=isL?'rgba(175,82,222,0.12)':'rgba(191,90,242,0.12)';
-  var relatedLine=isL?'rgba(0,0,0,0.08)':'rgba(255,255,255,0.06)';
+  var entityLine=isL?'rgba(0,122,255,0.35)':'rgba(100,210,255,0.4)';
+  var flowLine=isL?'rgba(175,82,222,0.35)':'rgba(191,90,242,0.4)';
+  var relatedLine=isL?'rgba(0,0,0,0.12)':'rgba(255,255,255,0.15)';
   var implementsLine=isL?'rgba(200,120,0,0.5)':'rgba(255,159,10,0.5)';
   var implementsArrow=isL?'rgba(200,120,0,0.7)':'rgba(255,159,10,0.7)';
   var highlightBorder=isL?'#1a1a1a':'#fff';
@@ -980,7 +980,7 @@ function updateCyTheme(isL){if(!cy)return;
 }
 
 /* ===== Global State ===== */
-let cy, allData = {nodes:[],edges:[]}, showEntities = true, showFlows = false, showRelations = true, currentLayout = 'dagre';
+let cy, allData = {nodes:[],edges:[]}, showEntities = true, showFlows = false, showRelations = true, currentLayout = 'concentric';
 let _pulseActive = true;
 let _pulseRafId = null;
 const tooltip = document.getElementById('tooltip');
@@ -1049,15 +1049,23 @@ function getAllElements() {
 
 function layoutCfg(name) {
   if (name === 'dagre') return {
-    name: 'dagre', rankDir: 'TB', nodeSep: 180, edgeSep: 80, rankSep: 220,
-    animate: false, fit: true, padding: 100,
-    ranker: 'tight-tree'
+    name: 'dagre', rankDir: 'TB', nodeSep: 120, edgeSep: 50, rankSep: 160,
+    animate: false, fit: true, padding: 60
   };
   return {
     name: 'concentric',
-    concentric: function(n) { return n.data('type') === 'story' ? 3 : n.data('type') === 'flow' ? 2 : 1; },
-    levelWidth: function() { return 2; }, minNodeSpacing: 160,
-    animate: false, fit: true, padding: 100
+    concentric: function(n) {
+      var t = n.data('type');
+      if (t === 'story') return 3;
+      if (t === 'entity') return 1;
+      if (t === 'flow') return 1;
+      if (t === 'sdd_item') return 1;
+      return 2;
+    },
+    levelWidth: function() { return 1; },
+    minNodeSpacing: 80,
+    animate: false, fit: true, padding: 40,
+    equidistant: true
   };
 }
 /* ===== Render Graph ===== */
@@ -1073,28 +1081,28 @@ function renderGraph() {
     style: [
       { selector: 'node[type="story"]', style: {
         'label': 'data(label)',
-        'text-valign': 'bottom', 'text-halign': 'center', 'text-margin-y': 14,
-        'font-size': '13px', 'font-weight': '600',
-        'text-max-width': '120px', 'text-wrap': 'ellipsis',
-        'color': 'rgba(255,255,255,0.92)',
-        'text-outline-color': 'rgba(0,0,0,0.9)', 'text-outline-width': 2.5,
+        'text-valign': 'bottom', 'text-halign': 'center', 'text-margin-y': 10,
+        'font-size': '10px', 'font-weight': '600',
+        'text-max-width': '80px', 'text-wrap': 'ellipsis',
+        'color': 'rgba(255,255,255,0.85)',
+        'text-outline-color': 'rgba(0,0,0,0.85)', 'text-outline-width': 2,
         'background-color': function(e) {
           var s = e.data('status');
           return s === 'completed' ? '#30d158' : s === 'refined' ? '#0a84ff' : '#ff9f0a';
         },
-        'background-opacity': 0.9,
-        'width': 54, 'height': 54,
-        'border-width': 2.5, 'border-opacity': 0.7,
+        'background-opacity': 0.85,
+        'width': 28, 'height': 28,
+        'border-width': 1.5, 'border-opacity': 0.5,
         'border-color': function(e) {
           var s = e.data('status');
           return s === 'completed' ? '#30d158' : s === 'refined' ? '#0a84ff' : '#ff9f0a';
         },
-        'shadow-blur': 20, 'shadow-opacity': 0.5,
+        'shadow-blur': 16, 'shadow-opacity': 0.5,
         'shadow-color': function(e) {
           var s = e.data('status');
           return s === 'completed' ? '#30d158' : s === 'refined' ? '#0a84ff' : '#ff9f0a';
         },
-        'overlay-opacity': 0, 'overlay-padding': 8,
+        'overlay-opacity': 0, 'overlay-padding': 6,
       }},
       { selector: 'node[type="entity"]', style: {
         'label': 'data(label)',
@@ -1157,19 +1165,20 @@ function renderGraph() {
         'text-background-padding': '3px', 'text-background-shape': 'round-rectangle',
       }},
       { selector: 'edge[relation="has_entity"]', style: {
-        'line-color': 'rgba(100,210,255,0.12)',
-        'curve-style': 'haystack', 'haystack-radius': 0.5,
-        'width': 0.8, 'opacity': 0.35, 'line-style': 'dotted',
+        'line-color': 'rgba(100,210,255,0.4)',
+        'target-arrow-color': 'rgba(100,210,255,0.5)', 'target-arrow-shape': 'circle', 'arrow-scale': 0.6,
+        'curve-style': 'bezier',
+        'width': 1.2, 'opacity': 0.7, 'line-style': 'dotted',
       }},
       { selector: 'edge[relation="in_flow"]', style: {
-        'line-color': 'rgba(191,90,242,0.12)',
-        'curve-style': 'haystack', 'haystack-radius': 0.5,
-        'width': 0.8, 'opacity': 0.35, 'line-style': 'dotted',
+        'line-color': 'rgba(191,90,242,0.4)',
+        'target-arrow-color': 'rgba(191,90,242,0.5)', 'target-arrow-shape': 'circle', 'arrow-scale': 0.6,
+        'curve-style': 'bezier',
+        'width': 1.2, 'opacity': 0.7, 'line-style': 'dotted',
       }},
       { selector: 'edge[relation="related_to"]', style: {
-        'line-color': 'rgba(255,255,255,0.06)',
-        'curve-style': 'haystack', 'haystack-radius': 0.3,
-        'width': 0.6, 'line-style': 'dashed', 'opacity': 0.2,
+        'line-color': 'rgba(255,255,255,0.15)',
+        'curve-style': 'bezier', 'width': 1, 'line-style': 'dashed', 'opacity': 0.4,
       }},
       { selector: 'edge[relation="implements"]', style: {
         'line-color': 'rgba(255,159,10,0.5)',
