@@ -573,3 +573,81 @@ def handle_delete_story(story_id: str, confirm_story_id: str) -> dict:
         "title": title,
         "message": f"HU '{story_id}' ({title}) eliminada permanentemente. Grafo, entidades y flujos actualizados.",
     }
+
+
+def handle_rename_story(old_id: str, new_id: str) -> dict:
+    """Renombra el ID de una HU propagando el cambio a toda la memoria.
+
+    Actualiza: archivo, grafo, entidades, flujos, dependencias de otras HUs.
+    También actualiza asociaciones en specs vinculadas si existen.
+
+    Args:
+        old_id: ID actual de la HU (ej: HU-001).
+        new_id: Nuevo ID deseado (ej: GD904-479).
+
+    Returns:
+        Status de la operación.
+    """
+    memory = get_memory()
+
+    if not memory.is_initialized:
+        return {"status": "error", "message": "Proyecto no inicializado."}
+
+    if not old_id or not new_id:
+        return {"status": "error", "message": "Se requieren old_id y new_id."}
+
+    if old_id == new_id:
+        return {"status": "error", "message": "old_id y new_id son iguales."}
+
+    story = memory.get_story(old_id)
+    if not story:
+        return {"status": "error", "message": f"HU '{old_id}' no encontrada."}
+
+    try:
+        renamed = memory.rename_story(old_id, new_id)
+    except ValueError as e:
+        return {"status": "error", "message": str(e)}
+
+    if not renamed:
+        return {"status": "error", "message": f"No se pudo renombrar '{old_id}'."}
+
+    # Actualizar asociaciones en specs (si hay spec engine)
+    specs_updated = []
+    try:
+        from src.engine.spec_engine import get_spec_engine
+        spec_engine = get_spec_engine()
+        if spec_engine:
+            for spec_summary in spec_engine.list_specs():
+                spec = spec_engine.get_spec(spec_summary["spec_id"])
+                if not spec:
+                    continue
+                modified = False
+                for layer_content in spec.layers.values():
+                    if not layer_content.associations:
+                        continue
+                    for item_id, hu_ids in list(layer_content.associations.items()):
+                        if old_id in hu_ids:
+                            hu_ids.remove(old_id)
+                            if new_id not in hu_ids:
+                                hu_ids.append(new_id)
+                            modified = True
+                if modified:
+                    spec.updated_at = __import__("datetime").datetime.now().isoformat()
+                    spec_engine._save_spec(spec)
+                    specs_updated.append(spec.spec_id)
+    except Exception:
+        pass
+
+    result = {
+        "status": "success",
+        "action": "renamed",
+        "old_id": old_id,
+        "new_id": new_id,
+        "title": story.title,
+        "message": f"HU '{old_id}' renombrada a '{new_id}'. Grafo, entidades, flujos y dependencias actualizados.",
+    }
+    if specs_updated:
+        result["specs_updated"] = specs_updated
+        result["message"] += f" Asociaciones actualizadas en specs: {', '.join(specs_updated)}."
+
+    return result

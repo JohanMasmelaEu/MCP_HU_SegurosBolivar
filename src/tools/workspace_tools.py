@@ -108,6 +108,38 @@ def handle_reset_workspace(params: dict) -> dict:
         return {"status": "error", "message": str(e)}
 
 
+def handle_rename_workspace(workspace_id: str, new_name: str) -> dict:
+    """Renombra un workspace (cambia su nombre y directorio).
+
+    Args:
+        workspace_id: ID actual del workspace a renombrar.
+        new_name: Nuevo nombre del proyecto.
+
+    Returns:
+        Status con el nuevo workspace_id generado.
+    """
+    manager = get_workspace_manager()
+    if manager is None:
+        return {"status": "error", "message": "WorkspaceManager no inicializado."}
+
+    if not workspace_id:
+        return {"status": "error", "message": "Se requiere 'workspace_id'."}
+    if not new_name or not new_name.strip():
+        return {"status": "error", "message": "Se requiere 'new_name' (nombre nuevo del proyecto)."}
+
+    try:
+        new_id = manager.rename_workspace(workspace_id, new_name.strip())
+        return {
+            "status": "success",
+            "old_workspace_id": workspace_id,
+            "new_workspace_id": new_id,
+            "new_name": new_name.strip(),
+            "message": f"Workspace '{workspace_id}' renombrado a '{new_name.strip()}' (nuevo ID: '{new_id}').",
+        }
+    except ValueError as e:
+        return {"status": "error", "message": str(e)}
+
+
 # ─── ECOSYSTEM TOOLS ─────────────────────────────────────────────────────────────
 
 

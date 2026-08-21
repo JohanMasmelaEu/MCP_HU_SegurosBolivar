@@ -180,6 +180,78 @@ class MemoryEngine:
         logger.info("HU '%s' eliminada completamente (grafo, entidades, flujos actualizados)", story_id)
         return True
 
+    def rename_story(self, old_id: str, new_id: str) -> bool:
+        """Renombra el ID de una HU propagando el cambio a todas las referencias.
+
+        Actualiza: archivo JSON, campo id interno, nodo del grafo, aristas,
+        entidades (appears_in), flujos (stories_involved), y dependencias/impactos
+        de otras HUs que referencian este ID.
+
+        Args:
+            old_id: ID actual de la HU (ej: HU-001).
+            new_id: Nuevo ID deseado (ej: GD904-479).
+
+        Returns:
+            True si se renombró correctamente, False si la HU no existe.
+        """
+        old_path = self._memory_path / "stories" / f"{old_id}.json"
+        if not old_path.exists():
+            return False
+
+        new_path = self._memory_path / "stories" / f"{new_id}.json"
+        if new_path.exists():
+            raise ValueError(f"Ya existe una HU con ID '{new_id}'.")
+
+        # 1. Cargar, actualizar ID, guardar con nuevo nombre
+        data = json.loads(old_path.read_text(encoding="utf-8"))
+        data["id"] = new_id
+        data["updated_at"] = datetime.now().isoformat()
+        new_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        old_path.unlink()
+
+        # 2. Actualizar grafo: relabel node
+        if self._graph.has_node(old_id):
+            nx.relabel_nodes(self._graph, {old_id: new_id}, copy=False)
+
+        # 3. Actualizar entidades
+        if self._index:
+            for entity in self._index.entities:
+                if old_id in entity.appears_in:
+                    entity.appears_in.remove(old_id)
+                    if new_id not in entity.appears_in:
+                        entity.appears_in.append(new_id)
+                if entity.first_seen_in == old_id:
+                    entity.first_seen_in = new_id
+
+            # 4. Actualizar flujos
+            for flow in self._index.flows:
+                if old_id in flow.stories_involved:
+                    flow.stories_involved.remove(old_id)
+                    if new_id not in flow.stories_involved:
+                        flow.stories_involved.append(new_id)
+
+        # 5. Actualizar dependencias/impactos en otras HUs
+        stories_dir = self._memory_path / "stories"
+        if stories_dir.exists():
+            for story_file in stories_dir.glob("*.json"):
+                if story_file.name == f"{new_id}.json":
+                    continue
+                sdata = json.loads(story_file.read_text(encoding="utf-8"))
+                modified = False
+                if old_id in sdata.get("dependencies", []):
+                    sdata["dependencies"] = [new_id if d == old_id else d for d in sdata["dependencies"]]
+                    modified = True
+                if old_id in sdata.get("impacts", []):
+                    sdata["impacts"] = [new_id if i == old_id else i for i in sdata["impacts"]]
+                    modified = True
+                if modified:
+                    story_file.write_text(json.dumps(sdata, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        self._save_index()
+        self._save_graph()
+        logger.info("HU renombrada: '%s' → '%s'", old_id, new_id)
+        return True
+
     def get_story(self, story_id: str) -> Optional[StoryAnalysis]:
         """Carga una HU desde disco.
 

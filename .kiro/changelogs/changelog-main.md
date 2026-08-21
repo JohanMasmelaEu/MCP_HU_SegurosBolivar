@@ -48,3 +48,13 @@
 - Se agregó método `delete_story(story_id)` en `src/engine/memory.py` que elimina permanentemente una HU: borra archivo JSON, remueve nodo del grafo con todas sus aristas, limpia referencias en entidades y flujos, y actualiza el índice
 - Se agregó handler `handle_delete_story(story_id, confirm_story_id)` en `src/tools/analysis_tools.py` con validación de confirmación explícita (el confirm_story_id debe ser idéntico al story_id)
 - Se registró herramienta MCP `delete_story` en `src/server.py` con documentación que indica al agente que debe obtener confirmación escrita del usuario antes de invocarla
+
+### Agregado
+- Se agregó método `rename_workspace(workspace_id, new_name)` en `src/engine/workspace_manager.py` que renombra el directorio del workspace, actualiza el `project_name` en el índice, y re-apunta la referencia activa si es necesario
+- Se agregó handler `handle_rename_workspace` en `src/tools/workspace_tools.py`
+- Se registró herramienta MCP `rename_workspace` en `src/server.py` con parámetros `workspace_id` y `new_name`
+
+### Agregado
+- Se agregó método `rename_story(old_id, new_id)` en `src/engine/memory.py` que propaga el cambio de ID a: archivo JSON, nodo del grafo (NetworkX relabel), entidades (`appears_in`, `first_seen_in`), flujos (`stories_involved`), y dependencias/impactos de otras HUs que referencian el viejo ID
+- Se agregó handler `handle_rename_story` en `src/tools/analysis_tools.py` que además propaga el cambio a asociaciones HU↔item en specs del SDD (`LayerContent.associations`)
+- Se registró herramienta MCP `rename_story` en `src/server.py` con parámetros `old_id` y `new_id`

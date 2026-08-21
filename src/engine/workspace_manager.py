@@ -240,6 +240,59 @@ class WorkspaceManager:
         logger.info("Workspace '%s' eliminado", workspace_id)
         return True
 
+    def rename_workspace(self, workspace_id: str, new_name: str) -> str:
+        """Renombra un workspace (cambia su directorio y project_name en el índice).
+
+        Args:
+            workspace_id: ID actual del workspace a renombrar.
+            new_name: Nuevo nombre del proyecto (se genera un nuevo ID a partir de él).
+
+        Returns:
+            El nuevo workspace_id generado.
+
+        Raises:
+            ValueError: Si el workspace no existe o el nuevo ID ya está en uso.
+        """
+        workspace_path = self._workspaces_path / workspace_id
+
+        if not workspace_path.exists():
+            raise ValueError(f"Workspace '{workspace_id}' no encontrado.")
+
+        new_id = _slugify(new_name)
+        if not new_id:
+            raise ValueError(f"El nombre '{new_name}' no genera un ID válido.")
+
+        new_path = self._workspaces_path / new_id
+
+        if new_path.exists() and new_id != workspace_id:
+            raise ValueError(
+                f"Ya existe un workspace con ID '{new_id}'. Elige otro nombre."
+            )
+
+        # Renombrar directorio (si el ID cambia)
+        if new_id != workspace_id:
+            workspace_path.rename(new_path)
+
+        # Actualizar project_name en el index.json
+        index_path = new_path / ".hu-memory" / "index.json"
+        if index_path.exists():
+            data = json.loads(index_path.read_text(encoding="utf-8"))
+            if "config" in data:
+                data["config"]["project_name"] = new_name
+            index_path.write_text(
+                json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+
+        # Si era el workspace activo, actualizar la referencia
+        if self._state.active_workspace == workspace_id:
+            self._state.active_workspace = new_id
+            self._save_state()
+            # Re-cargar el engine desde la nueva ubicación
+            self._active_memory = MemoryEngine(base_path=new_path)
+
+        logger.info("Workspace '%s' renombrado a '%s' (ID: '%s')", workspace_id, new_name, new_id)
+        return new_id
+
     def get_active(self) -> Optional[MemoryEngine]:
         """Obtiene el MemoryEngine del workspace activo.
 

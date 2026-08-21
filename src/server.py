@@ -29,6 +29,7 @@ from src.tools.analysis_tools import (
     handle_get_expert_analysis,
     handle_explain_for_stakeholder,
     handle_delete_story,
+    handle_rename_story,
 )
 from src.tools.conflict_tools import (
     handle_detect_conflicts,
@@ -51,6 +52,7 @@ from src.tools.workspace_tools import (
     handle_list_workspaces,
     handle_switch_workspace,
     handle_reset_workspace,
+    handle_rename_workspace,
     handle_list_ecosystems,
     handle_switch_ecosystem,
     handle_reset_ecosystem,
@@ -245,6 +247,21 @@ async def reset_workspace(workspace_id: str, confirm: bool = False) -> str:
 
 
 @mcp.tool()
+async def rename_workspace(workspace_id: str, new_name: str) -> str:
+    """Renombra un workspace (cambia el nombre del proyecto y su ID).
+
+    El nuevo ID se genera automaticamente a partir del nuevo nombre (slugified).
+    Si el workspace renombrado es el activo, se mantiene activo con el nuevo ID.
+
+    Args:
+        workspace_id: ID actual del workspace a renombrar (ver list_workspaces).
+        new_name: Nuevo nombre del proyecto.
+    """
+    result = handle_rename_workspace(workspace_id, new_name)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
 async def list_ecosystems() -> str:
     """Lista todos los ecosistemas disponibles con su metadata.
 
@@ -370,6 +387,22 @@ async def delete_story(story_id: str, confirm_story_id: str) -> str:
         confirm_story_id: Confirmacion explicita — debe ser identico a story_id para que la eliminacion proceda.
     """
     result = handle_delete_story(story_id, confirm_story_id)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def rename_story(old_id: str, new_id: str) -> str:
+    """Renombra el ID de una HU propagando el cambio a toda la memoria del MCP.
+
+    Actualiza: archivo JSON, grafo (red neuronal), entidades, flujos,
+    dependencias/impactos en otras HUs, y asociaciones en specs del SDD.
+    Todos los nodos y aristas del grafo se actualizan automaticamente.
+
+    Args:
+        old_id: ID actual de la HU (ej: HU-001).
+        new_id: Nuevo ID deseado (ej: GD904-479). Puede ser cualquier formato.
+    """
+    result = handle_rename_story(old_id, new_id)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
