@@ -28,6 +28,7 @@ from src.tools.analysis_tools import (
     handle_get_story_context,
     handle_get_expert_analysis,
     handle_explain_for_stakeholder,
+    handle_delete_story,
 )
 from src.tools.conflict_tools import (
     handle_detect_conflicts,
@@ -352,6 +353,23 @@ async def add_story(story_json: dict) -> str:
     """
     story_dict = _ensure_dict(story_json)
     result = handle_add_story(story_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+async def delete_story(story_id: str, confirm_story_id: str) -> str:
+    """Elimina permanentemente una HU de la memoria del proyecto.
+
+    OPERACION DESTRUCTIVA: requiere confirmacion explicita.
+    El parametro confirm_story_id debe ser IDENTICO a story_id para proceder.
+    Si el usuario pide eliminar una HU, primero confirma con el usuario escribiendo
+    el ID exacto antes de invocar esta herramienta.
+
+    Args:
+        story_id: ID de la HU a eliminar (ej: HU-001).
+        confirm_story_id: Confirmacion explicita — debe ser identico a story_id para que la eliminacion proceda.
+    """
+    result = handle_delete_story(story_id, confirm_story_id)
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 

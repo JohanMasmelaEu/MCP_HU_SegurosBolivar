@@ -136,6 +136,50 @@ class MemoryEngine:
         self._save_graph()
         logger.info("HU '%s' persistida", story.id)
 
+    def delete_story(self, story_id: str) -> bool:
+        """Elimina permanentemente una HU de la memoria.
+
+        Borra el archivo JSON, remueve el nodo del grafo (con todas sus aristas),
+        limpia referencias en entidades y flujos, y actualiza el índice.
+
+        Args:
+            story_id: ID de la HU a eliminar (ej: HU-001).
+
+        Returns:
+            True si se eliminó correctamente, False si no existía.
+        """
+        story_path = self._memory_path / "stories" / f"{story_id}.json"
+        if not story_path.exists():
+            return False
+
+        # Eliminar archivo
+        story_path.unlink()
+        logger.info("HU '%s' archivo eliminado", story_id)
+
+        # Remover del grafo (nodo + todas las aristas incidentes)
+        if self._graph.has_node(story_id):
+            self._graph.remove_node(story_id)
+
+        # Limpiar referencias en entidades
+        if self._index:
+            for entity in self._index.entities:
+                if story_id in entity.appears_in:
+                    entity.appears_in.remove(story_id)
+
+            # Limpiar referencias en flujos
+            for flow in self._index.flows:
+                if story_id in flow.stories_involved:
+                    flow.stories_involved.remove(story_id)
+
+            # Actualizar conteo
+            stories_dir = self._memory_path / "stories"
+            self._index.story_count = len(list(stories_dir.glob("*.json"))) if stories_dir.exists() else 0
+
+        self._save_index()
+        self._save_graph()
+        logger.info("HU '%s' eliminada completamente (grafo, entidades, flujos actualizados)", story_id)
+        return True
+
     def get_story(self, story_id: str) -> Optional[StoryAnalysis]:
         """Carga una HU desde disco.
 

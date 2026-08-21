@@ -522,3 +522,54 @@ def _get_cross_app_context_for_story(story) -> dict:
         return context
     except Exception:
         return {"available": False}
+
+
+def handle_delete_story(story_id: str, confirm_story_id: str) -> dict:
+    """Elimina permanentemente una HU de la memoria del proyecto.
+
+    Requiere confirmación explícita: el parámetro confirm_story_id debe ser
+    idéntico al story_id para proceder. Esto previene eliminaciones accidentales.
+
+    Args:
+        story_id: ID de la HU a eliminar (ej: HU-001).
+        confirm_story_id: Debe ser idéntico a story_id para confirmar la eliminación.
+
+    Returns:
+        Status de la operación.
+    """
+    memory = get_memory()
+
+    if not memory.is_initialized:
+        return {"status": "error", "message": "Proyecto no inicializado."}
+
+    if not story_id:
+        return {"status": "error", "message": "Se requiere story_id."}
+
+    if confirm_story_id != story_id:
+        return {
+            "status": "error",
+            "message": (
+                f"Confirmación fallida. Para eliminar '{story_id}' debes pasar "
+                f"confirm_story_id='{story_id}' (exactamente igual). "
+                f"Recibido: '{confirm_story_id}'."
+            ),
+        }
+
+    # Verificar que exista antes de eliminar
+    story = memory.get_story(story_id)
+    if not story:
+        return {"status": "error", "message": f"HU '{story_id}' no encontrada en la memoria."}
+
+    title = story.title
+    deleted = memory.delete_story(story_id)
+
+    if not deleted:
+        return {"status": "error", "message": f"No se pudo eliminar '{story_id}'."}
+
+    return {
+        "status": "success",
+        "action": "deleted",
+        "story_id": story_id,
+        "title": title,
+        "message": f"HU '{story_id}' ({title}) eliminada permanentemente. Grafo, entidades y flujos actualizados.",
+    }

@@ -43,3 +43,8 @@
 - Se agregó formulario inline de "Pregunta" y "Gap" en cada Criterio de Aceptación de la página de detalle de HU (`story_detail_ui.html`): iconos de pregunta (?) y gap (⚠) junto a cada CA que al hacer clic expanden un mini-formulario contextual con la referencia al criterio pre-llenada
 - Se creó endpoint `POST /api/story/{story_id}/feedback` en `src/engine/visualizer.py` para persistir preguntas y gaps en una HU, actualizando contadores `total_gaps`/`total_questions` y guardando en la sección del experto 'negocio'
 - Se agregó botón "Ver detalle" en el panel lateral de la red neuronal (`visualizer_ui.html`) al seleccionar un nodo de HU, que abre la página de detalle completo en una nueva ventana (`/story?id=HU-XXX`)
+
+### Agregado
+- Se agregó método `delete_story(story_id)` en `src/engine/memory.py` que elimina permanentemente una HU: borra archivo JSON, remueve nodo del grafo con todas sus aristas, limpia referencias en entidades y flujos, y actualiza el índice
+- Se agregó handler `handle_delete_story(story_id, confirm_story_id)` en `src/tools/analysis_tools.py` con validación de confirmación explícita (el confirm_story_id debe ser idéntico al story_id)
+- Se registró herramienta MCP `delete_story` en `src/server.py` con documentación que indica al agente que debe obtener confirmación escrita del usuario antes de invocarla
