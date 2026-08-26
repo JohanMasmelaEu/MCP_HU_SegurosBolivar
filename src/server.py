@@ -70,6 +70,12 @@ from src.tools.sdd_tools import (
     handle_export_spec_markdown,
     handle_import_spec,
 )
+from src.tools.gantt_tools import (
+    handle_get_work_plan,
+    handle_update_work_plan,
+    handle_validate_work_plan,
+    handle_get_plan_health,
+)
 from src.tools.shared_memory_tools import (
     handle_sync_shared_memory,
     handle_generate_wiki_content,
@@ -741,6 +747,81 @@ async def import_spec(source_path: str, as_reference: bool = True) -> str:
     """
     result = handle_import_spec(source_path, as_reference)
     return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+# ─── WORK PLAN (GANTT) ──────────────────────────────────────────────────────────
+
+
+@mcp.tool()
+async def get_work_plan(config: dict | None = None) -> str:
+    """Genera el plan de trabajo (diagrama de Gantt) desde la memoria del workspace activo.
+
+    Lee todas las HUs con sus dependencias y estimaciones, ejecuta un scheduler
+    dependency-aware que respeta el grafo de dependencias y la concurrencia máxima,
+    y retorna el plan completo con métricas, fases y calendario laboral Colombia.
+
+    El plan se puede visualizar interactivamente en http://localhost:9751/gantt
+
+    Args:
+        config: Objeto opcional con:
+            - project_start: str (YYYY-MM-DD), fecha de inicio del proyecto.
+            - deadline: str (YYYY-MM-DD), fecha límite.
+            - max_concurrent: int, máximo de HUs simultáneas (default 2).
+    """
+    config_dict = _ensure_dict(config) if config else {}
+    result = handle_get_work_plan(config_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2, default=str)
+
+
+@mcp.tool()
+async def update_work_plan(changes: dict) -> str:
+    """Modifica y persiste la configuración del plan de trabajo (Gantt).
+
+    Permite ajustar fases, deadlines (global y por fase), días por tarea,
+    y milestones. Los cambios se guardan en .hu-memory/gantt-config.json
+    y son referenciados por TODAS las herramientas del MCP para dar
+    visibilidad transversal del estado de salud del proyecto.
+
+    Args:
+        changes: Objeto con los cambios a aplicar:
+            - project_start: str (YYYY-MM-DD), nueva fecha inicio.
+            - deadline: str (YYYY-MM-DD), nuevo deadline global.
+            - max_concurrent: int, nueva concurrencia máxima.
+            - developers: int, cantidad de desarrolladores.
+            - phases: list de objetos con:
+                - phase_id: str (ej: "p1", "entrega-1", "sprint-3")
+                - name: str (nombre descriptivo de la fase)
+                - task_ids: list[str] (IDs de HUs en esta fase)
+                - deadline: str (YYYY-MM-DD, deadline de esta fase)
+            - task_day_overrides: dict {hu_id: días} para ajustar estimaciones.
+              Usar 0 para quitar un override y volver a la estimación automática.
+            - milestones: list de {name, date, description} hitos del proyecto.
+    """
+    changes_dict = _ensure_dict(changes)
+    result = handle_update_work_plan(changes_dict)
+    return json.dumps(result, ensure_ascii=False, indent=2, default=str)
+
+
+@mcp.tool()
+async def validate_work_plan() -> str:
+    """Valida el plan de trabajo actual buscando gaps, riesgos y problemas.
+
+    Analiza el plan considerando:
+    - Deadlines excedidos (global y por fase)
+    - Estimaciones basadas en heurísticas (HUs sin estimate_story)
+    - Dependencias rotas
+    - Ruta crítica y tareas sin margen (cualquier retraso impacta el cierre)
+    - Desbalanceo de carga entre fases
+    - HUs en fases subóptimas (podrían completarse antes)
+
+    Útil para que el usuario pida una re-validación después de modificar
+    el plan manualmente, o para detectar problemas proactivamente.
+
+    Retorna un reporte con findings categorizados por severidad:
+    critical, warning, info.
+    """
+    result = handle_validate_work_plan({})
+    return json.dumps(result, ensure_ascii=False, indent=2, default=str)
 
 
 # ─── SHARED MEMORY ───────────────────────────────────────────────────────────────

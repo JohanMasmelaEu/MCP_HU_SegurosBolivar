@@ -22,6 +22,16 @@ from src.engine.memory import get_memory
 from src.engine.spec_engine import get_spec_engine
 from src.engine.workspace_manager import get_workspace_manager
 from src.engine.ecosystem_manager import get_ecosystem_manager
+from src.engine.gantt_engine import (
+    GanttConfig,
+    build_gantt,
+    config_from_persisted,
+    config_to_dict,
+    gantt_to_json,
+    load_persisted_config,
+    save_persisted_config,
+    validate_work_plan as engine_validate,
+)
 from src.engine.ecosystem_visualizer import (
     route_ecosystem_index,
     route_eco_ecosystems,
@@ -459,6 +469,99 @@ async def route_switch_ecosystem(request: Request):
         return JSONResponse({"error": str(e)}, status_code=404)
 
 
+# ─── GANTT PLAN DE TRABAJO ──────────────────────────────────────────────────────
+
+GANTT_HTML_PATH = Path(__file__).parent / "gantt_ui.html"
+
+
+async def route_gantt_index(request):
+    """Sirve la UI HTML del Gantt (plan de trabajo)."""
+    html = GANTT_HTML_PATH.read_text(encoding="utf-8")
+    return HTMLResponse(content=html, status_code=200)
+
+
+async def route_gantt_api(request: Request):
+    """API: datos del Gantt planificado desde la memoria del workspace activo.
+
+    Query params opcionales:
+    - start: fecha inicio (YYYY-MM-DD)
+    - deadline: fecha deadline (YYYY-MM-DD)
+    - max_concurrent: int (default 2)
+    """
+    from datetime import date as dt_date
+
+    params = request.query_params
+
+    # Si hay query params, construir config con ellos sobre la persistida
+    config = None
+    if any(params.get(k) for k in ("start", "deadline", "max_concurrent")):
+        raw = load_persisted_config() or {}
+        config = config_from_persisted(raw)
+
+        if params.get("start"):
+            try:
+                parts = params["start"].split("-")
+                config.project_start = dt_date(int(parts[0]), int(parts[1]), int(parts[2]))
+            except (ValueError, IndexError):
+                pass
+
+        if params.get("deadline"):
+            try:
+                parts = params["deadline"].split("-")
+                config.deadline = dt_date(int(parts[0]), int(parts[1]), int(parts[2]))
+            except (ValueError, IndexError):
+                pass
+
+        if params.get("max_concurrent"):
+            try:
+                config.max_concurrent = max(1, min(10, int(params["max_concurrent"])))
+            except ValueError:
+                pass
+
+    # build_gantt carga la config persistida automáticamente si config=None
+    result = build_gantt(config)
+    if result is None:
+        return JSONResponse({
+            "status": "error",
+            "message": "No hay workspace activo o no tiene HUs analizadas.",
+        })
+
+    return JSONResponse(gantt_to_json(result))
+
+
+async def route_gantt_save_config(request: Request):
+    """API: guarda la configuración del Gantt.
+
+    POST /api/gantt/config con body JSON de la configuración completa.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Body JSON inválido."}, status_code=400)
+
+    ok = save_persisted_config(body)
+    if not ok:
+        return JSONResponse({"error": "No se pudo guardar la configuración."}, status_code=500)
+
+    # Recalcular con la nueva config
+    config = config_from_persisted(body)
+    result = build_gantt(config)
+    if result is None:
+        return JSONResponse({"status": "saved", "message": "Config guardada. No hay HUs para recalcular."})
+
+    data = gantt_to_json(result)
+    data["config_saved"] = True
+    return JSONResponse(data)
+
+
+async def route_gantt_validate(request: Request):
+    """API: valida el plan de trabajo actual.
+
+    GET /api/gantt/validate
+    """
+    return JSONResponse(engine_validate())
+
+
 app = Starlette(routes=[
     Route("/", route_index),
     Route("/api/graph", route_graph),
@@ -492,6 +595,11 @@ app = Starlette(routes=[
     Route("/api/spec/{spec_id}/impact", route_api_spec_impact, methods=["POST"]),
     Route("/api/spec/{spec_id}/stories", route_api_spec_stories),
     Route("/api/spec/{spec_id}/associations", route_api_spec_associations, methods=["GET", "POST"]),
+    # ─── Gantt Plan de Trabajo ───────────────────────────────────────────────
+    Route("/gantt", route_gantt_index),
+    Route("/api/gantt", route_gantt_api),
+    Route("/api/gantt/config", route_gantt_save_config, methods=["POST"]),
+    Route("/api/gantt/validate", route_gantt_validate),
 ])
 
 # Montar archivos estáticos (vendor scripts bundleados en Docker)

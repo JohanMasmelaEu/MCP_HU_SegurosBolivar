@@ -58,3 +58,25 @@
 - Se agregó método `rename_story(old_id, new_id)` en `src/engine/memory.py` que propaga el cambio de ID a: archivo JSON, nodo del grafo (NetworkX relabel), entidades (`appears_in`, `first_seen_in`), flujos (`stories_involved`), y dependencias/impactos de otras HUs que referencian el viejo ID
 - Se agregó handler `handle_rename_story` en `src/tools/analysis_tools.py` que además propaga el cambio a asociaciones HU↔item en specs del SDD (`LayerContent.associations`)
 - Se registró herramienta MCP `rename_story` en `src/server.py` con parámetros `old_id` y `new_id`
+
+### Agregado
+- Se creó `src/engine/gantt_engine.py` con motor de planificación dependency-aware: scheduler greedy con ruta crítica (CPM), calendario laboral Colombia (festivos oficiales + Ley Emiliani + Pascua), estimación de días por complejidad/estimaciones guardadas, detección de dominio/fase, y comparación secuencial vs paralelo
+- Se creó `src/engine/gantt_ui.html` con visualización interactiva del plan de trabajo estilo NLVS: tabla Gantt con barras por fase, marcadores de fin de semana/festivos/deadlines, tooltips, tarjetas resumen por fase, y tabla comparativa
+- Se creó `src/tools/gantt_tools.py` con handler `handle_get_work_plan` para generar el plan desde la memoria del workspace activo
+- Se registró herramienta MCP `get_work_plan` en `src/server.py` con configuración opcional de fecha inicio, deadline y concurrencia máxima
+- Se agregaron rutas `/gantt` (HTML) y `/api/gantt` (JSON) en `src/engine/visualizer.py`
+- Se agregó pestaña "Plan de Trabajo" en la navegación de `visualizer_ui.html` y `ecosystem_visualizer_ui.html` con ícono SVG de barras Gantt
+- Se agregó persistencia de configuración del Gantt en `.hu-memory/gantt-config.json` con modelo `PhaseConfig` (fases con nombre, task_ids, deadline por fase), `task_day_overrides` (días personalizados por HU), y `milestones`
+- Se agregaron funciones `load_persisted_config()`, `save_persisted_config()`, `config_from_persisted()`, `config_to_dict()` en `gantt_engine.py` para lectura/escritura del archivo de configuración persistida
+- Se modificó `build_gantt()` para cargar automáticamente la configuración persistida cuando no se provee una explícita, aplicando overrides de fases y días del usuario sobre la auto-detección
+- Se agregó `GanttGroup.deadline` para soportar deadlines individuales por fase/entrega, con líneas verticales amarillas en el diagrama
+- Se agregaron días editables inline en la tabla Gantt: cada fila tiene un input numérico que al modificarse marca el override en naranja y auto-guarda con debounce de 1.5s
+- Se agregó botón "💾 Guardar" en la barra de configuración del Gantt para persistir toda la configuración actual (fechas, concurrencia, fases, day overrides)
+- Se agregó botón "🔍 Validar" que ejecuta `validate_work_plan` y muestra un panel inline con findings categorizados por severidad (critical/warning/info)
+- Se creó función `validate_work_plan()` en `gantt_engine.py` que analiza: deadlines excedidos (global y por fase), HUs sin estimación explícita, dependencias rotas, ruta crítica sin margen, desbalanceo entre fases, y tareas en fases subóptimas
+- Se registró herramienta MCP `update_work_plan` en `src/server.py` para modificar y persistir fases, deadlines (global + por fase), días por tarea, y milestones
+- Se registró herramienta MCP `validate_work_plan` en `src/server.py` para re-validar el plan buscando gaps, riesgos y problemas de scheduling
+- Se creó función `get_work_plan_state()` en `gantt_engine.py` como interfaz de transversalidad cross-tool: cualquier herramienta del MCP puede consultar el estado de salud del plan (fits_deadline, margin_days, phase_deadlines, critical_path_days)
+- Se agregaron endpoints `POST /api/gantt/config` y `GET /api/gantt/validate` en `src/engine/visualizer.py`
+- Se agregó campo `is_overridden` en la serialización de tareas (`gantt_to_json`) para indicar visualmente qué HUs tienen días ajustados manualmente
+- Se agregaron `phase_deadlines` y `persisted_config` en la respuesta JSON del API para que el frontend pueda renderizar deadlines por fase y alimentar el guardado

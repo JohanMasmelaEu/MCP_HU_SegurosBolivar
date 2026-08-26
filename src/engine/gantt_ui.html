@@ -1,0 +1,1167 @@
+<meta charset="utf-8">
+<title>Plan de Trabajo — Gantt</title>
+<style>
+/* ─── NLVS Design System Tokens ─── */
+:root {
+  --bg: #000000;
+  --surface: rgba(28,28,30,0.72);
+  --surface-elevated: rgba(44,44,46,0.65);
+  --surface-border: rgba(255,255,255,0.08);
+  --surface-border-hover: rgba(255,255,255,0.15);
+  --text-primary: rgba(255,255,255,0.92);
+  --text-secondary: rgba(255,255,255,0.55);
+  --text-tertiary: rgba(255,255,255,0.35);
+  --accent-blue: #0a84ff;
+  --accent-purple: #bf5af2;
+  --accent-orange: #ff9f0a;
+  --accent-green: #30d158;
+  --accent-red: #ff453a;
+  --accent-teal: #64d2ff;
+  --accent-yellow: #ffd60a;
+  --organic-green: rgba(34,120,80,0.12);
+  --organic-teal: rgba(40,140,130,0.08);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-organic: 20px 16px 22px 14px;
+  --blur-light: blur(20px) saturate(1.4);
+  --blur-medium: blur(40px) saturate(1.8) brightness(1.1);
+  --neo-raised: 4px 4px 8px rgba(0,0,0,0.35), -2px -2px 6px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.06);
+  --neo-pressed: inset 3px 3px 6px rgba(0,0,0,0.35), inset -2px -2px 4px rgba(255,255,255,0.02);
+  --neo-panel: 0 0 0 0.5px rgba(255,255,255,0.06) inset, 0 8px 32px -8px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05) inset;
+  --sku-metal: linear-gradient(180deg, rgba(60,60,65,0.4) 0%, rgba(40,40,44,0.6) 50%, rgba(35,35,38,0.7) 100%);
+  --sku-led-glow: 0 0 6px var(--accent-blue), 0 0 12px rgba(10,132,255,0.3);
+  --scrollbar-thumb: rgba(255,255,255,0.1);
+  --scrollbar-thumb-hover: rgba(255,255,255,0.2);
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.25,1,0.5,1);
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  /* ─── Phase colors ─── */
+  --phase-p1: var(--accent-blue);
+  --phase-p1-bg: rgba(10,132,255,0.12);
+  --phase-p2: var(--accent-purple);
+  --phase-p2-bg: rgba(191,90,242,0.12);
+  --phase-p3: var(--accent-teal);
+  --phase-p3-bg: rgba(100,210,255,0.12);
+  --phase-p4: var(--accent-green);
+  --phase-p4-bg: rgba(48,209,88,0.12);
+  --phase-p5: var(--accent-orange);
+  --phase-p5-bg: rgba(255,159,10,0.12);
+  --weekend-bg: rgba(255,255,255,0.015);
+  --holiday-bg: rgba(255,69,58,0.06);
+  --deadline-color: var(--accent-red);
+  --phase-deadline-color: var(--accent-yellow);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f5f5f7;
+    --surface: rgba(255,255,255,0.72);
+    --surface-elevated: rgba(255,255,255,0.85);
+    --surface-border: rgba(0,0,0,0.08);
+    --surface-border-hover: rgba(0,0,0,0.15);
+    --text-primary: rgba(0,0,0,0.88);
+    --text-secondary: rgba(0,0,0,0.55);
+    --text-tertiary: rgba(0,0,0,0.35);
+    --accent-blue: #007aff;
+    --accent-purple: #af52de;
+    --accent-orange: #ff9500;
+    --accent-green: #28a745;
+    --accent-red: #ff3b30;
+    --accent-teal: #5ac8fa;
+    --accent-yellow: #f5a623;
+    --organic-green: rgba(34,120,80,0.08);
+    --organic-teal: rgba(40,140,130,0.06);
+    --neo-raised: 3px 3px 6px rgba(0,0,0,0.06), -2px -2px 4px rgba(255,255,255,0.6), inset 0 1px 0 rgba(255,255,255,0.8);
+    --neo-pressed: inset 2px 2px 4px rgba(0,0,0,0.06), inset -1px -1px 3px rgba(255,255,255,0.3);
+    --neo-panel: 0 0 0 0.5px rgba(0,0,0,0.04) inset, 0 8px 32px -8px rgba(0,0,0,0.12), 0 1px 0 rgba(255,255,255,0.8) inset;
+    --sku-metal: linear-gradient(180deg, rgba(240,240,244,0.85) 0%, rgba(230,230,234,0.9) 100%);
+    --scrollbar-thumb: rgba(0,0,0,0.12);
+    --scrollbar-thumb-hover: rgba(0,0,0,0.2);
+    --phase-p1-bg: rgba(0,122,255,0.08);
+    --phase-p2-bg: rgba(175,82,222,0.08);
+    --phase-p3-bg: rgba(90,200,250,0.08);
+    --phase-p4-bg: rgba(40,167,69,0.08);
+    --phase-p5-bg: rgba(255,149,0,0.08);
+    --weekend-bg: rgba(0,0,0,0.02);
+    --holiday-bg: rgba(255,59,48,0.06);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --surface: rgba(28,28,30,0.72);
+  --surface-elevated: rgba(44,44,46,0.65);
+  --surface-border: rgba(255,255,255,0.08);
+  --surface-border-hover: rgba(255,255,255,0.15);
+  --text-primary: rgba(255,255,255,0.92);
+  --text-secondary: rgba(255,255,255,0.55);
+  --text-tertiary: rgba(255,255,255,0.35);
+  --accent-blue: #0a84ff;
+  --accent-purple: #bf5af2;
+  --accent-orange: #ff9f0a;
+  --accent-green: #30d158;
+  --accent-red: #ff453a;
+  --accent-teal: #64d2ff;
+  --accent-yellow: #ffd60a;
+  --neo-raised: 4px 4px 8px rgba(0,0,0,0.35), -2px -2px 6px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.06);
+  --neo-pressed: inset 3px 3px 6px rgba(0,0,0,0.35), inset -2px -2px 4px rgba(255,255,255,0.02);
+  --neo-panel: 0 0 0 0.5px rgba(255,255,255,0.06) inset, 0 8px 32px -8px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05) inset;
+  --sku-metal: linear-gradient(180deg, rgba(60,60,65,0.4) 0%, rgba(40,40,44,0.6) 50%, rgba(35,35,38,0.7) 100%);
+  --scrollbar-thumb: rgba(255,255,255,0.1);
+  --scrollbar-thumb-hover: rgba(255,255,255,0.2);
+}
+
+/* ─── Reset & Base ─── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+* { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) transparent; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: -1;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 30%, var(--organic-green) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 70%, var(--organic-teal) 0%, transparent 70%);
+  animation: meshShift 3s ease-out forwards;
+}
+@keyframes meshShift {
+  0% { opacity: 0; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.page { max-width: 1500px; margin: 0 auto; padding: 1.5rem; }
+
+/* ─── Header ─── */
+.gantt-header {
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid var(--surface-border);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--neo-panel);
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1rem;
+}
+.gantt-header h1 {
+  font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.gantt-header h1::before {
+  content: '';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent-blue);
+  box-shadow: var(--sku-led-glow);
+}
+.gantt-header .sub {
+  font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.25rem;
+}
+.gantt-header .sub strong { color: var(--text-primary); font-weight: 600; }
+
+/* ─── Alert box ─── */
+.alert-box {
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--neo-raised);
+}
+.alert-box.ok { border-left: 3px solid var(--accent-green); }
+.alert-box.warn { border-left: 3px solid var(--accent-red); }
+.alert-box h2 { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.4rem; }
+.alert-box.ok h2 { color: var(--accent-green); }
+.alert-box.warn h2 { color: var(--accent-red); }
+.alert-box p { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.6; }
+.alert-box p strong { color: var(--text-primary); }
+
+.metric-row { display: flex; gap: 1.5rem; margin: 0.6rem 0; flex-wrap: wrap; }
+.metric-item { text-align: center; }
+.metric-value {
+  font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+.metric-label {
+  font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); font-weight: 600; margin-top: 0.1rem;
+}
+
+/* ─── Config bar ─── */
+.config-bar {
+  background: var(--sku-metal);
+  backdrop-filter: var(--blur-light);
+  -webkit-backdrop-filter: var(--blur-light);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
+  font-size: 0.72rem;
+  box-shadow: var(--neo-panel);
+}
+.config-bar label {
+  color: var(--text-secondary); display: flex; align-items: center; gap: 0.3rem;
+}
+.config-bar input, .config-bar select {
+  background: rgba(0,0,0,0.2); border: 1px solid var(--surface-border);
+  color: var(--text-primary); border-radius: var(--radius-sm);
+  padding: 0.25rem 0.4rem; font-size: 0.7rem;
+  font-family: var(--font-mono);
+}
+.config-bar input:focus, .config-bar select:focus {
+  outline: 2px solid var(--accent-blue); outline-offset: 1px;
+}
+.config-bar input[type="date"] { width: 120px; }
+.config-bar input[type="number"] { width: 50px; }
+
+.btn {
+  border: 1px solid rgba(10,132,255,0.35);
+  color: var(--accent-blue); border-radius: var(--radius-sm);
+  padding: 0.3rem 0.8rem; font-size: 0.7rem; font-weight: 600;
+  cursor: pointer; transition: all var(--transition-normal);
+  box-shadow: var(--neo-raised);
+  background: linear-gradient(145deg, rgba(10,132,255,0.2) 0%, rgba(10,132,255,0.08) 100%);
+}
+.btn:hover { border-color: var(--accent-blue); transform: translateY(-1px); }
+.btn:active { transform: scale(0.96); box-shadow: var(--neo-pressed); }
+.btn:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.btn.btn-green {
+  background: linear-gradient(145deg, rgba(48,209,88,0.2) 0%, rgba(48,209,88,0.08) 100%);
+  border-color: rgba(48,209,88,0.35); color: var(--accent-green);
+}
+.btn.btn-orange {
+  background: linear-gradient(145deg, rgba(255,159,10,0.2) 0%, rgba(255,159,10,0.08) 100%);
+  border-color: rgba(255,159,10,0.35); color: var(--accent-orange);
+}
+.btn.btn-sm { padding: 0.15rem 0.5rem; font-size: 0.6rem; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ─── Save indicator ─── */
+.save-indicator {
+  font-size: 0.65rem; padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
+  opacity: 0; pointer-events: none;
+}
+.save-indicator.visible { opacity: 1; }
+.save-indicator.saving { color: var(--accent-orange); }
+.save-indicator.saved { color: var(--accent-green); }
+.save-indicator.error { color: var(--accent-red); }
+
+/* ─── Summary cards ─── */
+.summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+.summary-card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.015) 100%);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid var(--surface-border);
+  box-shadow: var(--neo-raised);
+  transition: transform var(--transition-normal);
+}
+.summary-card:hover { transform: translateY(-1px); }
+.summary-card.p1 { border-left-color: var(--phase-p1); }
+.summary-card.p2 { border-left-color: var(--phase-p2); }
+.summary-card.p3 { border-left-color: var(--phase-p3); }
+.summary-card.p4 { border-left-color: var(--phase-p4); }
+.summary-card.p5 { border-left-color: var(--phase-p5); }
+.summary-card .sc-label {
+  font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); font-weight: 600;
+}
+.summary-card .sc-value {
+  font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  margin-top: 0.1rem;
+}
+.summary-card .sc-detail { font-size: 0.62rem; color: var(--text-tertiary); }
+.summary-card .sc-deadline {
+  font-size: 0.58rem; color: var(--accent-yellow); margin-top: 0.15rem;
+  display: flex; align-items: center; gap: 0.2rem;
+}
+.summary-card .sc-deadline.exceeded { color: var(--accent-red); }
+
+/* ─── Legend ─── */
+.legend {
+  display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem; color: var(--text-secondary); align-items: center;
+}
+.legend-item { display: flex; align-items: center; gap: 0.25rem; }
+.legend-swatch { width: 14px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+/* ─── Gantt table ─── */
+.gantt-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--neo-panel);
+}
+.gantt-table { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; }
+.gantt-table th, .gantt-table td {
+  padding: 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.68rem; vertical-align: middle;
+}
+.gantt-table thead th {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--surface-elevated);
+  font-weight: 600; text-align: center;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.month-header {
+  font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-secondary); padding: 0.35rem 0.2rem !important;
+  border-right: 1px solid var(--surface-border);
+}
+.week-header {
+  font-size: 0.55rem; color: var(--text-tertiary); padding: 0.2rem 0 !important;
+  width: 18px; min-width: 18px; max-width: 18px;
+  font-family: var(--font-mono); font-weight: 400;
+}
+.week-header.weekend { background: var(--weekend-bg); }
+.week-header.holiday { background: var(--holiday-bg); color: var(--accent-red); font-weight: 600; }
+.week-header.deadline-col { box-shadow: inset -2px 0 0 var(--deadline-color); }
+.week-header.phase-deadline-col { box-shadow: inset -2px 0 0 var(--phase-deadline-color); }
+
+/* Sticky columns */
+.col-id {
+  position: sticky; left: 0; z-index: 5;
+  background: var(--surface); width: 80px; min-width: 80px;
+  padding: 0.25rem 0.35rem !important;
+  font-family: var(--font-mono); font-size: 0.6rem; font-weight: 500;
+  color: var(--text-secondary); border-right: 1px solid rgba(255,255,255,0.04);
+  white-space: nowrap;
+}
+.col-title {
+  position: sticky; left: 80px; z-index: 5;
+  background: var(--surface); width: 220px; min-width: 220px; max-width: 220px;
+  padding: 0.25rem 0.4rem !important; font-size: 0.65rem; color: var(--text-primary);
+  border-right: 1px solid var(--surface-border);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.col-days {
+  position: sticky; left: 300px; z-index: 5;
+  background: var(--surface); width: 36px; min-width: 36px;
+  padding: 0.25rem 0.1rem !important; text-align: center;
+  font-family: var(--font-mono); font-size: 0.6rem; font-weight: 500;
+  color: var(--text-tertiary); border-right: 1px solid var(--surface-border);
+}
+thead .col-id, thead .col-title, thead .col-days { background: var(--surface-elevated); }
+
+/* Editable days cell */
+.days-input {
+  width: 28px; background: rgba(0,0,0,0.2); border: 1px solid var(--surface-border);
+  color: var(--text-primary); border-radius: 3px; padding: 0.1rem 0.15rem;
+  font-family: var(--font-mono); font-size: 0.6rem; text-align: center;
+  transition: border-color var(--transition-fast);
+}
+.days-input:focus { border-color: var(--accent-blue); outline: none; }
+.days-input.overridden { border-color: var(--accent-orange); color: var(--accent-orange); }
+
+/* Group rows */
+.group-row td, .group-row th {
+  background: var(--surface-elevated) !important;
+  font-weight: 700; font-size: 0.68rem;
+  padding: 0.35rem 0.35rem !important;
+  border-bottom: 1px solid var(--surface-border);
+  border-top: 2px solid var(--surface-border);
+}
+.group-row .col-title { font-weight: 700; }
+.group-row.p1-group td { border-top: 2px solid var(--phase-p1); }
+.group-row.p2-group td { border-top: 2px solid var(--phase-p2); }
+.group-row.p3-group td { border-top: 2px solid var(--phase-p3); }
+.group-row.p4-group td { border-top: 2px solid var(--phase-p4); }
+.group-row.p5-group td { border-top: 2px solid var(--phase-p5); }
+
+/* Phase tag badge */
+.phase-tag {
+  display: inline-block; font-size: 0.5rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 0.05rem 0.25rem; border-radius: 3px;
+  margin-left: 0.3rem; vertical-align: middle;
+}
+.phase-tag.p1 { background: var(--phase-p1-bg); color: var(--phase-p1); }
+.phase-tag.p2 { background: var(--phase-p2-bg); color: var(--phase-p2); }
+.phase-tag.p3 { background: var(--phase-p3-bg); color: var(--phase-p3); }
+.phase-tag.p4 { background: var(--phase-p4-bg); color: var(--phase-p4); }
+.phase-tag.p5 { background: var(--phase-p5-bg); color: var(--phase-p5); }
+
+/* Day cells */
+.day-cell {
+  width: 18px; min-width: 18px; max-width: 18px; height: 24px;
+  padding: 0 !important; position: relative;
+}
+.day-cell.weekend { background: var(--weekend-bg); }
+.day-cell.holiday { background: var(--holiday-bg); }
+.day-cell.deadline-col { box-shadow: inset -2px 0 0 var(--deadline-color); }
+.day-cell.phase-deadline-col { box-shadow: inset -2px 0 0 var(--phase-deadline-color); }
+
+/* Bars */
+.bar {
+  position: absolute; top: 4px; height: 16px;
+  border-radius: 3px; z-index: 2; left: 0; width: 18px;
+  cursor: pointer;
+  transition: filter var(--transition-fast);
+}
+.bar:hover { filter: brightness(1.3); }
+.bar.p1 { background: var(--phase-p1); opacity: 0.8; }
+.bar.p2 { background: var(--phase-p2); opacity: 0.75; }
+.bar.p3 { background: var(--phase-p3); opacity: 0.75; }
+.bar.p4 { background: var(--phase-p4); opacity: 0.75; }
+.bar.p5 { background: var(--phase-p5); opacity: 0.75; }
+
+/* ─── Validation panel ─── */
+.validation-panel {
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--neo-raised);
+  display: none;
+}
+.validation-panel.visible { display: block; }
+.validation-panel h2 {
+  font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem;
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.validation-panel .health-badge {
+  font-size: 0.55rem; padding: 0.1rem 0.4rem; border-radius: 4px;
+  text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;
+}
+.health-badge.healthy { background: rgba(48,209,88,0.15); color: var(--accent-green); }
+.health-badge.at_risk { background: rgba(255,159,10,0.15); color: var(--accent-orange); }
+.health-badge.critical { background: rgba(255,69,58,0.15); color: var(--accent-red); }
+.finding-list { list-style: none; }
+.finding-item {
+  padding: 0.35rem 0.5rem; margin: 0.2rem 0;
+  border-radius: var(--radius-sm); font-size: 0.7rem;
+  border-left: 3px solid var(--surface-border);
+  background: rgba(255,255,255,0.02);
+}
+.finding-item.critical { border-left-color: var(--accent-red); }
+.finding-item.warning { border-left-color: var(--accent-orange); }
+.finding-item.info { border-left-color: var(--accent-blue); }
+.finding-item .f-cat {
+  font-size: 0.55rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-tertiary);
+}
+.finding-item .f-msg { color: var(--text-secondary); margin-top: 0.1rem; }
+
+/* ─── Holidays section ─── */
+.holidays-section {
+  margin-top: 1.25rem; padding-top: 0.75rem;
+  border-top: 1px solid var(--surface-border);
+}
+.holidays-section h2 { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.4rem; }
+.holidays-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.25rem; font-size: 0.68rem;
+}
+.holiday-item { display: flex; gap: 0.35rem; align-items: baseline; color: var(--text-secondary); }
+.holiday-item .hdate {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  color: var(--accent-red); min-width: 56px; font-weight: 500;
+}
+
+/* ─── Notes ─── */
+.notes {
+  margin-top: 1rem; padding: 0.75rem;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-md);
+  font-size: 0.68rem; color: var(--text-secondary); line-height: 1.6;
+}
+.notes strong { color: var(--text-primary); }
+
+/* ─── Comparison table ─── */
+.table-compare {
+  margin-top: 0.5rem; border-collapse: collapse;
+  width: 100%; max-width: 560px; font-size: 0.72rem;
+}
+.table-compare th, .table-compare td {
+  padding: 0.3rem 0.5rem; text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.table-compare th {
+  font-weight: 600; font-size: 0.6rem; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--text-tertiary);
+}
+.table-compare td:nth-child(n+2) {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right;
+}
+.table-compare .highlight { color: var(--accent-red); font-weight: 700; }
+.table-compare .ok { color: var(--accent-green); font-weight: 600; }
+
+/* ─── Loading state ─── */
+.loading-state {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 300px; flex-direction: column; gap: 1rem;
+}
+.loading-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 0.8rem; color: var(--text-tertiary); }
+
+/* ─── Empty state ─── */
+.empty-state {
+  text-align: center; padding: 3rem 1rem;
+  color: var(--text-tertiary); font-size: 0.85rem;
+}
+.empty-state .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.empty-state p { max-width: 400px; margin: 0.5rem auto; line-height: 1.6; }
+
+/* ─── Nav back ─── */
+.back-link {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  font-size: 0.72rem; color: var(--text-secondary);
+  text-decoration: none; margin-bottom: 0.75rem;
+  transition: color var(--transition-fast);
+}
+.back-link:hover { color: var(--accent-blue); }
+.back-link:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+/* ─── Tooltip ─── */
+.gantt-tooltip {
+  position: fixed; z-index: 200;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.68rem; color: var(--text-primary);
+  box-shadow: var(--neo-raised);
+  pointer-events: none;
+  opacity: 0; transition: opacity 0.15s ease;
+  max-width: 280px;
+  line-height: 1.5;
+}
+.gantt-tooltip.visible { opacity: 1; }
+.gantt-tooltip .tt-id { font-family: var(--font-mono); color: var(--accent-blue); font-weight: 600; }
+.gantt-tooltip .tt-dates { color: var(--text-tertiary); font-size: 0.6rem; margin-top: 0.2rem; }
+.gantt-tooltip .tt-domain {
+  display: inline-block; font-size: 0.55rem; padding: 0.05rem 0.3rem;
+  background: rgba(255,255,255,0.06); border-radius: 3px;
+  color: var(--text-secondary); margin-top: 0.2rem;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .page { padding: 0.75rem; }
+  .summary-row { grid-template-columns: repeat(2, 1fr); }
+  .col-title { width: 150px; min-width: 150px; max-width: 150px; }
+  .col-days { left: 230px; }
+  .metric-row { gap: 0.8rem; }
+  .config-bar { flex-direction: column; align-items: flex-start; }
+}
+</style>
+
+<div class="page">
+  <a class="back-link" href="/" aria-label="Volver al grafo de HUs">← Grafo de HUs</a>
+
+  <div class="gantt-header">
+    <h1>Plan de Trabajo</h1>
+    <p class="sub" id="header-sub">Cargando plan de trabajo…</p>
+  </div>
+
+  <div class="config-bar" id="config-bar">
+    <label>Inicio: <input type="date" id="cfg-start"></label>
+    <label>Deadline: <input type="date" id="cfg-deadline"></label>
+    <label>Concurrencia: <input type="number" id="cfg-concurrent" min="1" max="10" value="2"></label>
+    <button class="btn" id="btn-recalc" aria-label="Recalcular plan">Recalcular</button>
+    <button class="btn btn-green" id="btn-save" aria-label="Guardar configuración">💾 Guardar</button>
+    <button class="btn btn-orange" id="btn-validate" aria-label="Validar plan">🔍 Validar</button>
+    <span class="save-indicator" id="save-indicator"></span>
+  </div>
+
+  <div id="alert-box"></div>
+  <div class="validation-panel" id="validation-panel"></div>
+  <div class="summary-row" id="summary"></div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="gantt-wrap" id="gantt-container">
+    <div class="loading-state" id="loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Generando plan de trabajo…</div>
+    </div>
+    <table class="gantt-table" id="gantt" style="display:none"></table>
+  </div>
+
+  <div id="compare-section"></div>
+
+  <div class="holidays-section" id="holidays-section" style="display:none">
+    <h2>Festivos Colombia en el rango</h2>
+    <div class="holidays-grid" id="holidays-list"></div>
+  </div>
+
+  <div class="notes" id="notes" style="display:none"></div>
+</div>
+
+<div class="gantt-tooltip" id="tooltip"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  var API_BASE = '';
+  var ganttData = null;
+  var pendingDayOverrides = {};
+  var dayOverrideTimer = null;
+
+  // ─── Date helpers ────────────────────────────────────────────────────────────
+  function parseDate(s) { var p = s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function fmtISO(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function fmtShort(d) {
+    var months = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    return d.getDate() + ' ' + months[d.getMonth()];
+  }
+  function fmtLong(d) {
+    var months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    return d.getDate() + ' de ' + months[d.getMonth()] + ' de ' + d.getFullYear();
+  }
+  function isWeekend(d) { var w = d.getDay(); return w === 0 || w === 6; }
+
+  // ─── Save indicator ─────────────────────────────────────────────────────────
+  function showSaveStatus(status, msg) {
+    var el = document.getElementById('save-indicator');
+    el.textContent = msg || '';
+    el.className = 'save-indicator visible ' + status;
+    if (status === 'saved' || status === 'error') {
+      setTimeout(function() { el.classList.remove('visible'); }, 2500);
+    }
+  }
+
+  // ─── Load data ───────────────────────────────────────────────────────────────
+  function loadGantt(params) {
+    var url = API_BASE + '/api/gantt';
+    if (params) url += '?' + new URLSearchParams(params).toString();
+
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.status === 'error') {
+          showEmpty(data.message || 'No hay datos para generar el plan.');
+          return;
+        }
+        ganttData = data;
+        render(data);
+      })
+      .catch(function(err) {
+        showEmpty('Error cargando datos: ' + err.message);
+      });
+  }
+
+  function showEmpty(msg) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('gantt').style.display = 'none';
+    document.getElementById('gantt-container').innerHTML =
+      '<div class="empty-state">' +
+      '<div class="empty-icon">📋</div>' +
+      '<h3>Sin plan de trabajo</h3>' +
+      '<p>' + msg + '</p>' +
+      '<p style="font-size:0.72rem;color:var(--text-tertiary)">Analiza HUs con <code>analyze_story</code> y guárdalas con <code>add_story</code> para generar el plan.</p>' +
+      '</div>';
+  }
+
+  // ─── Save config ─────────────────────────────────────────────────────────────
+  function saveConfig() {
+    if (!ganttData || !ganttData.persisted_config) return;
+
+    var cfg = JSON.parse(JSON.stringify(ganttData.persisted_config));
+
+    // Apply current UI values
+    var start = document.getElementById('cfg-start').value;
+    var deadline = document.getElementById('cfg-deadline').value;
+    var concurrent = document.getElementById('cfg-concurrent').value;
+    if (start) cfg.project_start = start;
+    cfg.deadline = deadline || null;
+    if (concurrent) cfg.max_concurrent = parseInt(concurrent) || 2;
+
+    // Merge pending day overrides
+    if (Object.keys(pendingDayOverrides).length) {
+      cfg.task_day_overrides = cfg.task_day_overrides || {};
+      for (var id in pendingDayOverrides) {
+        var val = pendingDayOverrides[id];
+        if (val <= 0) {
+          delete cfg.task_day_overrides[id];
+        } else {
+          cfg.task_day_overrides[id] = val;
+        }
+      }
+      pendingDayOverrides = {};
+    }
+
+    showSaveStatus('saving', 'Guardando…');
+
+    fetch(API_BASE + '/api/gantt/config', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(cfg),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        showSaveStatus('error', '✗ ' + data.error);
+        return;
+      }
+      showSaveStatus('saved', '✓ Guardado');
+      if (data.status === 'success') {
+        ganttData = data;
+        render(data);
+      }
+    })
+    .catch(function(err) {
+      showSaveStatus('error', '✗ Error: ' + err.message);
+    });
+  }
+
+  // ─── Validate ────────────────────────────────────────────────────────────────
+  function runValidation() {
+    var panel = document.getElementById('validation-panel');
+    panel.className = 'validation-panel visible';
+    panel.innerHTML = '<div class="loading-state" style="min-height:80px"><div class="loading-spinner"></div><div class="loading-text">Validando plan…</div></div>';
+
+    fetch(API_BASE + '/api/gantt/validate')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.status === 'error') {
+          panel.innerHTML = '<h2>⚠ ' + (data.message || 'Error en validación') + '</h2>';
+          return;
+        }
+        renderValidation(data);
+      })
+      .catch(function(err) {
+        panel.innerHTML = '<h2>✗ Error: ' + err.message + '</h2>';
+      });
+  }
+
+  function renderValidation(data) {
+    var panel = document.getElementById('validation-panel');
+    var healthIcon = {healthy: '✅', at_risk: '⚠️', critical: '🚨'};
+    var html = '<h2>' + (healthIcon[data.health] || '📋') + ' Validación del Plan ' +
+      '<span class="health-badge ' + data.health + '">' + data.health.replace('_', ' ') + '</span></h2>';
+
+    if (data.summary.total_findings === 0) {
+      html += '<p style="font-size:0.75rem;color:var(--accent-green)">No se encontraron problemas. El plan está saludable.</p>';
+    } else {
+      html += '<p style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:0.5rem">' +
+        data.summary.critical + ' críticos · ' + data.summary.warnings + ' advertencias · ' + data.summary.info + ' informativos</p>';
+      html += '<ul class="finding-list">';
+      data.findings.forEach(function(f) {
+        html += '<li class="finding-item ' + f.severity + '">' +
+          '<div class="f-cat">' + f.category + (f.story_id ? ' · ' + f.story_id : '') + '</div>' +
+          '<div class="f-msg">' + escapeHtml(f.message) + '</div>' +
+          '</li>';
+      });
+      html += '</ul>';
+    }
+
+    panel.innerHTML = html;
+  }
+
+  // ─── Render ──────────────────────────────────────────────────────────────────
+  function render(data) {
+    var m = data.metrics;
+    var tasks = data.tasks;
+    var holidays = data.holidays || [];
+    var phases = data.phases || [];
+    var phaseDeadlines = data.phase_deadlines || {};
+
+    // Holiday set for cell marking
+    var holidaySet = {};
+    holidays.forEach(function(h) { holidaySet[h.date] = true; });
+
+    // Header
+    document.getElementById('header-sub').innerHTML =
+      m.story_count + ' HUs · Inicio <strong>' + fmtLong(parseDate(m.project_start)) + '</strong>' +
+      ' · ' + m.developers + ' desarrollador' + (m.developers > 1 ? 'es' : '') +
+      ' · Hasta ' + m.max_concurrent + ' HUs simultáneas';
+
+    // Config defaults
+    document.getElementById('cfg-start').value = m.project_start;
+    if (m.deadline) document.getElementById('cfg-deadline').value = m.deadline;
+    document.getElementById('cfg-concurrent').value = m.max_concurrent;
+
+    // Alert box
+    var fits = m.fits_deadline;
+    var absMargin = Math.abs(m.margin_days);
+    var alertEl = document.getElementById('alert-box');
+    if (m.deadline) {
+      var alertCls = fits ? 'ok' : 'warn';
+      var alertMsg = fits
+        ? '✓ El proyecto cierra el ' + fmtLong(parseDate(m.project_end)) + ' — ' + absMargin + ' días antes del deadline'
+        : '⚠ El proyecto cierra el ' + fmtLong(parseDate(m.project_end)) + ' — ' + absMargin + ' días después del deadline';
+
+      alertEl.innerHTML =
+        '<div class="alert-box ' + alertCls + '">' +
+        '<h2>' + alertMsg + '</h2>' +
+        '<div class="metric-row">' +
+          '<div class="metric-item"><div class="metric-value" style="color:var(--accent-' + (fits?'green':'red') + ')">' + m.total_work_days + '</div><div class="metric-label">Días hábiles<br>con paralelismo</div></div>' +
+          '<div class="metric-item"><div class="metric-value">' + m.total_effort_days + '</div><div class="metric-label">Días de esfuerzo<br>(' + m.story_count + ' HUs sumadas)</div></div>' +
+          '<div class="metric-item"><div class="metric-value" style="color:var(--accent-' + (fits?'green':'red') + ')">' + fmtShort(parseDate(m.project_end)) + '</div><div class="metric-label">Fecha cierre</div></div>' +
+          '<div class="metric-item"><div class="metric-value">' + m.work_days_available + '</div><div class="metric-label">Días hábiles<br>hasta deadline</div></div>' +
+          '<div class="metric-item"><div class="metric-value" style="color:var(--accent-' + (fits?'green':'red') + ')">' + (fits ? '-'+absMargin+'d' : '+'+absMargin+'d') + '</div><div class="metric-label">' + (fits?'Margen':'Excedente') + '</div></div>' +
+        '</div>' +
+        '<p>Concurrencia promedio: <strong>' + m.concurrency_avg + ' HUs/día</strong>. Ruta crítica: <strong>' + m.critical_path_days + ' días hábiles</strong>.</p>' +
+        '</div>';
+    } else {
+      alertEl.innerHTML =
+        '<div class="alert-box ok">' +
+        '<h2>Plan calculado — cierre estimado: ' + fmtLong(parseDate(m.project_end)) + '</h2>' +
+        '<div class="metric-row">' +
+          '<div class="metric-item"><div class="metric-value" style="color:var(--accent-blue)">' + m.total_work_days + '</div><div class="metric-label">Días hábiles</div></div>' +
+          '<div class="metric-item"><div class="metric-value">' + m.total_effort_days + '</div><div class="metric-label">Días esfuerzo</div></div>' +
+          '<div class="metric-item"><div class="metric-value">' + m.critical_path_days + '</div><div class="metric-label">Ruta crítica</div></div>' +
+        '</div>' +
+        '</div>';
+    }
+
+    // Summary cards — now with phase deadlines
+    var phaseLabels = {p1:'F1 Fundamentos',p2:'F2 Core',p3:'F3 Integraciones',p4:'F4 Avanzadas',p5:'F5 QA+Cierre'};
+    var summaryEl = document.getElementById('summary');
+    summaryEl.innerHTML = '';
+    phases.forEach(function(ph) {
+      var startD = ph.start_date ? fmtShort(parseDate(ph.start_date)) : '—';
+      var endD = ph.end_date ? fmtShort(parseDate(ph.end_date)) : '—';
+      var dlHtml = '';
+      if (ph.deadline) {
+        var phEnd = ph.end_date ? parseDate(ph.end_date) : null;
+        var phDl = parseDate(ph.deadline);
+        var exceeded = phEnd && phEnd > phDl;
+        dlHtml = '<div class="sc-deadline' + (exceeded ? ' exceeded' : '') + '">⏰ DL: ' +
+          fmtShort(phDl) + (exceeded ? ' ⚠' : ' ✓') + '</div>';
+      }
+      summaryEl.innerHTML +=
+        '<div class="summary-card ' + ph.phase + '">' +
+        '<div class="sc-label">' + (phaseLabels[ph.phase] || ph.name) + '</div>' +
+        '<div class="sc-value">' + ph.total_days + 'd</div>' +
+        '<div class="sc-detail">' + ph.task_count + ' HUs · ' + startD + ' → ' + endD + '</div>' +
+        dlHtml +
+        '</div>';
+    });
+
+    // Legend
+    var legendEl = document.getElementById('legend');
+    var legendHtml =
+      '<div class="legend-item"><div class="legend-swatch" style="background:var(--phase-p1)"></div>F1 Fundamentos</div>' +
+      '<div class="legend-item"><div class="legend-swatch" style="background:var(--phase-p2)"></div>F2 Core</div>' +
+      '<div class="legend-item"><div class="legend-swatch" style="background:var(--phase-p3)"></div>F3 Integraciones</div>' +
+      '<div class="legend-item"><div class="legend-swatch" style="background:var(--phase-p4)"></div>F4 Avanzadas</div>' +
+      '<div class="legend-item"><div class="legend-swatch" style="background:var(--phase-p5)"></div>F5 QA+Cierre</div>' +
+      '<div class="legend-item"><div class="legend-swatch" style="background:var(--accent-red);opacity:.5"></div>Festivo</div>';
+    if (m.deadline) {
+      legendHtml += '<div class="legend-item" style="color:var(--accent-red);font-weight:600">▎Deadline ' + fmtShort(parseDate(m.deadline)) + '</div>';
+    }
+    if (Object.keys(phaseDeadlines).length) {
+      legendHtml += '<div class="legend-item" style="color:var(--accent-yellow);font-weight:600">▎DL Fase</div>';
+    }
+    legendEl.innerHTML = legendHtml;
+
+    // ─── Build Gantt table ──────────────────────────────────────────────────────
+    var taskItems = tasks.filter(function(t) { return t.type === 'task' && t.start_date && t.end_date; });
+    if (!taskItems.length) { showEmpty('No hay tareas con fechas calculadas.'); return; }
+
+    var minDate = parseDate(taskItems[0].start_date);
+    var maxDate = parseDate(taskItems[0].end_date);
+    taskItems.forEach(function(t) {
+      var s = parseDate(t.start_date), e = parseDate(t.end_date);
+      if (s < minDate) minDate = s;
+      if (e > maxDate) maxDate = e;
+    });
+
+    // Include deadlines in range
+    if (m.deadline) {
+      var dl = parseDate(m.deadline);
+      if (dl > maxDate) maxDate = dl;
+    }
+    for (var pKey in phaseDeadlines) {
+      var pdl = parseDate(phaseDeadlines[pKey]);
+      if (pdl > maxDate) maxDate = pdl;
+    }
+
+    // Expand to full weeks with buffer
+    var timelineStart = new Date(minDate);
+    var dow = timelineStart.getDay();
+    timelineStart.setDate(timelineStart.getDate() - (dow === 0 ? 6 : dow - 1));
+
+    var timelineEnd = new Date(maxDate);
+    timelineEnd.setDate(timelineEnd.getDate() + 10);
+    while (timelineEnd.getDay() !== 0) timelineEnd.setDate(timelineEnd.getDate() + 1);
+
+    var allDays = [];
+    var dc = new Date(timelineStart);
+    while (dc <= timelineEnd) { allDays.push(new Date(dc)); dc.setDate(dc.getDate() + 1); }
+
+    var deadlineFmt = m.deadline || '';
+
+    // Build phase deadline date set
+    var phaseDeadlineDates = {};
+    for (var pk in phaseDeadlines) { phaseDeadlineDates[phaseDeadlines[pk]] = pk; }
+
+    // Day index map
+    var dayIdx = {};
+    allDays.forEach(function(d, i) { dayIdx[fmtISO(d)] = i; });
+
+    // Month headers
+    var months = {};
+    allDays.forEach(function(d) {
+      var key = d.getFullYear() + '-' + d.getMonth();
+      if (!months[key]) {
+        var mNames = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+        months[key] = { count: 0, label: mNames[d.getMonth()] + ' ' + d.getFullYear() };
+      }
+      months[key].count++;
+    });
+
+    var mH = '<tr><th class="col-id month-header"></th><th class="col-title month-header"></th><th class="col-days month-header">d</th>';
+    Object.values(months).forEach(function(mo) {
+      mH += '<th class="month-header" colspan="' + mo.count + '">' + mo.label + '</th>';
+    });
+    mH += '</tr>';
+
+    var dH = '<tr><th class="col-id" style="font-size:.55rem;color:var(--text-tertiary)">ID</th><th class="col-title" style="font-size:.55rem;color:var(--text-tertiary)">Tarea</th><th class="col-days" style="font-size:.55rem;color:var(--text-tertiary)">días</th>';
+    allDays.forEach(function(d) {
+      var dISO = fmtISO(d);
+      var we = isWeekend(d), hol = holidaySet[dISO], isDl = dISO === deadlineFmt, isPdl = phaseDeadlineDates[dISO];
+      var cls = 'week-header';
+      if (we) cls += ' weekend';
+      if (hol && !we) cls += ' holiday';
+      if (isDl) cls += ' deadline-col';
+      else if (isPdl) cls += ' phase-deadline-col';
+      dH += '<th class="' + cls + '">' + d.getDate() + '</th>';
+    });
+    dH += '</tr>';
+
+    var table = document.getElementById('gantt');
+    table.innerHTML = '<thead>' + mH + dH + '</thead><tbody id="gantt-body"></tbody>';
+
+    var tbody = document.getElementById('gantt-body');
+
+    tasks.forEach(function(task) {
+      var tr = document.createElement('tr');
+
+      if (task.type === 'group') {
+        tr.className = 'group-row ' + task.phase + '-group';
+        var groupCells = '';
+        allDays.forEach(function(d) {
+          var dISO = fmtISO(d);
+          var we = isWeekend(d), hol = holidaySet[dISO], isDl = dISO === deadlineFmt, isPdl = phaseDeadlineDates[dISO];
+          var c = 'day-cell'; if (we) c += ' weekend'; if (hol && !we) c += ' holiday';
+          if (isDl) c += ' deadline-col'; else if (isPdl) c += ' phase-deadline-col';
+          groupCells += '<td class="' + c + '"></td>';
+        });
+        var dlLabel = task.deadline ? ' <span style="font-size:0.55rem;color:var(--accent-yellow);font-weight:400">⏰ DL: ' + fmtShort(parseDate(task.deadline)) + '</span>' : '';
+        tr.innerHTML = '<td class="col-id"></td><td class="col-title">' + escapeHtml(task.name) +
+          ' <span class="phase-tag ' + task.phase + '">' + task.phase.toUpperCase() + '</span>' + dlLabel + '</td>' +
+          '<td class="col-days"></td>' + groupCells;
+        tbody.appendChild(tr);
+        return;
+      }
+
+      if (!task.start_date || !task.end_date) return;
+
+      var si = dayIdx[task.start_date];
+      var ei = dayIdx[task.end_date];
+
+      var cells = '';
+      allDays.forEach(function(d, i) {
+        var dISO = fmtISO(d);
+        var we = isWeekend(d), hol = holidaySet[dISO], isDl = dISO === deadlineFmt, isPdl = phaseDeadlineDates[dISO];
+        var c = 'day-cell';
+        if (we) c += ' weekend';
+        if (hol && !we) c += ' holiday';
+        if (isDl) c += ' deadline-col';
+        else if (isPdl) c += ' phase-deadline-col';
+
+        var content = '';
+        if (si !== undefined && ei !== undefined && i >= si && i <= ei && !isWeekend(d) && !holidaySet[dISO]) {
+          content = '<div class="bar ' + task.phase + '" data-task-id="' + task.id + '"></div>';
+        }
+        cells += '<td class="' + c + '">' + content + '</td>';
+      });
+
+      // Days cell — editable input
+      var overrideClass = task.is_overridden ? ' overridden' : '';
+      var daysCell = '<input type="number" class="days-input' + overrideClass + '" value="' + task.days +
+        '" min="1" max="60" data-task-id="' + task.id + '" data-original="' + task.days +
+        '" title="Editar días (actual: ' + task.days + ')">';
+
+      tr.innerHTML =
+        '<td class="col-id">' + escapeHtml(task.id) + '</td>' +
+        '<td class="col-title" title="' + escapeHtml(task.title) + '">' + escapeHtml(task.title) + '</td>' +
+        '<td class="col-days">' + daysCell + '</td>' + cells;
+      tbody.appendChild(tr);
+    });
+
+    // Show table, hide loading
+    document.getElementById('loading').style.display = 'none';
+    table.style.display = '';
+
+    // Setup day input handlers
+    setupDayInputs();
+
+    // ─── Comparison table ───────────────────────────────────────────────────────
+    if (m.deadline) {
+      var seqDays = m.total_effort_days;
+      var cpDays = m.critical_path_days;
+
+      document.getElementById('compare-section').innerHTML =
+        '<div style="margin-top:1rem;overflow-x:auto">' +
+        '<h2 style="font-size:0.8rem;font-weight:600;margin-bottom:0.4rem">Comparación: secuencial vs paralelo</h2>' +
+        '<table class="table-compare">' +
+        '<thead><tr><th>Escenario</th><th>Días</th><th>vs Deadline</th></tr></thead>' +
+        '<tbody>' +
+        '<tr><td><strong>Secuencial</strong> (sin paralelismo)</td><td class="highlight">' + seqDays + 'd</td><td class="highlight">Excede</td></tr>' +
+        '<tr><td><strong>Paralelo</strong> (' + m.max_concurrent + ' HUs)</td><td>' + m.total_work_days + 'd</td><td>' + (fits ? '<span class="ok">✓ −' + absMargin + 'd</span>' : '<span class="highlight">+' + absMargin + 'd</span>') + '</td></tr>' +
+        '<tr><td><strong>Ruta crítica</strong> (teórico)</td><td class="ok">' + cpDays + 'd</td><td class="ok">✓ −' + (m.work_days_available - cpDays) + 'd</td></tr>' +
+        '<tr style="border-top:2px solid var(--surface-border)"><td><strong>Deadline</strong></td><td>' + m.work_days_available + 'd</td><td>—</td></tr>' +
+        '</tbody></table></div>';
+    }
+
+    // ─── Holidays ───────────────────────────────────────────────────────────────
+    if (holidays.length) {
+      var holSection = document.getElementById('holidays-section');
+      holSection.style.display = '';
+      var holList = document.getElementById('holidays-list');
+      holList.innerHTML = '';
+      holidays.forEach(function(h) {
+        holList.innerHTML += '<div class="holiday-item"><span class="hdate">' + h.day_name + ' ' + h.formatted + '</span></div>';
+      });
+    }
+
+    // ─── Notes ──────────────────────────────────────────────────────────────────
+    var notesEl = document.getElementById('notes');
+    notesEl.style.display = '';
+    notesEl.innerHTML =
+      '<strong>Premisas del plan:</strong><br>' +
+      '• <strong>Paralelismo:</strong> hasta ' + m.max_concurrent + ' HUs simultáneas respetando dependencias.<br>' +
+      '• <strong>Estimaciones:</strong> basadas en complejidad detectada y estimaciones guardadas en memoria. <span style="color:var(--accent-orange)">Edite los días directamente en la tabla para ajustar.</span><br>' +
+      '• <strong>Priorización:</strong> scheduler automático por ruta crítica — las HUs que bloquean más tareas se priorizan.<br>' +
+      '• <strong>Dependencias respetadas:</strong> ninguna HU empieza antes de que sus prerequisitos estén completos.<br>' +
+      '• <strong>Calendario:</strong> festivos oficiales de Colombia y fines de semana excluidos.<br>' +
+      '• <strong>Persistencia:</strong> presione <strong>💾 Guardar</strong> para persistir la configuración. Las demás herramientas del MCP la usarán como referencia.';
+
+    // ─── Tooltip setup ──────────────────────────────────────────────────────────
+    setupTooltips(tasks);
+  }
+
+  // ─── Editable day inputs ─────────────────────────────────────────────────────
+  function setupDayInputs() {
+    document.querySelectorAll('.days-input').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var taskId = this.getAttribute('data-task-id');
+        var newVal = parseInt(this.value);
+        if (isNaN(newVal) || newVal < 1) {
+          this.value = this.getAttribute('data-original');
+          return;
+        }
+        this.value = Math.min(60, Math.max(1, newVal));
+        this.classList.add('overridden');
+        pendingDayOverrides[taskId] = parseInt(this.value);
+
+        // Debounce: auto-save after 1.5s of no changes
+        clearTimeout(dayOverrideTimer);
+        dayOverrideTimer = setTimeout(function() {
+          showSaveStatus('saving', 'Auto-guardando…');
+          saveConfig();
+        }, 1500);
+      });
+
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.blur();
+        }
+      });
+    });
+  }
+
+  function setupTooltips(tasks) {
+    var tooltip = document.getElementById('tooltip');
+    var taskMap = {};
+    tasks.filter(function(t) { return t.type === 'task'; }).forEach(function(t) { taskMap[t.id] = t; });
+
+    document.addEventListener('mouseover', function(e) {
+      var bar = e.target.closest('.bar');
+      if (!bar) return;
+      var id = bar.getAttribute('data-task-id');
+      var task = taskMap[id];
+      if (!task) return;
+
+      tooltip.innerHTML =
+        '<div class="tt-id">' + escapeHtml(task.id) + '</div>' +
+        '<div>' + escapeHtml(task.title) + '</div>' +
+        '<div class="tt-dates">' + task.days + 'd · ' +
+        (task.start_date ? fmtShort(parseDate(task.start_date)) : '') + ' → ' +
+        (task.end_date ? fmtShort(parseDate(task.end_date)) : '') +
+        (task.is_overridden ? ' <span style="color:var(--accent-orange)">✎ ajustado</span>' : '') + '</div>' +
+        '<div class="tt-domain">' + escapeHtml(task.domain) + '</div>' +
+        (task.deps.length ? '<div style="font-size:0.55rem;color:var(--text-tertiary);margin-top:0.2rem">Deps: ' + task.deps.join(', ') + '</div>' : '');
+      tooltip.classList.add('visible');
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!tooltip.classList.contains('visible')) return;
+      tooltip.style.left = (e.clientX + 12) + 'px';
+      tooltip.style.top = (e.clientY - 10) + 'px';
+    });
+
+    document.addEventListener('mouseout', function(e) {
+      if (e.target.closest('.bar')) {
+        tooltip.classList.remove('visible');
+      }
+    });
+  }
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ─── Config bar events ─────────────────────────────────────────────────────
+  document.getElementById('btn-recalc').addEventListener('click', function() {
+    var params = {};
+    var start = document.getElementById('cfg-start').value;
+    var deadline = document.getElementById('cfg-deadline').value;
+    var concurrent = document.getElementById('cfg-concurrent').value;
+    if (start) params.start = start;
+    if (deadline) params.deadline = deadline;
+    if (concurrent) params.max_concurrent = concurrent;
+
+    // Reset UI
+    document.getElementById('gantt').style.display = 'none';
+    document.getElementById('gantt-container').innerHTML =
+      '<div class="loading-state" id="loading"><div class="loading-spinner"></div><div class="loading-text">Recalculando plan…</div></div>' +
+      '<table class="gantt-table" id="gantt" style="display:none"></table>';
+
+    loadGantt(params);
+  });
+
+  document.getElementById('btn-save').addEventListener('click', saveConfig);
+  document.getElementById('btn-validate').addEventListener('click', runValidation);
+
+  // ─── Initial load ──────────────────────────────────────────────────────────
+  loadGantt();
+})();
+</script>

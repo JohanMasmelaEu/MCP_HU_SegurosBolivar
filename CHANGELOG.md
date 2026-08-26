@@ -13,6 +13,15 @@
 ### Agregado
 - Se agregó filtro de búsqueda por ID o nombre en la sección de Historias de Usuario del spec visualizer
 - Se agregó paginación tipo tabla en la sección de HU mostrando 4 elementos por página con controles de navegación
+- Se creó motor de planificación Gantt (`gantt_engine.py`): scheduler dependency-aware con ruta crítica (CPM), calendario laboral Colombia, estimación por complejidad, detección automática de fases y dominios
+- Se creó visualización interactiva del plan de trabajo (`gantt_ui.html`) estilo NLVS con barras por fase, marcadores de festivos/deadlines, tooltips, tarjetas resumen y tabla comparativa
+- Se agregó persistencia de configuración del Gantt en `.hu-memory/gantt-config.json` con fases editables (nombre, task_ids, deadline por fase), overrides de días por tarea, y milestones
+- Se agregaron días editables inline en la tabla Gantt con auto-guardado debounce y botón "💾 Guardar" para persistir toda la configuración
+- Se agregó validación del plan ("🔍 Validar") que detecta deadlines excedidos, HUs sin estimación, dependencias rotas, ruta crítica sin margen y desbalanceo entre fases
+- Se agregó función `get_work_plan_state()` como interfaz de transversalidad cross-tool para que las demás herramientas del MCP consulten el estado de salud del proyecto
+- Se registraron herramientas MCP `get_work_plan`, `update_work_plan` y `validate_work_plan` en el servidor
+- Se agregaron rutas `/gantt`, `/api/gantt`, `POST /api/gantt/config` y `GET /api/gantt/validate` en el visualizador
+- Se agregó pestaña "Plan de Trabajo" en la navegación del visualizador de grafo y ecosistemas
 
 ## [2.0.0] — 2026-08-05
 
